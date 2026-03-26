@@ -625,7 +625,13 @@ GameObject:
   - component: {fileID: 1144081206}
   - component: {fileID: 1144081205}
   - component: {fileID: 1144081204}
+  - component: {fileID: 1144081213}
   - component: {fileID: 1144081203}
+  - component: {fileID: 1144081212}
+  - component: {fileID: 1144081211}
+  - component: {fileID: 1144081210}
+  - component: {fileID: 1144081209}
+  - component: {fileID: 1144081208}
   m_Layer: 0
   m_Name: EnemyTest
   m_TagString: Untagged
@@ -732,6 +738,108 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1144081208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e3e1b5a05d6fd345bfeea9eeb7184f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+--- !u!114 &1144081209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 043d63091cf9b024a8aa32ed97b087a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyStats: {fileID: 0}
+  enemyAIController: {fileID: 0}
+  enemyCombat: {fileID: 0}
+  collidersToDisableOnDeath: []
+--- !u!114 &1144081210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69f39848bb018964fa51afaae3a141c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damage: 10
+  attackInterval: 1
+  attackRange: 2
+  requireLineOfSight: 0
+  attackOrigin: {fileID: 0}
+  lineOfSightMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &1144081211
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16cce8295200fa043b8667c6ba0f63f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 0}
+  navMeshAgent: {fileID: 0}
+  enemyCombat: {fileID: 0}
+  detectionRange: 15
+  repathInterval: 0.1
+  faceTargetSpeed: 10
+--- !u!114 &1144081212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e3e1b5a05d6fd345bfeea9eeb7184f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+--- !u!195 &1144081213
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1144081202}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 3.5
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 1
+  m_BaseOffset: 0.5
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!1 &1288139524
 GameObject:
   m_ObjectHideFlags: 0
@@ -1326,9 +1434,10 @@ GameObject:
   - component: {fileID: 1755864928}
   - component: {fileID: 1755864933}
   - component: {fileID: 1755864934}
+  - component: {fileID: 1755864935}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1481,6 +1590,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameInput: {fileID: 1288139525}
   currentWeapon: {fileID: 469301785}
+--- !u!114 &1755864935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1755864927}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b5f1e6948bf90a4996e1d249bd27b50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  disableComponentsOnDeath: 1
 --- !u!1 &1764779336
 GameObject:
   m_ObjectHideFlags: 3
