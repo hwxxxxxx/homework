@@ -3,7 +3,7 @@ using UnityEngine.AI;
 
 public class EnemyAIController : MonoBehaviour
 {
-    public enum EnemyState
+    public enum EnemyStateId
     {
         Idle,
         Chase,
@@ -21,11 +21,16 @@ public class EnemyAIController : MonoBehaviour
     [SerializeField] private float repathInterval = 0.1f;
     [SerializeField] private float faceTargetSpeed = 10f;
 
-    private EnemyState currentState = EnemyState.Idle;
+    private EnemyStateMachine stateMachine;
+    private EnemyStateId currentStateId = EnemyStateId.Idle;
     private bool isDead;
     private float nextRepathTime;
 
-    public EnemyState CurrentState => currentState;
+    public EnemyStateId CurrentState => currentStateId;
+    public Transform Target => target;
+    public float DetectionRange => detectionRange;
+    public float AttackRange => enemyCombat != null ? enemyCombat.AttackRange : 2f;
+    public bool IsDead => isDead;
 
     private void Awake()
     {
@@ -38,42 +43,18 @@ public class EnemyAIController : MonoBehaviour
         {
             enemyCombat = GetComponent<EnemyCombat>();
         }
+
+        stateMachine = new EnemyStateMachine();
+        stateMachine.RegisterState(new EnemyIdleState(this));
+        stateMachine.RegisterState(new EnemyChaseState(this));
+        stateMachine.RegisterState(new EnemyAttackState(this));
+        stateMachine.RegisterState(new EnemyDeadState(this));
+        stateMachine.ChangeState(EnemyStateId.Idle);
     }
 
     private void Update()
     {
-        if (isDead)
-        {
-            return;
-        }
-
-        if (target == null)
-        {
-            TryFindPlayerTarget();
-        }
-
-        if (target == null)
-        {
-            EnterIdle();
-            return;
-        }
-
-        float distanceToTarget = Vector3.Distance(transform.position, target.position);
-        float attackRange = enemyCombat != null ? enemyCombat.AttackRange : 2f;
-
-        if (distanceToTarget <= attackRange)
-        {
-            EnterAttack();
-            return;
-        }
-
-        if (distanceToTarget <= detectionRange)
-        {
-            EnterChase();
-            return;
-        }
-
-        EnterIdle();
+        stateMachine?.Tick();
     }
 
     public void SetDead()
@@ -84,19 +65,7 @@ public class EnemyAIController : MonoBehaviour
         }
 
         isDead = true;
-        currentState = EnemyState.Dead;
-
-        if (enemyCombat != null)
-        {
-            enemyCombat.SetDead();
-        }
-
-        if (navMeshAgent != null && navMeshAgent.enabled)
-        {
-            navMeshAgent.isStopped = true;
-            navMeshAgent.ResetPath();
-            navMeshAgent.enabled = false;
-        }
+        stateMachine?.ChangeState(EnemyStateId.Dead);
     }
 
     public void SetTarget(Transform newTarget)
@@ -113,34 +82,40 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    private void EnterIdle()
+    public bool EnsureTarget()
     {
-        currentState = EnemyState.Idle;
-
-        if (enemyCombat != null)
+        if (target != null)
         {
-            enemyCombat.SetCanAttack(false);
-            enemyCombat.SetTarget(null);
+            return true;
         }
 
-        if (navMeshAgent != null && navMeshAgent.enabled)
-        {
-            navMeshAgent.isStopped = true;
-            navMeshAgent.ResetPath();
-        }
+        TryFindPlayerTarget();
+        return target != null;
     }
 
-    private void EnterChase()
+    public bool IsTargetInAttackRange()
     {
-        currentState = EnemyState.Chase;
-
-        if (enemyCombat != null)
+        if (target == null)
         {
-            enemyCombat.SetCanAttack(false);
-            enemyCombat.SetTarget(target);
+            return false;
         }
 
-        if (navMeshAgent == null || !navMeshAgent.enabled)
+        return Vector3.Distance(transform.position, target.position) <= AttackRange;
+    }
+
+    public bool IsTargetInDetectionRange()
+    {
+        if (target == null)
+        {
+            return false;
+        }
+
+        return Vector3.Distance(transform.position, target.position) <= detectionRange;
+    }
+
+    public void MoveToTarget()
+    {
+        if (target == null || navMeshAgent == null || !navMeshAgent.enabled)
         {
             return;
         }
@@ -153,26 +128,29 @@ public class EnemyAIController : MonoBehaviour
         }
     }
 
-    private void EnterAttack()
+    public void StopMoving()
     {
-        currentState = EnemyState.Attack;
-
-        if (enemyCombat != null)
+        if (navMeshAgent == null || !navMeshAgent.enabled)
         {
-            enemyCombat.SetTarget(target);
-            enemyCombat.SetCanAttack(true);
+            return;
         }
 
-        if (navMeshAgent != null && navMeshAgent.enabled)
-        {
-            navMeshAgent.isStopped = true;
-            navMeshAgent.ResetPath();
-        }
-
-        FaceTarget();
+        navMeshAgent.isStopped = true;
+        navMeshAgent.ResetPath();
     }
 
-    private void FaceTarget()
+    public void SetAttackEnabled(bool value)
+    {
+        if (enemyCombat == null)
+        {
+            return;
+        }
+
+        enemyCombat.SetTarget(value ? target : null);
+        enemyCombat.SetCanAttack(value);
+    }
+
+    public void FaceTarget()
     {
         if (target == null)
         {
@@ -193,5 +171,35 @@ public class EnemyAIController : MonoBehaviour
             targetRotation,
             faceTargetSpeed * Time.deltaTime
         );
+    }
+
+    public void DisableOnDeath()
+    {
+        if (enemyCombat != null)
+        {
+            enemyCombat.SetDead();
+        }
+
+        if (navMeshAgent != null && navMeshAgent.enabled)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.ResetPath();
+            navMeshAgent.enabled = false;
+        }
+    }
+
+    public void ChangeState(EnemyStateId newStateId)
+    {
+        if (stateMachine == null)
+        {
+            return;
+        }
+
+        stateMachine.ChangeState(newStateId);
+    }
+
+    public void SetCurrentStateId(EnemyStateId stateId)
+    {
+        currentStateId = stateId;
     }
 }
