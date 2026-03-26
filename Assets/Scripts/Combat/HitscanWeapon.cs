@@ -34,6 +34,10 @@ public class HitscanWeapon : WeaponBase
             Debug.Log("Hit: " + hit.collider.name);
 
             IDamageable damageable = hit.collider.GetComponent<IDamageable>();
+            if (damageable == null)
+            {
+                damageable = hit.collider.GetComponentInParent<IDamageable>();
+            }
             if (damageable != null)
             {
                 damageable.TakeDamage(damage);
