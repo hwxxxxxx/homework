@@ -84,6 +84,14 @@ public class EnemyCombat : MonoBehaviour
         target = null;
     }
 
+    public void ResetCombat()
+    {
+        isDead = false;
+        canAttack = false;
+        target = null;
+        lastAttackTime = -999f;
+    }
+
     private bool HasLineOfSight(Transform potentialTarget)
     {
         Vector3 origin = attackOrigin.position + Vector3.up * 0.5f;

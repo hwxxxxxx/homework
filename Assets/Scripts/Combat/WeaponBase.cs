@@ -18,6 +18,7 @@ public abstract class WeaponBase : MonoBehaviour
     protected bool isReloading;
 
     public event Action<int, int> OnAmmoChanged;
+    public event Action OnFired;
 
     protected virtual void Awake()
     {
@@ -40,6 +41,7 @@ public abstract class WeaponBase : MonoBehaviour
         Fire();
         currentAmmoInMagazine--;
         lastFireTime = Time.time;
+        OnFired?.Invoke();
 
         NotifyAmmoChanged();
     }

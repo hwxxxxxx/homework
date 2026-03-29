@@ -18,8 +18,7 @@ public class EnemyStats : MonoBehaviour
 
     private void Awake()
     {
-        currentHealth = maxHealth;
-        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+        ResetStats();
     }
 
     public void TakeDamage(int damage)
@@ -47,5 +46,12 @@ public class EnemyStats : MonoBehaviour
 
         isDead = true;
         OnDied?.Invoke();
+    }
+
+    public void ResetStats()
+    {
+        isDead = false;
+        currentHealth = maxHealth;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
     }
 }

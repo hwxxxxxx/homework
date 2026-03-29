@@ -1,15 +1,20 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(EnemyStats))]
 [RequireComponent(typeof(EnemyAIController))]
 [RequireComponent(typeof(EnemyCombat))]
-public class EnemyBase : MonoBehaviour, IDamageable
+public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 {
     [Header("References")]
     [SerializeField] private EnemyStats enemyStats;
     [SerializeField] private EnemyAIController enemyAIController;
     [SerializeField] private EnemyCombat enemyCombat;
     [SerializeField] private Collider[] collidersToDisableOnDeath;
+    [SerializeField] private float despawnDelayOnDeath = 2f;
+
+    public event Action<EnemyBase> OnEnemyDied;
+    private bool hasDied;
 
     private void Awake()
     {
@@ -52,6 +57,11 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     public void TakeDamage(int damage)
     {
+        if (hasDied)
+        {
+            return;
+        }
+
         if (enemyStats == null)
         {
             return;
@@ -62,6 +72,14 @@ public class EnemyBase : MonoBehaviour, IDamageable
 
     private void OnDied()
     {
+        if (hasDied)
+        {
+            return;
+        }
+
+        hasDied = true;
+        OnEnemyDied?.Invoke(this);
+
         if (enemyAIController != null)
         {
             enemyAIController.SetDead();
@@ -73,7 +91,7 @@ public class EnemyBase : MonoBehaviour, IDamageable
         }
 
         DisableColliders();
-        Destroy(gameObject, 2f);
+        PoolService.DespawnAfterDelay(gameObject, despawnDelayOnDeath);
     }
 
     private void DisableColliders()
@@ -91,5 +109,48 @@ public class EnemyBase : MonoBehaviour, IDamageable
                 enemyCollider.enabled = false;
             }
         }
+    }
+
+    private void EnableColliders()
+    {
+        if (collidersToDisableOnDeath == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < collidersToDisableOnDeath.Length; i++)
+        {
+            Collider enemyCollider = collidersToDisableOnDeath[i];
+            if (enemyCollider != null)
+            {
+                enemyCollider.enabled = true;
+            }
+        }
+    }
+
+    public void OnSpawnedFromPool()
+    {
+        hasDied = false;
+        EnableColliders();
+
+        if (enemyStats != null)
+        {
+            enemyStats.ResetStats();
+        }
+
+        if (enemyCombat != null)
+        {
+            enemyCombat.ResetCombat();
+        }
+
+        if (enemyAIController != null)
+        {
+            enemyAIController.ResetAI();
+        }
+    }
+
+    public void OnDespawnedToPool()
+    {
+        hasDied = false;
     }
 }

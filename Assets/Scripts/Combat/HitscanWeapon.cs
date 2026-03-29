@@ -13,23 +13,12 @@ public class HitscanWeapon : WeaponBase
 
     protected override void Fire()
     {
-        if (mainCamera == null || firePoint == null)
+        if (!TryGetShotData(out Ray fireRay, out RaycastHit hit, out bool hasHit))
         {
-            Debug.LogWarning("HitscanWeapon is missing mainCamera or firePoint reference.");
             return;
         }
 
-        Vector3 targetPoint = GetAimPoint();
-        Vector3 fireDirection = (targetPoint - firePoint.position).normalized;
-
-        Ray fireRay = new Ray(firePoint.position, fireDirection);
-
-        if (drawDebugRay)
-        {
-            Debug.DrawRay(firePoint.position, fireDirection * range, Color.red, 1f);
-        }
-
-        if (Physics.Raycast(fireRay, out RaycastHit hit, range, hitMask))
+        if (hasHit)
         {
             Debug.Log("Hit: " + hit.collider.name);
 
@@ -43,6 +32,43 @@ public class HitscanWeapon : WeaponBase
                 damageable.TakeDamage(damage);
             }
         }
+    }
+
+    public bool TryGetShotHitPoint(out Vector3 hitPoint)
+    {
+        if (!TryGetShotData(out Ray fireRay, out RaycastHit hit, out bool hasHit))
+        {
+            hitPoint = Vector3.zero;
+            return false;
+        }
+
+        hitPoint = hasHit ? hit.point : fireRay.origin + fireRay.direction * range;
+        return true;
+    }
+
+    private bool TryGetShotData(out Ray fireRay, out RaycastHit hit, out bool hasHit)
+    {
+        fireRay = default;
+        hit = default;
+        hasHit = false;
+
+        if (mainCamera == null || firePoint == null)
+        {
+            Debug.LogWarning("HitscanWeapon is missing mainCamera or firePoint reference.");
+            return false;
+        }
+
+        Vector3 targetPoint = GetAimPoint();
+        Vector3 fireDirection = (targetPoint - firePoint.position).normalized;
+        fireRay = new Ray(firePoint.position, fireDirection);
+
+        if (drawDebugRay)
+        {
+            Debug.DrawRay(firePoint.position, fireDirection * range, Color.red, 1f);
+        }
+
+        hasHit = Physics.Raycast(fireRay, out hit, range, hitMask);
+        return true;
     }
 
     private Vector3 GetAimPoint()

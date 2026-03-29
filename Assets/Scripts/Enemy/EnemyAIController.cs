@@ -68,6 +68,30 @@ public class EnemyAIController : MonoBehaviour
         stateMachine?.ChangeState(EnemyStateId.Dead);
     }
 
+    public void ResetAI()
+    {
+        isDead = false;
+        nextRepathTime = 0f;
+
+        if (navMeshAgent != null && !navMeshAgent.enabled)
+        {
+            navMeshAgent.enabled = true;
+        }
+
+        if (navMeshAgent != null && navMeshAgent.enabled)
+        {
+            navMeshAgent.isStopped = true;
+            navMeshAgent.ResetPath();
+        }
+
+        if (enemyCombat != null)
+        {
+            enemyCombat.ResetCombat();
+        }
+
+        stateMachine?.ChangeState(EnemyStateId.Idle);
+    }
+
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
