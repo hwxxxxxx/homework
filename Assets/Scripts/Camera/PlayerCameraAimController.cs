@@ -3,6 +3,14 @@ using UnityEngine;
 
 public class PlayerCameraAimController : MonoBehaviour
 {
+    public struct LookSensitivitySettings
+    {
+        public float normalX;
+        public float normalY;
+        public float aimMultiplier;
+        public float globalScale;
+    }
+
     [Header("References")]
     [SerializeField] private GameInput gameInput;
     [SerializeField] private PlayerCombat playerCombat;
@@ -19,6 +27,7 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private float normalLookSensitivityX = 180f;
     [SerializeField] private float normalLookSensitivityY = 120f;
     [SerializeField] private float aimLookSensitivityMultiplier = 0.8f;
+    [SerializeField] private float globalLookSensitivityScale = 1f;
     [SerializeField] private float lookInputExponent = 1.35f;
     [SerializeField] private float lookInputSmoothingTime = 0.04f;
     [SerializeField] private float lookRotationDampingTime = 0.03f;
@@ -41,13 +50,9 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private float cameraCollisionRadius = 0.22f;
     [SerializeField] private LayerMask collisionLayers = ~0;
     [SerializeField] private string collisionIgnoreTag = "Player";
-    [SerializeField] private float collisionMinDistanceFromTarget = 0.2f;
-    [SerializeField] private float collisionSmoothingTime = 0.12f;
-    [SerializeField] private float collisionDamping = 0.25f;
-    [SerializeField] private float collisionDampingWhenOccluded = 0.35f;
-    [SerializeField] private float collisionMinimumOcclusionTime = 0.04f;
-    [SerializeField] private CinemachineCollider.ResolutionStrategy collisionStrategy =
-        CinemachineCollider.ResolutionStrategy.PreserveCameraDistance;
+    [SerializeField] private float collisionDampingInto = 0.12f;
+    [SerializeField] private float collisionDampingFrom = 0.18f;
+    [SerializeField] private bool autoSanitizeCollisionMask = true;
     [SerializeField] private bool forceBrainLateUpdate = true;
     [SerializeField] private bool enableOutputStabilizer = false;
     [SerializeField] private float outputJumpThreshold = 0.45f;
@@ -77,14 +82,13 @@ public class PlayerCameraAimController : MonoBehaviour
     private WeaponBase currentWeapon;
     private float nextDebugLogTime;
     private Vector3 lastMainCameraPosition;
-    private CinemachineCollider normalCameraCollider;
-    private CinemachineCollider aimCameraCollider;
 
     private void OnEnable()
     {
         if (playerCombat != null)
         {
             playerCombat.OnAimStateChanged += HandleAimStateChanged;
+            playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
         }
 
         BindWeaponEvents();
@@ -94,6 +98,7 @@ public class PlayerCameraAimController : MonoBehaviour
     {
         normalFreeLook = normalCamera as CinemachineFreeLook;
         SetupFreeLookInputOverride();
+        EnsureValidCollisionMask();
 
         if (cameraRoot != null)
         {
@@ -109,7 +114,6 @@ public class PlayerCameraAimController : MonoBehaviour
         ApplyAimState(isAiming);
         ApplyBrainUpdateMode();
         ApplyCinemachineTuning();
-        UpdateCollisionOwner(isAiming);
         ApplyOutputStabilizer();
 
         Camera main = Camera.main;
@@ -128,6 +132,7 @@ public class PlayerCameraAimController : MonoBehaviour
 
         bool isAiming = playerCombat != null && playerCombat.IsAiming;
         float sensitivityMultiplier = isAiming ? aimLookSensitivityMultiplier : 1f;
+        float effectiveSensitivityScale = Mathf.Max(0.05f, globalLookSensitivityScale);
 
         Vector2 lookInput = ProcessLookInput(gameInput.GetLookInput());
         smoothedLookInput = Vector2.SmoothDamp(
@@ -137,8 +142,8 @@ public class PlayerCameraAimController : MonoBehaviour
             lookInputSmoothingTime
         );
 
-        targetYaw += smoothedLookInput.x * normalLookSensitivityX * sensitivityMultiplier * Time.deltaTime;
-        targetPitch -= smoothedLookInput.y * normalLookSensitivityY * sensitivityMultiplier * Time.deltaTime;
+        targetYaw += smoothedLookInput.x * normalLookSensitivityX * sensitivityMultiplier * effectiveSensitivityScale * Time.deltaTime;
+        targetPitch -= smoothedLookInput.y * normalLookSensitivityY * sensitivityMultiplier * effectiveSensitivityScale * Time.deltaTime;
         targetPitch = Mathf.Clamp(targetPitch, minPitch, maxPitch);
 
         UpdateRecoil();
@@ -151,7 +156,6 @@ public class PlayerCameraAimController : MonoBehaviour
         cameraRoot.rotation = Quaternion.Euler(pitch, yaw, 0f);
         SyncFreeLookXAxisWithYaw();
         SyncFreeLookYAxisWithPitch();
-        UpdateCollisionOwner(isAiming);
         TryDebugLog(isAiming);
         TryDebugCameraJump();
 
@@ -167,6 +171,7 @@ public class PlayerCameraAimController : MonoBehaviour
         if (playerCombat != null)
         {
             playerCombat.OnAimStateChanged -= HandleAimStateChanged;
+            playerCombat.OnCurrentWeaponChanged -= HandleCurrentWeaponChanged;
         }
 
         UnbindWeaponEvents();
@@ -175,6 +180,16 @@ public class PlayerCameraAimController : MonoBehaviour
     private void HandleAimStateChanged(bool isAiming)
     {
         ApplyAimState(isAiming);
+    }
+
+    private void HandleCurrentWeaponChanged(WeaponBase nextWeapon)
+    {
+        UnbindWeaponEvents();
+        currentWeapon = nextWeapon;
+        if (currentWeapon != null)
+        {
+            currentWeapon.OnFired += HandleWeaponFired;
+        }
     }
 
     private void ApplyAimState(bool isAiming)
@@ -197,8 +212,6 @@ public class PlayerCameraAimController : MonoBehaviour
         {
             crosshair.SetActive(isAiming);
         }
-
-        UpdateCollisionOwner(isAiming);
     }
 
     private static float NormalizeAngle(float angle)
@@ -337,15 +350,16 @@ public class PlayerCameraAimController : MonoBehaviour
             ApplyDamping();
         }
 
-        if (enableCameraCollision)
-        {
-            normalCameraCollider = EnsureCollisionExtension(normalCamera);
-            aimCameraCollider = EnsureCollisionExtension(aimCamera);
-        }
+        bool enableCollisionRuntime = enableCameraCollision && HasValidCollisionMask();
+        ConfigureThirdPersonFollowCollision(enableCollisionRuntime);
     }
 
     private void ApplyDamping()
     {
+        const float aimDampingMultiplier = 0.55f;
+        float normalDamping = positionDamping;
+        float aimDamping = positionDamping * aimDampingMultiplier;
+
         if (normalFreeLook != null)
         {
             for (int i = 0; i < 3; i++)
@@ -359,62 +373,52 @@ public class PlayerCameraAimController : MonoBehaviour
                 CinemachineOrbitalTransposer orbital = rig.GetCinemachineComponent<CinemachineOrbitalTransposer>();
                 if (orbital != null)
                 {
-                    orbital.m_XDamping = positionDamping;
-                    orbital.m_YDamping = positionDamping;
-                    orbital.m_ZDamping = positionDamping;
+                    orbital.m_XDamping = normalDamping;
+                    orbital.m_YDamping = normalDamping;
+                    orbital.m_ZDamping = normalDamping;
                 }
             }
         }
 
-        ApplyDampingToVirtualCamera(normalCamera as CinemachineVirtualCamera);
-        ApplyDampingToVirtualCamera(aimCamera as CinemachineVirtualCamera);
+        ApplyDampingToVirtualCamera(normalCamera as CinemachineVirtualCamera, normalDamping);
+        ApplyDampingToVirtualCamera(aimCamera as CinemachineVirtualCamera, aimDamping);
     }
 
-    private CinemachineCollider EnsureCollisionExtension(CinemachineVirtualCameraBase cameraBase)
+    private void ConfigureThirdPersonFollowCollision(bool enableCollision)
     {
-        if (cameraBase == null)
-        {
-            return null;
-        }
-
-        CinemachineCollider collider = cameraBase.GetComponent<CinemachineCollider>();
-        if (collider == null)
-        {
-            collider = cameraBase.gameObject.AddComponent<CinemachineCollider>();
-        }
-
-        collider.m_AvoidObstacles = true;
-        collider.m_CameraRadius = cameraCollisionRadius;
-        collider.m_CollideAgainst = collisionLayers;
-        collider.m_IgnoreTag = collisionIgnoreTag;
-        collider.m_Damping = collisionDamping;
-        collider.m_DampingWhenOccluded = collisionDampingWhenOccluded;
-        collider.m_MinimumOcclusionTime = collisionMinimumOcclusionTime;
-        collider.m_SmoothingTime = collisionSmoothingTime;
-        collider.m_MinimumDistanceFromTarget = collisionMinDistanceFromTarget;
-        collider.m_Strategy = collisionStrategy;
-        return collider;
+        ConfigureThirdPersonFollowCollision(normalCamera as CinemachineVirtualCamera, enableCollision);
+        ConfigureThirdPersonFollowCollision(aimCamera as CinemachineVirtualCamera, enableCollision);
     }
 
-    private void UpdateCollisionOwner(bool isAiming)
+    private void ConfigureThirdPersonFollowCollision(CinemachineVirtualCamera virtualCamera, bool enableCollision)
     {
-        if (!enableCameraCollision)
+        if (virtualCamera == null)
         {
             return;
         }
 
-        if (normalCameraCollider != null)
+        Cinemachine3rdPersonFollow thirdPersonFollow =
+            virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+        if (thirdPersonFollow == null)
         {
-            normalCameraCollider.enabled = !isAiming;
+            return;
         }
 
-        if (aimCameraCollider != null)
+        if (!enableCollision)
         {
-            aimCameraCollider.enabled = isAiming;
+            thirdPersonFollow.CameraCollisionFilter = 0;
+            thirdPersonFollow.IgnoreTag = string.Empty;
+            return;
         }
+
+        thirdPersonFollow.CameraCollisionFilter = collisionLayers;
+        thirdPersonFollow.IgnoreTag = collisionIgnoreTag;
+        thirdPersonFollow.CameraRadius = cameraCollisionRadius;
+        thirdPersonFollow.DampingIntoCollision = collisionDampingInto;
+        thirdPersonFollow.DampingFromCollision = collisionDampingFrom;
     }
 
-    private void ApplyDampingToVirtualCamera(CinemachineVirtualCamera virtualCamera)
+    private void ApplyDampingToVirtualCamera(CinemachineVirtualCamera virtualCamera, float dampingValue)
     {
         if (virtualCamera == null)
         {
@@ -424,16 +428,40 @@ public class PlayerCameraAimController : MonoBehaviour
         Cinemachine3rdPersonFollow thirdPersonFollow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
         if (thirdPersonFollow != null)
         {
-            thirdPersonFollow.Damping = new Vector3(positionDamping, positionDamping, positionDamping);
+            thirdPersonFollow.Damping = new Vector3(dampingValue, dampingValue, dampingValue);
             return;
         }
 
         CinemachineTransposer transposer = virtualCamera.GetCinemachineComponent<CinemachineTransposer>();
         if (transposer != null)
         {
-            transposer.m_XDamping = positionDamping;
-            transposer.m_YDamping = positionDamping;
-            transposer.m_ZDamping = positionDamping;
+            transposer.m_XDamping = dampingValue;
+            transposer.m_YDamping = dampingValue;
+            transposer.m_ZDamping = dampingValue;
+        }
+    }
+
+    private void EnsureValidCollisionMask()
+    {
+        if (!enableCameraCollision)
+        {
+            return;
+        }
+
+        if (autoSanitizeCollisionMask)
+        {
+            collisionLayers = SanitizeCollisionMask(collisionLayers);
+        }
+
+        if (HasValidCollisionMask())
+        {
+            return;
+        }
+
+        collisionLayers = BuildFallbackCollisionMask();
+        if (enableCameraDebugLog)
+        {
+            Debug.LogWarning($"[CameraDebug] collisionLayers invalid, fallback mask={collisionLayers.value}.");
         }
     }
 
@@ -482,12 +510,153 @@ public class PlayerCameraAimController : MonoBehaviour
 
     private void OnValidate()
     {
-        collisionSmoothingTime = Mathf.Clamp(collisionSmoothingTime, 0f, 1.5f);
-        collisionDamping = Mathf.Clamp(collisionDamping, 0f, 2f);
-        collisionDampingWhenOccluded = Mathf.Clamp(collisionDampingWhenOccluded, 0f, 2f);
-        collisionMinimumOcclusionTime = Mathf.Clamp(collisionMinimumOcclusionTime, 0f, 0.5f);
-        collisionMinDistanceFromTarget = Mathf.Max(0.01f, collisionMinDistanceFromTarget);
+        normalLookSensitivityX = Mathf.Max(1f, normalLookSensitivityX);
+        normalLookSensitivityY = Mathf.Max(1f, normalLookSensitivityY);
+        aimLookSensitivityMultiplier = Mathf.Clamp(aimLookSensitivityMultiplier, 0.1f, 2f);
+        globalLookSensitivityScale = Mathf.Clamp(globalLookSensitivityScale, 0.05f, 3f);
+
+        collisionDampingInto = Mathf.Clamp(collisionDampingInto, 0f, 2f);
+        collisionDampingFrom = Mathf.Clamp(collisionDampingFrom, 0f, 2f);
         cameraCollisionRadius = Mathf.Clamp(cameraCollisionRadius, 0.05f, 1f);
+    }
+
+    private bool HasValidCollisionMask()
+    {
+        return collisionLayers.value != 0;
+    }
+
+    private LayerMask SanitizeCollisionMask(LayerMask sourceMask)
+    {
+        int value = sourceMask.value;
+        if (value == 0)
+        {
+            return BuildFallbackCollisionMask();
+        }
+
+        int dedicatedCameraObstacleMask = AddLayerIfExists("CameraObstacle");
+        int groundMask = AddLayerIfExists("ground") | AddLayerIfExists("Ground");
+        if (dedicatedCameraObstacleMask != 0 && value == groundMask)
+        {
+            return dedicatedCameraObstacleMask;
+        }
+
+        if (value == ~0)
+        {
+            LayerMask curatedMask = BuildNamedCollisionMask(includeDefault: true);
+            if (curatedMask.value != 0)
+            {
+                return curatedMask;
+            }
+        }
+
+        int playerLayer = LayerMask.NameToLayer("Player");
+        if (playerLayer >= 0)
+        {
+            value &= ~(1 << playerLayer);
+        }
+
+        int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
+        if (ignoreRaycastLayer >= 0)
+        {
+            value &= ~(1 << ignoreRaycastLayer);
+        }
+
+        int uiLayer = LayerMask.NameToLayer("UI");
+        if (uiLayer >= 0)
+        {
+            value &= ~(1 << uiLayer);
+        }
+
+        if (value == 0)
+        {
+            return BuildFallbackCollisionMask();
+        }
+
+        return value;
+    }
+
+    private LayerMask BuildFallbackCollisionMask()
+    {
+        int value = BuildNamedCollisionMask(includeDefault: true).value;
+
+        if (value == 0)
+        {
+            value = ~0;
+            int playerLayer = LayerMask.NameToLayer("Player");
+            if (playerLayer >= 0)
+            {
+                value &= ~(1 << playerLayer);
+            }
+
+            int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
+            if (ignoreRaycastLayer >= 0)
+            {
+                value &= ~(1 << ignoreRaycastLayer);
+            }
+
+            int uiLayer = LayerMask.NameToLayer("UI");
+            if (uiLayer >= 0)
+            {
+                value &= ~(1 << uiLayer);
+            }
+        }
+
+        return value;
+    }
+
+    private LayerMask BuildNamedCollisionMask(bool includeDefault)
+    {
+        int value = AddLayerIfExists("CameraObstacle");
+        value |= AddLayerIfExists("Environment");
+        value |= AddLayerIfExists("Obstacle");
+
+        if (value != 0)
+        {
+            return value;
+        }
+
+        if (includeDefault)
+        {
+            value |= AddLayerIfExists("Default");
+        }
+
+        value |= AddLayerIfExists("ground");
+        value |= AddLayerIfExists("Ground");
+        return value;
+    }
+
+    private static int AddLayerIfExists(string layerName)
+    {
+        int layer = LayerMask.NameToLayer(layerName);
+        if (layer < 0)
+        {
+            return 0;
+        }
+
+        return 1 << layer;
+    }
+
+    public void SetLookSensitivity(float normalX, float normalY, float aimMultiplier)
+    {
+        normalLookSensitivityX = Mathf.Max(1f, normalX);
+        normalLookSensitivityY = Mathf.Max(1f, normalY);
+        aimLookSensitivityMultiplier = Mathf.Clamp(aimMultiplier, 0.1f, 2f);
+    }
+
+    public void SetGlobalLookSensitivityScale(float scale)
+    {
+        globalLookSensitivityScale = Mathf.Clamp(scale, 0.05f, 3f);
+    }
+
+    public LookSensitivitySettings GetLookSensitivitySettings()
+    {
+        return new LookSensitivitySettings
+        {
+            normalX = normalLookSensitivityX,
+            normalY = normalLookSensitivityY,
+            aimMultiplier = aimLookSensitivityMultiplier,
+            globalScale = globalLookSensitivityScale
+        };
     }
 
     private void TryDebugLog(bool isAiming)
@@ -517,17 +686,11 @@ public class PlayerCameraAimController : MonoBehaviour
             brainUpdate = brain.m_UpdateMethod.ToString();
         }
 
-        string collisionOwner = "none";
-        if (enableCameraCollision)
-        {
-            collisionOwner = isAiming ? "AimCamera" : "NormalCamera";
-        }
-
         Debug.Log(
             $"[CameraDebug] aiming={isAiming} activeCam={activeCameraName} brainUpdate={brainUpdate} " +
             $"rootYaw={rootYaw:F1} mainYaw={mainYaw:F1} yawDiff={yawDiff:F1} " +
             $"targetYaw={targetYaw:F1} smoothedYaw={yaw:F1} targetPitch={targetPitch:F1} smoothedPitch={pitch:F1} " +
-            $"recoilPitch={recoilPitch:F2} recoilYaw={recoilYaw:F2} collisionOwner={collisionOwner}"
+            $"recoilPitch={recoilPitch:F2} recoilYaw={recoilYaw:F2}"
         );
     }
 
@@ -551,7 +714,7 @@ public class PlayerCameraAimController : MonoBehaviour
             Debug.LogWarning(
                 $"[CameraJumpDebug] delta={delta:F3} threshold={cameraJumpDistanceThreshold:F3} " +
                 $"camPos={currentPos:F3} lastPos={lastMainCameraPosition:F3} " +
-                $"strategy={collisionStrategy} collideMask={collisionLayers.value} ignoreTag={collisionIgnoreTag}"
+                $"collideMask={collisionLayers.value} ignoreTag={collisionIgnoreTag}"
             );
         }
 

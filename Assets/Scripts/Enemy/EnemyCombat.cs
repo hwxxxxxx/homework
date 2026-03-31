@@ -7,6 +7,9 @@ public class EnemyCombat : MonoBehaviour
     [SerializeField] private int damage = 10;
     [SerializeField] private float attackInterval = 1f;
     [SerializeField] private float attackRange = 2f;
+    [SerializeField] private StatBlock statBlock;
+    [SerializeField] private string damageStatId = StatIds.EnemyAttackDamage;
+    [SerializeField] private string attackIntervalStatId = StatIds.EnemyAttackInterval;
     [SerializeField] private bool requireLineOfSight;
     [SerializeField] private Transform attackOrigin;
     [SerializeField] private LayerMask lineOfSightMask = ~0;
@@ -26,6 +29,11 @@ public class EnemyCombat : MonoBehaviour
         {
             attackOrigin = transform;
         }
+
+        if (statBlock == null)
+        {
+            statBlock = GetComponent<StatBlock>();
+        }
     }
 
     private void Update()
@@ -35,7 +43,8 @@ public class EnemyCombat : MonoBehaviour
             return;
         }
 
-        if (Time.time < lastAttackTime + attackInterval)
+        float currentAttackInterval = GetAttackInterval();
+        if (Time.time < lastAttackTime + currentAttackInterval)
         {
             return;
         }
@@ -62,7 +71,7 @@ public class EnemyCombat : MonoBehaviour
             return;
         }
 
-        damageable.TakeDamage(damage);
+        damageable.TakeDamage(GetDamageValue());
         lastAttackTime = Time.time;
         OnAttack?.Invoke();
     }
@@ -104,5 +113,25 @@ public class EnemyCombat : MonoBehaviour
         }
 
         return hit.transform == potentialTarget || hit.transform.IsChildOf(potentialTarget);
+    }
+
+    private int GetDamageValue()
+    {
+        return Mathf.Max(1, Mathf.RoundToInt(GetStatOrDefault(damageStatId, damage)));
+    }
+
+    private float GetAttackInterval()
+    {
+        return Mathf.Max(0.05f, GetStatOrDefault(attackIntervalStatId, attackInterval));
+    }
+
+    private float GetStatOrDefault(string statId, float defaultValue)
+    {
+        if (statBlock == null || string.IsNullOrWhiteSpace(statId) || !statBlock.HasStat(statId))
+        {
+            return defaultValue;
+        }
+
+        return statBlock.GetStatValue(statId);
     }
 }

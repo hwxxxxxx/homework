@@ -8,6 +8,8 @@ public abstract class EffectRuntimeBase : IEffectRuntime
     protected EffectContext Context { get; }
     public string EffectId { get; }
     public bool IsExpired { get; private set; }
+    public float Duration => duration;
+    public float RemainingTime => duration <= 0f ? 0f : Mathf.Max(0f, duration - elapsed);
 
     protected EffectRuntimeBase(string effectId, EffectContext context, float duration)
     {

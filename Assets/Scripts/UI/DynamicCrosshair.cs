@@ -5,13 +5,39 @@ public class DynamicCrosshair : MonoBehaviour
     [Header("References")]
     [SerializeField] private RectTransform crosshairRect;
     [SerializeField] private RectTransform canvasRect;
-    [SerializeField] private HitscanWeapon hitscanWeapon;
+    [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private Camera mainCamera;
 
     [Header("Smoothing")]
     [SerializeField] private float followSmoothTime = 0.03f;
 
     private Vector2 crosshairVelocity;
+    private IWeaponAimPointProvider currentAimPointProvider;
+
+    private void Start()
+    {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
+
+        if (playerCombat == null)
+        {
+            Debug.LogWarning("DynamicCrosshair: missing PlayerCombat reference.", this);
+            return;
+        }
+
+        playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
+        HandleCurrentWeaponChanged(playerCombat.GetCurrentWeapon());
+    }
+
+    private void OnDestroy()
+    {
+        if (playerCombat != null)
+        {
+            playerCombat.OnCurrentWeaponChanged -= HandleCurrentWeaponChanged;
+        }
+    }
 
     private void LateUpdate()
     {
@@ -20,12 +46,12 @@ public class DynamicCrosshair : MonoBehaviour
             return;
         }
 
-        if (crosshairRect == null || canvasRect == null || hitscanWeapon == null || mainCamera == null)
+        if (crosshairRect == null || canvasRect == null || currentAimPointProvider == null || mainCamera == null)
         {
             return;
         }
 
-        if (!hitscanWeapon.TryGetShotHitPoint(out Vector3 worldHitPoint))
+        if (!currentAimPointProvider.TryGetShotHitPoint(out Vector3 worldHitPoint))
         {
             return;
         }
@@ -59,5 +85,10 @@ public class DynamicCrosshair : MonoBehaviour
             ref crosshairVelocity,
             followSmoothTime
         );
+    }
+
+    private void HandleCurrentWeaponChanged(WeaponBase weapon)
+    {
+        currentAimPointProvider = weapon as IWeaponAimPointProvider;
     }
 }

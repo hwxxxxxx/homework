@@ -10,6 +10,20 @@ public static class PoolService
     private static Transform poolRoot;
     private static PoolCoroutineRunner coroutineRunner;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetOnDomainReload()
+    {
+        Pools.Clear();
+
+        if (poolRoot != null)
+        {
+            Object.Destroy(poolRoot.gameObject);
+        }
+
+        poolRoot = null;
+        coroutineRunner = null;
+    }
+
     public static T Spawn<T>(T prefab, Vector3 position, Quaternion rotation, Transform parent = null, int preloadCount = 0)
         where T : Component
     {

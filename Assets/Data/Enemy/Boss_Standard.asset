@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eda231409da7b346b0be2c4f714cdfd, type: 3}
+  m_Name: Boss_Standard
+  m_EditorClassIdentifier: 
+  applyBossScale: 1
+  bossScale: {x: 2.3, y: 2.6, z: 2.3}
+  maxHealth: 1200
+  attackDamage: 22
+  attackInterval: 0.85
+  moveSpeed: 4.5
+  enrageHealthThresholdRatio: 0.35
+  enrageDamagePercentAdd: 0.4
+  enrageAttackSpeedPercentAdd: 0.25
+  enrageMoveSpeedPercentAdd: 0.2
+  skills:
+  - {fileID: 11400000, guid: 86ed4ae9ab4ca094abad778beb5aa711, type: 2}
+  skillThinkInterval: 0.1

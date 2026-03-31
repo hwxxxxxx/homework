@@ -13,12 +13,14 @@ GameObject:
   - component: {fileID: 1308637347771388132}
   - component: {fileID: 5635908235135247285}
   - component: {fileID: 3325925219522253900}
-  - component: {fileID: 7154170496143367486}
   - component: {fileID: 254494206914642027}
   - component: {fileID: 2784836056203205924}
   - component: {fileID: 3301847462671384716}
   - component: {fileID: 8137537163740921323}
-  - component: {fileID: 3358690711628319703}
+  - component: {fileID: 8244933989182514567}
+  - component: {fileID: 6438487179467282784}
+  - component: {fileID: 8728213059352869662}
+  - component: {fileID: 8925468993562356664}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -134,19 +136,6 @@ NavMeshAgent:
   m_BaseOffset: 0.5
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &7154170496143367486
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8277816582260641995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59ab6feebfc28f24f9e7b28dc97df95f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  health: 50
 --- !u!114 &254494206914642027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -160,6 +149,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+  statBlock: {fileID: 0}
+  maxHealthStatId: MaxHP
 --- !u!114 &2784836056203205924
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -193,6 +184,9 @@ MonoBehaviour:
   damage: 10
   attackInterval: 1
   attackRange: 2
+  statBlock: {fileID: 0}
+  damageStatId: EnemyDamage
+  attackIntervalStatId: EnemyAttackInterval
   requireLineOfSight: 0
   attackOrigin: {fileID: 0}
   lineOfSightMask:
@@ -214,7 +208,8 @@ MonoBehaviour:
   enemyAIController: {fileID: 0}
   enemyCombat: {fileID: 0}
   collidersToDisableOnDeath: []
---- !u!114 &3358690711628319703
+  despawnDelayOnDeath: 2
+--- !u!114 &8244933989182514567
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -223,7 +218,53 @@ MonoBehaviour:
   m_GameObject: {fileID: 8277816582260641995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e3e1b5a05d6fd345bfeea9eeb7184f1, type: 3}
+  m_Script: {fileID: 11500000, guid: 3cf1b2efa9ebede4fb1f45230c6e9402, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  baseStats:
+  - statId: MaxHP
+    baseValue: 100
+  - statId: EnemyDamage
+    baseValue: 10
+  - statId: EnemyAttackInterval
+    baseValue: 1
+--- !u!114 &6438487179467282784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ad5df5f495103242b9863e996d0e967, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  statBlock: {fileID: 0}
+--- !u!114 &8728213059352869662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb84a11570513444eb3df61c3f645a8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageableComponent: {fileID: 0}
+--- !u!114 &8925468993562356664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae9b565f781fe314f889ef9725817461, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  worldOffset: {x: 0, y: 2.2, z: 0}
+  size: {x: 72, y: 8}

@@ -101,6 +101,49 @@ public class EffectController : MonoBehaviour
         return removed;
     }
 
+    public bool HasEffect(string effectId)
+    {
+        if (string.IsNullOrWhiteSpace(effectId))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            if (activeEffects[i].EffectId == effectId)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool TryGetEffectRemaining(string effectId, out float remainingTime, out float duration)
+    {
+        remainingTime = 0f;
+        duration = 0f;
+        if (string.IsNullOrWhiteSpace(effectId))
+        {
+            return false;
+        }
+
+        for (int i = 0; i < activeEffects.Count; i++)
+        {
+            IEffectRuntime runtime = activeEffects[i];
+            if (runtime.EffectId != effectId)
+            {
+                continue;
+            }
+
+            remainingTime = runtime.RemainingTime;
+            duration = runtime.Duration;
+            return true;
+        }
+
+        return false;
+    }
+
     private void RemoveEffectAt(int index)
     {
         IEffectRuntime runtime = activeEffects[index];

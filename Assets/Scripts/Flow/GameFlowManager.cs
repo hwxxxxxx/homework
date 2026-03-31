@@ -16,7 +16,6 @@ public class GameFlowManager : MonoBehaviour
 
     [Header("Flow")]
     [SerializeField] private bool autoStartCombat = true;
-    [SerializeField] private bool pauseTimeOnEnd = true;
 
     private GameFlowState currentState = GameFlowState.Start;
 
@@ -24,6 +23,7 @@ public class GameFlowManager : MonoBehaviour
     public event Action OnCombatStarted;
 
     public GameFlowState CurrentState => currentState;
+    public PlayerStats PlayerStatsRef => playerStats;
 
     private void OnEnable()
     {
@@ -91,12 +91,5 @@ public class GameFlowManager : MonoBehaviour
     {
         currentState = newState;
         OnStateChanged?.Invoke(currentState);
-
-        if (!pauseTimeOnEnd)
-        {
-            return;
-        }
-
-        Time.timeScale = currentState == GameFlowState.Victory || currentState == GameFlowState.Fail ? 0f : 1f;
     }
 }

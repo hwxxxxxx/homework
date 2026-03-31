@@ -1,31 +1,22 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    [Serializable]
-    public class WaveDefinition
-    {
-        public EnemyBase enemyPrefab;
-        public int enemyCount = 3;
-        public float spawnInterval = 0.3f;
-        public int prewarmCount = 0;
-    }
-
     [Header("Spawn Setup")]
-    [SerializeField] private List<Transform> spawnPoints = new List<Transform>();
-    [SerializeField] private List<WaveDefinition> waves = new List<WaveDefinition>();
+    [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private WaveConfigAsset waveConfig;
+    [SerializeField] private Transform playerTarget;
     [SerializeField] private bool randomSpawnPoint = true;
     [SerializeField] private bool prewarmPoolsOnStart = true;
 
     private Coroutine spawningCoroutine;
 
-    public event Action<EnemyBase> OnEnemySpawned;
+    public event Action<int, EnemyBase> OnEnemySpawned;
     public event Action<int> OnWaveSpawnCompleted;
 
-    public int WaveCount => waves.Count;
+    public int WaveCount => waveConfig != null ? waveConfig.WaveCount : 0;
 
     private void Start()
     {
@@ -39,13 +30,13 @@ public class SpawnManager : MonoBehaviour
 
     public void SpawnWave(int waveIndex)
     {
-        if (waveIndex < 0 || waveIndex >= waves.Count)
+        if (!TryGetWave(waveIndex, out WaveConfigAsset.WaveEntry _))
         {
             Debug.LogWarning($"SpawnManager: invalid wave index {waveIndex}.");
             return;
         }
 
-        if (spawnPoints.Count == 0)
+        if (spawnPoints == null || spawnPoints.Length == 0)
         {
             Debug.LogWarning("SpawnManager: no spawn points configured.");
             OnWaveSpawnCompleted?.Invoke(waveIndex);
@@ -60,9 +51,30 @@ public class SpawnManager : MonoBehaviour
         spawningCoroutine = StartCoroutine(SpawnWaveRoutine(waveIndex));
     }
 
+    public void CancelCurrentWaveSpawn()
+    {
+        if (spawningCoroutine == null)
+        {
+            return;
+        }
+
+        StopCoroutine(spawningCoroutine);
+        spawningCoroutine = null;
+    }
+
+    public bool TryGetWaveEntry(int waveIndex, out WaveConfigAsset.WaveEntry waveEntry)
+    {
+        return TryGetWave(waveIndex, out waveEntry);
+    }
+
     private IEnumerator SpawnWaveRoutine(int waveIndex)
     {
-        WaveDefinition wave = waves[waveIndex];
+        if (!TryGetWave(waveIndex, out WaveConfigAsset.WaveEntry wave))
+        {
+            OnWaveSpawnCompleted?.Invoke(waveIndex);
+            yield break;
+        }
+
         if (wave.enemyPrefab == null || wave.enemyCount <= 0)
         {
             OnWaveSpawnCompleted?.Invoke(waveIndex);
@@ -79,8 +91,9 @@ public class SpawnManager : MonoBehaviour
                 null,
                 0
             );
+            ConfigureSpawnedEnemy(spawnedEnemy);
 
-            OnEnemySpawned?.Invoke(spawnedEnemy);
+            OnEnemySpawned?.Invoke(waveIndex, spawnedEnemy);
 
             if (wave.spawnInterval > 0f)
             {
@@ -96,18 +109,24 @@ public class SpawnManager : MonoBehaviour
     {
         if (randomSpawnPoint)
         {
-            int index = UnityEngine.Random.Range(0, spawnPoints.Count);
+            int index = UnityEngine.Random.Range(0, spawnPoints.Length);
             return spawnPoints[index];
         }
 
-        return spawnPoints[spawnIndex % spawnPoints.Count];
+        return spawnPoints[spawnIndex % spawnPoints.Length];
     }
 
     private void PrewarmPools()
     {
+        if (waveConfig == null)
+        {
+            return;
+        }
+
+        var waves = waveConfig.GetWaves();
         for (int i = 0; i < waves.Count; i++)
         {
-            WaveDefinition wave = waves[i];
+            WaveConfigAsset.WaveEntry wave = waves[i];
             if (wave.enemyPrefab == null)
             {
                 continue;
@@ -115,6 +134,31 @@ public class SpawnManager : MonoBehaviour
 
             int prewarmCount = wave.prewarmCount > 0 ? wave.prewarmCount : wave.enemyCount;
             PoolService.Warmup(wave.enemyPrefab.gameObject, prewarmCount);
+        }
+    }
+
+    private bool TryGetWave(int waveIndex, out WaveConfigAsset.WaveEntry wave)
+    {
+        if (waveConfig == null)
+        {
+            wave = default;
+            return false;
+        }
+
+        return waveConfig.TryGetWave(waveIndex, out wave);
+    }
+
+    private void ConfigureSpawnedEnemy(EnemyBase enemy)
+    {
+        if (enemy == null || playerTarget == null)
+        {
+            return;
+        }
+
+        EnemyAIController ai = enemy.GetComponent<EnemyAIController>();
+        if (ai != null)
+        {
+            ai.SetTarget(playerTarget);
         }
     }
 }

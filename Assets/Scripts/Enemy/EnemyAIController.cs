@@ -25,6 +25,7 @@ public class EnemyAIController : MonoBehaviour
     private EnemyStateId currentStateId = EnemyStateId.Idle;
     private bool isDead;
     private float nextRepathTime;
+    private bool missingTargetLogged;
 
     public EnemyStateId CurrentState => currentStateId;
     public Transform Target => target;
@@ -72,6 +73,7 @@ public class EnemyAIController : MonoBehaviour
     {
         isDead = false;
         nextRepathTime = 0f;
+        missingTargetLogged = false;
 
         if (navMeshAgent != null && !navMeshAgent.enabled)
         {
@@ -95,15 +97,7 @@ public class EnemyAIController : MonoBehaviour
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
-    }
-
-    private void TryFindPlayerTarget()
-    {
-        GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
-        if (playerObject != null)
-        {
-            target = playerObject.transform;
-        }
+        missingTargetLogged = false;
     }
 
     public bool EnsureTarget()
@@ -113,8 +107,13 @@ public class EnemyAIController : MonoBehaviour
             return true;
         }
 
-        TryFindPlayerTarget();
-        return target != null;
+        if (!missingTargetLogged)
+        {
+            missingTargetLogged = true;
+            Debug.LogWarning("EnemyAIController: missing target reference.", this);
+        }
+
+        return false;
     }
 
     public bool IsTargetInAttackRange()

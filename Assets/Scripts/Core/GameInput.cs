@@ -55,4 +55,29 @@ public class GameInput : MonoBehaviour
     {
         return Input.GetKeyDown(KeyCode.Escape);
     }
+
+    public bool IsNextWeaponPressed()
+    {
+        return Input.mouseScrollDelta.y > 0.01f;
+    }
+
+    public bool IsPreviousWeaponPressed()
+    {
+        return Input.mouseScrollDelta.y < -0.01f;
+    }
+
+    public int GetDirectWeaponSlotInput()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            return 0;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            return 1;
+        }
+
+        return -1;
+    }
 }
