@@ -3,27 +3,14 @@ using UnityEngine;
 
 public class GameFlowManager : MonoBehaviour
 {
-    public enum GameFlowState
-    {
-        Start,
-        Combat,
-        Victory,
-        Fail
-    }
-
     [Header("References")]
     [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private GameStateMachineService gameStateService;
+    [SerializeField] private RunContextService runContextService;
+    
+    private bool runStarted;
 
-    [Header("Flow")]
-    [SerializeField] private bool autoStartCombat = true;
-
-    private GameFlowState currentState = GameFlowState.Start;
-
-    public event Action<GameFlowState> OnStateChanged;
     public event Action OnCombatStarted;
-
-    public GameFlowState CurrentState => currentState;
-    public PlayerStats PlayerStatsRef => playerStats;
 
     private void OnEnable()
     {
@@ -31,15 +18,11 @@ public class GameFlowManager : MonoBehaviour
         {
             playerStats.OnDied += HandlePlayerDied;
         }
-    }
 
-    private void Start()
-    {
-        SetState(GameFlowState.Start);
-
-        if (autoStartCombat)
+        if (gameStateService != null)
         {
-            StartCombat();
+            gameStateService.OnStateChanged += HandleGameStateChanged;
+            HandleGameStateChanged(gameStateService.CurrentState, gameStateService.CurrentState);
         }
     }
 
@@ -49,37 +32,49 @@ public class GameFlowManager : MonoBehaviour
         {
             playerStats.OnDied -= HandlePlayerDied;
         }
-    }
 
-    public void StartCombat()
-    {
-        if (currentState != GameFlowState.Start)
+        if (gameStateService != null)
         {
-            return;
+            gameStateService.OnStateChanged -= HandleGameStateChanged;
         }
 
-        SetState(GameFlowState.Combat);
-        OnCombatStarted?.Invoke();
+        runStarted = false;
     }
 
     public void NotifyAllWavesCleared()
     {
-        if (currentState != GameFlowState.Combat)
+        if (!runStarted || gameStateService == null || gameStateService.CurrentState != GameStateId.InRun)
         {
             return;
         }
 
-        SetState(GameFlowState.Victory);
+        if (runContextService != null && runContextService.IsRunActive)
+        {
+            runContextService.CompleteRun(true);
+        }
+
+        if (gameStateService != null)
+        {
+            gameStateService.TrySetState(GameStateId.RunResult);
+        }
     }
 
     public void TriggerFail()
     {
-        if (currentState == GameFlowState.Victory || currentState == GameFlowState.Fail)
+        if (!runStarted || gameStateService == null || gameStateService.CurrentState != GameStateId.InRun)
         {
             return;
         }
 
-        SetState(GameFlowState.Fail);
+        if (runContextService != null && runContextService.IsRunActive)
+        {
+            runContextService.CompleteRun(false);
+        }
+
+        if (gameStateService != null)
+        {
+            gameStateService.TrySetState(GameStateId.RunResult);
+        }
     }
 
     private void HandlePlayerDied()
@@ -87,9 +82,18 @@ public class GameFlowManager : MonoBehaviour
         TriggerFail();
     }
 
-    private void SetState(GameFlowState newState)
+    private void HandleGameStateChanged(GameStateId previous, GameStateId current)
     {
-        currentState = newState;
-        OnStateChanged?.Invoke(currentState);
+        if (current == GameStateId.InRun)
+        {
+            if (!runStarted)
+            {
+                runStarted = true;
+                OnCombatStarted?.Invoke();
+            }
+            return;
+        }
+
+        runStarted = false;
     }
 }

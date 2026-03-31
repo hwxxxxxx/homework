@@ -6,25 +6,21 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 {
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 2.2f, 0f);
     [SerializeField] private Vector2 size = new Vector2(72f, 8f);
+    [SerializeField] private Canvas canvas;
+    [SerializeField] private Camera mainCamera;
 
     private EnemyStats enemyStats;
-    private Camera mainCamera;
-    private Canvas canvas;
     private RectTransform rectTransform;
     private Image fillImage;
 
     private void Awake()
     {
         enemyStats = GetComponent<EnemyStats>();
-        EnsureWidget();
     }
 
     private void OnEnable()
     {
-        if (rectTransform == null || fillImage == null)
-        {
-            EnsureWidget();
-        }
+        EnsureWidget();
 
         if (enemyStats != null)
         {
@@ -40,18 +36,9 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 
     private void LateUpdate()
     {
-        if (rectTransform == null)
+        if (rectTransform == null || mainCamera == null || canvas == null)
         {
             return;
-        }
-
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-            if (mainCamera == null)
-            {
-                return;
-            }
         }
 
         Vector3 worldPosition = transform.position + worldOffset;
@@ -124,6 +111,13 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
         }
     }
 
+    public void ConfigurePresentation(Canvas targetCanvas, Camera targetCamera)
+    {
+        canvas = targetCanvas;
+        mainCamera = targetCamera;
+        EnsureWidget();
+    }
+
     private void HandleHealthChanged(int current, int max)
     {
         if (fillImage == null)
@@ -138,8 +132,7 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 
     private void EnsureWidget()
     {
-        canvas = FindOverlayCanvas();
-        if (canvas == null)
+        if (canvas == null || mainCamera == null)
         {
             return;
         }
@@ -191,17 +184,4 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
         image.rectTransform.localScale = Vector3.one;
     }
 
-    private static Canvas FindOverlayCanvas()
-    {
-        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < canvases.Length; i++)
-        {
-            if (canvases[i].renderMode == RenderMode.ScreenSpaceOverlay)
-            {
-                return canvases[i];
-            }
-        }
-
-        return null;
-    }
 }

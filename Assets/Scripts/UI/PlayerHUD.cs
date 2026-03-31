@@ -4,10 +4,6 @@ using UnityEngine.UI;
 
 public class PlayerHUD : MonoBehaviour
 {
-    private const string HealthTextNodeName = "HealthText";
-    private const string SkillCooldownFillNodeName = "SkillCooldownFill";
-    private const string SkillCooldownTextNodeName = "SkillCooldownText";
-
     [Header("References")]
     [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private PlayerStats playerStats;
@@ -24,31 +20,28 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private Image skillCooldownFillImage;
     [SerializeField] private TextMeshProUGUI skillCooldownText;
 
+    [Header("Tutorial UI")]
+    [SerializeField] private TextMeshProUGUI tutorialText;
+    [SerializeField, TextArea(2, 4)] private string tutorialMessage =
+        "RMB: Aim\nLMB: Fire\nShift: Sprint\nSpace: Jump\nR: Reload\nQ: Skill";
+
     private WeaponBase currentWeapon;
 
     private void Start()
     {
-        if (playerSkillSystem == null && playerCombat != null)
+        if (playerCombat == null || playerStats == null || playerSkillSystem == null || playerEffectController == null ||
+            ammoText == null || healthText == null || skillCooldownFillImage == null || skillCooldownText == null ||
+            tutorialText == null)
         {
-            playerSkillSystem = playerCombat.GetComponent<PlayerSkillSystem>();
+            Debug.LogError("PlayerHUD references are not fully assigned.", this);
+            enabled = false;
+            return;
         }
 
-        if (playerEffectController == null && playerCombat != null)
-        {
-            playerEffectController = playerCombat.GetComponent<EffectController>();
-        }
+        tutorialText.text = tutorialMessage;
 
-        AutoBindUiReferences();
-
-        if (playerCombat != null)
-        {
-            playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
-            HandleCurrentWeaponChanged(playerCombat.GetCurrentWeapon());
-        }
-        else
-        {
-            Debug.LogWarning("PlayerHUD: missing PlayerCombat reference.", this);
-        }
+        playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
+        HandleCurrentWeaponChanged(playerCombat.GetCurrentWeapon());
 
         if (skillCooldownFillImage != null && skillCooldownFillImage.type != Image.Type.Filled)
         {
@@ -58,15 +51,8 @@ public class PlayerHUD : MonoBehaviour
             skillCooldownFillImage.fillOrigin = (int)Image.Origin360.Top;
         }
 
-        if (playerStats != null)
-        {
-            playerStats.OnHealthChanged += HandlePlayerHealthChanged;
-            HandlePlayerHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
-        }
-        else
-        {
-            Debug.LogWarning("PlayerHUD: missing PlayerStats reference.", this);
-        }
+        playerStats.OnHealthChanged += HandlePlayerHealthChanged;
+        HandlePlayerHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
 
         RefreshSkillCooldownUI();
     }
@@ -127,10 +113,7 @@ public class PlayerHUD : MonoBehaviour
 
     private void UpdateAmmoText(int currentAmmo, int reserveAmmo)
     {
-        if (ammoText != null)
-        {
-            ammoText.text = currentAmmo + " / " + reserveAmmo;
-        }
+        ammoText.text = currentAmmo + " / " + reserveAmmo;
     }
 
     private void RefreshSkillCooldownUI()
@@ -155,58 +138,8 @@ public class PlayerHUD : MonoBehaviour
 
     private void SetSkillCooldownUI(float fill, bool ready, float remaining)
     {
-        if (skillCooldownFillImage != null)
-        {
-            skillCooldownFillImage.fillAmount = fill;
-            skillCooldownFillImage.enabled = !ready;
-        }
-
-        if (skillCooldownText != null)
-        {
-            skillCooldownText.text = ready ? "Q READY" : $"Q {remaining:0.0}s";
-        }
-    }
-
-    private void AutoBindUiReferences()
-    {
-        if (healthText == null)
-        {
-            healthText = FindNamedUi<TextMeshProUGUI>(HealthTextNodeName);
-        }
-
-        if (skillCooldownFillImage == null)
-        {
-            skillCooldownFillImage = FindNamedUi<Image>(SkillCooldownFillNodeName);
-        }
-
-        if (skillCooldownText == null)
-        {
-            skillCooldownText = FindNamedUi<TextMeshProUGUI>(SkillCooldownTextNodeName);
-        }
-    }
-
-    private T FindNamedUi<T>(string objectName) where T : Component
-    {
-        if (string.IsNullOrWhiteSpace(objectName))
-        {
-            return null;
-        }
-
-        Canvas canvas = ammoText != null ? ammoText.GetComponentInParent<Canvas>() : null;
-        if (canvas != null)
-        {
-            Transform node = canvas.transform.Find(objectName);
-            if (node != null)
-            {
-                T component = node.GetComponent<T>();
-                if (component != null)
-                {
-                    return component;
-                }
-            }
-        }
-
-        Debug.LogWarning($"PlayerHUD: missing UI node '{objectName}'.", this);
-        return null;
+        skillCooldownFillImage.fillAmount = fill;
+        skillCooldownFillImage.enabled = !ready;
+        skillCooldownText.text = ready ? "Q READY" : $"Q {remaining:0.0}s";
     }
 }

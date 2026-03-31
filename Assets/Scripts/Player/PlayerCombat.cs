@@ -17,9 +17,11 @@ public class PlayerCombat : MonoBehaviour
 
     private void Awake()
     {
-        if (playerSkillSystem == null)
+        if (gameInput == null || playerSkillSystem == null || weaponSlots == null || weaponSlots.Length == 0)
         {
-            playerSkillSystem = GetComponent<PlayerSkillSystem>();
+            Debug.LogError("PlayerCombat references are not fully assigned.", this);
+            enabled = false;
+            return;
         }
 
         InitializeWeapons();
@@ -49,35 +51,21 @@ public class PlayerCombat : MonoBehaviour
     {
         List<WeaponBase> validWeapons = new List<WeaponBase>();
 
-        if (weaponSlots != null)
+        foreach (WeaponBase weapon in weaponSlots)
         {
-            foreach (WeaponBase weapon in weaponSlots)
+            if (weapon != null && !validWeapons.Contains(weapon))
             {
-                if (weapon != null && !validWeapons.Contains(weapon))
-                {
-                    validWeapons.Add(weapon);
-                }
+                validWeapons.Add(weapon);
             }
-        }
-
-        if (validWeapons.Count == 0)
-        {
-            WeaponBase[] discovered = GetComponentsInChildren<WeaponBase>(true);
-            foreach (WeaponBase weapon in discovered)
-            {
-                if (weapon != null && !validWeapons.Contains(weapon))
-                {
-                    validWeapons.Add(weapon);
-                }
-            }
-        }
-
-        if (validWeapons.Count == 0 && currentWeapon != null)
-        {
-            validWeapons.Add(currentWeapon);
         }
 
         weaponSlots = validWeapons.ToArray();
+        if (weaponSlots.Length == 0)
+        {
+            Debug.LogError("PlayerCombat weaponSlots has no valid weapon.", this);
+            enabled = false;
+            return;
+        }
 
         foreach (WeaponBase weapon in weaponSlots)
         {
@@ -117,7 +105,20 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        if (gameInput.IsFirePressed())
+        if (!gameInput.IsFirePressed())
+        {
+            return;
+        }
+
+        if (currentWeapon.GetCurrentAmmoInMagazine() <= 0 &&
+            currentWeapon.GetReserveAmmo() > 0 &&
+            !currentWeapon.IsReloading())
+        {
+            currentWeapon.StartReload(this);
+            return;
+        }
+
+        if (currentWeapon.GetCurrentAmmoInMagazine() > 0)
         {
             currentWeapon.TryFire();
         }

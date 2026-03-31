@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(EnemyCombat))]
 public class EnemyAIController : MonoBehaviour
 {
     public enum EnemyStateId
@@ -13,8 +15,8 @@ public class EnemyAIController : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private Transform target;
-    [SerializeField] private NavMeshAgent navMeshAgent;
-    [SerializeField] private EnemyCombat enemyCombat;
+    private NavMeshAgent navMeshAgent;
+    private EnemyCombat enemyCombat;
 
     [Header("AI")]
     [SerializeField] private float detectionRange = 15f;
@@ -25,25 +27,17 @@ public class EnemyAIController : MonoBehaviour
     private EnemyStateId currentStateId = EnemyStateId.Idle;
     private bool isDead;
     private float nextRepathTime;
-    private bool missingTargetLogged;
 
     public EnemyStateId CurrentState => currentStateId;
     public Transform Target => target;
     public float DetectionRange => detectionRange;
-    public float AttackRange => enemyCombat != null ? enemyCombat.AttackRange : 2f;
+    public float AttackRange => enemyCombat.AttackRange;
     public bool IsDead => isDead;
 
     private void Awake()
     {
-        if (navMeshAgent == null)
-        {
-            navMeshAgent = GetComponent<NavMeshAgent>();
-        }
-
-        if (enemyCombat == null)
-        {
-            enemyCombat = GetComponent<EnemyCombat>();
-        }
+        navMeshAgent = GetComponent<NavMeshAgent>();
+        enemyCombat = GetComponent<EnemyCombat>();
 
         stateMachine = new EnemyStateMachine();
         stateMachine.RegisterState(new EnemyIdleState(this));
@@ -55,7 +49,7 @@ public class EnemyAIController : MonoBehaviour
 
     private void Update()
     {
-        stateMachine?.Tick();
+        stateMachine.Tick();
     }
 
     public void SetDead()
@@ -66,54 +60,38 @@ public class EnemyAIController : MonoBehaviour
         }
 
         isDead = true;
-        stateMachine?.ChangeState(EnemyStateId.Dead);
+        stateMachine.ChangeState(EnemyStateId.Dead);
     }
 
     public void ResetAI()
     {
         isDead = false;
         nextRepathTime = 0f;
-        missingTargetLogged = false;
 
-        if (navMeshAgent != null && !navMeshAgent.enabled)
+        if (!navMeshAgent.enabled)
         {
             navMeshAgent.enabled = true;
         }
 
-        if (navMeshAgent != null && navMeshAgent.enabled)
+        if (navMeshAgent.enabled)
         {
             navMeshAgent.isStopped = true;
             navMeshAgent.ResetPath();
         }
 
-        if (enemyCombat != null)
-        {
-            enemyCombat.ResetCombat();
-        }
+        enemyCombat.ResetCombat();
 
-        stateMachine?.ChangeState(EnemyStateId.Idle);
+        stateMachine.ChangeState(EnemyStateId.Idle);
     }
 
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
-        missingTargetLogged = false;
     }
 
     public bool EnsureTarget()
     {
-        if (target != null)
-        {
-            return true;
-        }
-
-        if (!missingTargetLogged)
-        {
-            missingTargetLogged = true;
-            Debug.LogWarning("EnemyAIController: missing target reference.", this);
-        }
-
-        return false;
+        return target != null;
     }
 
     public bool IsTargetInAttackRange()
@@ -138,7 +116,7 @@ public class EnemyAIController : MonoBehaviour
 
     public void MoveToTarget()
     {
-        if (target == null || navMeshAgent == null || !navMeshAgent.enabled)
+        if (target == null || !navMeshAgent.enabled)
         {
             return;
         }
@@ -153,7 +131,7 @@ public class EnemyAIController : MonoBehaviour
 
     public void StopMoving()
     {
-        if (navMeshAgent == null || !navMeshAgent.enabled)
+        if (!navMeshAgent.enabled)
         {
             return;
         }
@@ -164,11 +142,6 @@ public class EnemyAIController : MonoBehaviour
 
     public void SetAttackEnabled(bool value)
     {
-        if (enemyCombat == null)
-        {
-            return;
-        }
-
         enemyCombat.SetTarget(value ? target : null);
         enemyCombat.SetCanAttack(value);
     }
@@ -198,12 +171,9 @@ public class EnemyAIController : MonoBehaviour
 
     public void DisableOnDeath()
     {
-        if (enemyCombat != null)
-        {
-            enemyCombat.SetDead();
-        }
+        enemyCombat.SetDead();
 
-        if (navMeshAgent != null && navMeshAgent.enabled)
+        if (navMeshAgent.enabled)
         {
             navMeshAgent.isStopped = true;
             navMeshAgent.ResetPath();
@@ -213,11 +183,6 @@ public class EnemyAIController : MonoBehaviour
 
     public void ChangeState(EnemyStateId newStateId)
     {
-        if (stateMachine == null)
-        {
-            return;
-        }
-
         stateMachine.ChangeState(newStateId);
     }
 

@@ -15,9 +15,12 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private GameInput gameInput;
     [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private Transform cameraRoot;
+    [SerializeField] private Camera mainCamera;
     [SerializeField] private CinemachineVirtualCameraBase normalCamera;
     [SerializeField] private CinemachineVirtualCameraBase aimCamera;
+    [SerializeField] private CameraOutputStabilizer outputStabilizer;
     [SerializeField] private GameObject crosshair;
+    [SerializeField] private bool enableAimMode = true;
 
     [Header("Priority")]
     [SerializeField] private int activePriority = 20;
@@ -52,7 +55,6 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private string collisionIgnoreTag = "Player";
     [SerializeField] private float collisionDampingInto = 0.12f;
     [SerializeField] private float collisionDampingFrom = 0.18f;
-    [SerializeField] private bool autoSanitizeCollisionMask = true;
     [SerializeField] private bool forceBrainLateUpdate = true;
     [SerializeField] private bool enableOutputStabilizer = false;
     [SerializeField] private float outputJumpThreshold = 0.45f;
@@ -83,9 +85,32 @@ public class PlayerCameraAimController : MonoBehaviour
     private float nextDebugLogTime;
     private Vector3 lastMainCameraPosition;
 
+    private void Awake()
+    {
+        if (gameInput == null || cameraRoot == null || normalCamera == null || mainCamera == null)
+        {
+            Debug.LogError("PlayerCameraAimController references are not fully assigned.", this);
+            enabled = false;
+            return;
+        }
+
+        if (forceBrainLateUpdate && mainCamera.GetComponent<CinemachineBrain>() == null)
+        {
+            Debug.LogError("PlayerCameraAimController requires CinemachineBrain on MainCamera.", this);
+            enabled = false;
+            return;
+        }
+
+        if (enableOutputStabilizer && outputStabilizer == null)
+        {
+            Debug.LogError("PlayerCameraAimController requires CameraOutputStabilizer reference when enabled.", this);
+            enabled = false;
+        }
+    }
+
     private void OnEnable()
     {
-        if (playerCombat != null)
+        if (enableAimMode && playerCombat != null)
         {
             playerCombat.OnAimStateChanged += HandleAimStateChanged;
             playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
@@ -98,7 +123,6 @@ public class PlayerCameraAimController : MonoBehaviour
     {
         normalFreeLook = normalCamera as CinemachineFreeLook;
         SetupFreeLookInputOverride();
-        EnsureValidCollisionMask();
 
         if (cameraRoot != null)
         {
@@ -110,17 +134,13 @@ public class PlayerCameraAimController : MonoBehaviour
             targetPitch = pitch;
         }
 
-        bool isAiming = playerCombat != null && playerCombat.IsAiming;
+        bool isAiming = IsAimingActive();
         ApplyAimState(isAiming);
         ApplyBrainUpdateMode();
         ApplyCinemachineTuning();
         ApplyOutputStabilizer();
 
-        Camera main = Camera.main;
-        if (main != null)
-        {
-            lastMainCameraPosition = main.transform.position;
-        }
+        lastMainCameraPosition = mainCamera.transform.position;
     }
 
     private void LateUpdate()
@@ -130,7 +150,7 @@ public class PlayerCameraAimController : MonoBehaviour
             return;
         }
 
-        bool isAiming = playerCombat != null && playerCombat.IsAiming;
+        bool isAiming = IsAimingActive();
         float sensitivityMultiplier = isAiming ? aimLookSensitivityMultiplier : 1f;
         float effectiveSensitivityScale = Mathf.Max(0.05f, globalLookSensitivityScale);
 
@@ -168,7 +188,7 @@ public class PlayerCameraAimController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (playerCombat != null)
+        if (enableAimMode && playerCombat != null)
         {
             playerCombat.OnAimStateChanged -= HandleAimStateChanged;
             playerCombat.OnCurrentWeaponChanged -= HandleCurrentWeaponChanged;
@@ -179,7 +199,7 @@ public class PlayerCameraAimController : MonoBehaviour
 
     private void HandleAimStateChanged(bool isAiming)
     {
-        ApplyAimState(isAiming);
+        ApplyAimState(enableAimMode && isAiming);
     }
 
     private void HandleCurrentWeaponChanged(WeaponBase nextWeapon)
@@ -212,6 +232,11 @@ public class PlayerCameraAimController : MonoBehaviour
         {
             crosshair.SetActive(isAiming);
         }
+    }
+
+    private bool IsAimingActive()
+    {
+        return enableAimMode && playerCombat != null && playerCombat.IsAiming;
     }
 
     private static float NormalizeAngle(float angle)
@@ -293,7 +318,7 @@ public class PlayerCameraAimController : MonoBehaviour
 
     private void BindWeaponEvents()
     {
-        if (playerCombat == null)
+        if (!enableAimMode || playerCombat == null)
         {
             return;
         }
@@ -350,7 +375,7 @@ public class PlayerCameraAimController : MonoBehaviour
             ApplyDamping();
         }
 
-        bool enableCollisionRuntime = enableCameraCollision && HasValidCollisionMask();
+        bool enableCollisionRuntime = enableCameraCollision && collisionLayers.value != 0;
         ConfigureThirdPersonFollowCollision(enableCollisionRuntime);
     }
 
@@ -441,30 +466,6 @@ public class PlayerCameraAimController : MonoBehaviour
         }
     }
 
-    private void EnsureValidCollisionMask()
-    {
-        if (!enableCameraCollision)
-        {
-            return;
-        }
-
-        if (autoSanitizeCollisionMask)
-        {
-            collisionLayers = SanitizeCollisionMask(collisionLayers);
-        }
-
-        if (HasValidCollisionMask())
-        {
-            return;
-        }
-
-        collisionLayers = BuildFallbackCollisionMask();
-        if (enableCameraDebugLog)
-        {
-            Debug.LogWarning($"[CameraDebug] collisionLayers invalid, fallback mask={collisionLayers.value}.");
-        }
-    }
-
     private void ApplyBrainUpdateMode()
     {
         if (!forceBrainLateUpdate)
@@ -472,13 +473,7 @@ public class PlayerCameraAimController : MonoBehaviour
             return;
         }
 
-        Camera main = Camera.main;
-        if (main == null)
-        {
-            return;
-        }
-
-        CinemachineBrain brain = main.GetComponent<CinemachineBrain>();
+        CinemachineBrain brain = mainCamera.GetComponent<CinemachineBrain>();
         if (brain != null)
         {
             brain.m_UpdateMethod = CinemachineBrain.UpdateMethod.LateUpdate;
@@ -487,19 +482,12 @@ public class PlayerCameraAimController : MonoBehaviour
 
     private void ApplyOutputStabilizer()
     {
-        Camera main = Camera.main;
-        if (main == null)
+        if (outputStabilizer == null)
         {
             return;
         }
-
-        CameraOutputStabilizer stabilizer = main.GetComponent<CameraOutputStabilizer>();
-        if (stabilizer == null)
-        {
-            stabilizer = main.gameObject.AddComponent<CameraOutputStabilizer>();
-        }
-
-        stabilizer.Configure(
+        
+        outputStabilizer.Configure(
             enableOutputStabilizer,
             outputJumpThreshold,
             outputMaxStepPerFrame,
@@ -518,122 +506,6 @@ public class PlayerCameraAimController : MonoBehaviour
         collisionDampingInto = Mathf.Clamp(collisionDampingInto, 0f, 2f);
         collisionDampingFrom = Mathf.Clamp(collisionDampingFrom, 0f, 2f);
         cameraCollisionRadius = Mathf.Clamp(cameraCollisionRadius, 0.05f, 1f);
-    }
-
-    private bool HasValidCollisionMask()
-    {
-        return collisionLayers.value != 0;
-    }
-
-    private LayerMask SanitizeCollisionMask(LayerMask sourceMask)
-    {
-        int value = sourceMask.value;
-        if (value == 0)
-        {
-            return BuildFallbackCollisionMask();
-        }
-
-        int dedicatedCameraObstacleMask = AddLayerIfExists("CameraObstacle");
-        int groundMask = AddLayerIfExists("ground") | AddLayerIfExists("Ground");
-        if (dedicatedCameraObstacleMask != 0 && value == groundMask)
-        {
-            return dedicatedCameraObstacleMask;
-        }
-
-        if (value == ~0)
-        {
-            LayerMask curatedMask = BuildNamedCollisionMask(includeDefault: true);
-            if (curatedMask.value != 0)
-            {
-                return curatedMask;
-            }
-        }
-
-        int playerLayer = LayerMask.NameToLayer("Player");
-        if (playerLayer >= 0)
-        {
-            value &= ~(1 << playerLayer);
-        }
-
-        int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
-        if (ignoreRaycastLayer >= 0)
-        {
-            value &= ~(1 << ignoreRaycastLayer);
-        }
-
-        int uiLayer = LayerMask.NameToLayer("UI");
-        if (uiLayer >= 0)
-        {
-            value &= ~(1 << uiLayer);
-        }
-
-        if (value == 0)
-        {
-            return BuildFallbackCollisionMask();
-        }
-
-        return value;
-    }
-
-    private LayerMask BuildFallbackCollisionMask()
-    {
-        int value = BuildNamedCollisionMask(includeDefault: true).value;
-
-        if (value == 0)
-        {
-            value = ~0;
-            int playerLayer = LayerMask.NameToLayer("Player");
-            if (playerLayer >= 0)
-            {
-                value &= ~(1 << playerLayer);
-            }
-
-            int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
-            if (ignoreRaycastLayer >= 0)
-            {
-                value &= ~(1 << ignoreRaycastLayer);
-            }
-
-            int uiLayer = LayerMask.NameToLayer("UI");
-            if (uiLayer >= 0)
-            {
-                value &= ~(1 << uiLayer);
-            }
-        }
-
-        return value;
-    }
-
-    private LayerMask BuildNamedCollisionMask(bool includeDefault)
-    {
-        int value = AddLayerIfExists("CameraObstacle");
-        value |= AddLayerIfExists("Environment");
-        value |= AddLayerIfExists("Obstacle");
-
-        if (value != 0)
-        {
-            return value;
-        }
-
-        if (includeDefault)
-        {
-            value |= AddLayerIfExists("Default");
-        }
-
-        value |= AddLayerIfExists("ground");
-        value |= AddLayerIfExists("Ground");
-        return value;
-    }
-
-    private static int AddLayerIfExists(string layerName)
-    {
-        int layer = LayerMask.NameToLayer(layerName);
-        if (layer < 0)
-        {
-            return 0;
-        }
-
-        return 1 << layer;
     }
 
     public void SetLookSensitivity(float normalX, float normalY, float aimMultiplier)
@@ -659,6 +531,21 @@ public class PlayerCameraAimController : MonoBehaviour
         };
     }
 
+    public void ConfigureBaseMode(GameInput input, Transform root, CinemachineVirtualCameraBase baseCamera)
+    {
+        gameInput = input;
+        cameraRoot = root;
+        normalCamera = baseCamera;
+        aimCamera = null;
+        crosshair = null;
+        playerCombat = null;
+        enableAimMode = false;
+        enableRecoil = false;
+        drawDebugDirections = false;
+        enableCameraJumpDebugLog = false;
+        ApplyAimState(false);
+    }
+
     private void TryDebugLog(bool isAiming)
     {
         if (!enableCameraDebugLog || Time.time < nextDebugLogTime)
@@ -668,9 +555,8 @@ public class PlayerCameraAimController : MonoBehaviour
 
         nextDebugLogTime = Time.time + Mathf.Max(0.05f, debugLogInterval);
 
-        Camera main = Camera.main;
-        float mainYaw = main != null ? main.transform.eulerAngles.y : 0f;
-        float rootYaw = cameraRoot != null ? cameraRoot.eulerAngles.y : 0f;
+        float mainYaw = mainCamera.transform.eulerAngles.y;
+        float rootYaw = cameraRoot.eulerAngles.y;
         float yawDiff = Mathf.DeltaAngle(mainYaw, rootYaw);
 
         string activeCameraName = "none";
@@ -680,7 +566,7 @@ public class PlayerCameraAimController : MonoBehaviour
         }
 
         string brainUpdate = "none";
-        CinemachineBrain brain = main != null ? main.GetComponent<CinemachineBrain>() : null;
+        CinemachineBrain brain = mainCamera.GetComponent<CinemachineBrain>();
         if (brain != null)
         {
             brainUpdate = brain.m_UpdateMethod.ToString();
@@ -701,13 +587,7 @@ public class PlayerCameraAimController : MonoBehaviour
             return;
         }
 
-        Camera main = Camera.main;
-        if (main == null)
-        {
-            return;
-        }
-
-        Vector3 currentPos = main.transform.position;
+        Vector3 currentPos = mainCamera.transform.position;
         float delta = Vector3.Distance(currentPos, lastMainCameraPosition);
         if (delta > cameraJumpDistanceThreshold)
         {
@@ -720,4 +600,5 @@ public class PlayerCameraAimController : MonoBehaviour
 
         lastMainCameraPosition = currentPos;
     }
+
 }

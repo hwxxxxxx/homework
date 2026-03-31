@@ -1,13 +1,16 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SpawnManager : MonoBehaviour
 {
     [Header("Spawn Setup")]
     [SerializeField] private Transform[] spawnPoints;
-    [SerializeField] private WaveConfigAsset waveConfig;
+    [SerializeField] private RunContextService runContextService;
     [SerializeField] private Transform playerTarget;
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Canvas enemyHealthBarCanvas;
     [SerializeField] private bool randomSpawnPoint = true;
     [SerializeField] private bool prewarmPoolsOnStart = true;
 
@@ -16,7 +19,14 @@ public class SpawnManager : MonoBehaviour
     public event Action<int, EnemyBase> OnEnemySpawned;
     public event Action<int> OnWaveSpawnCompleted;
 
-    public int WaveCount => waveConfig != null ? waveConfig.WaveCount : 0;
+    public int WaveCount
+    {
+        get
+        {
+        WaveConfigAsset activeConfig = GetActiveWaveConfig();
+        return activeConfig != null ? activeConfig.WaveCount : 0;
+        }
+    }
 
     private void Start()
     {
@@ -118,12 +128,13 @@ public class SpawnManager : MonoBehaviour
 
     private void PrewarmPools()
     {
-        if (waveConfig == null)
+        WaveConfigAsset activeConfig = GetActiveWaveConfig();
+        if (activeConfig == null)
         {
             return;
         }
 
-        var waves = waveConfig.GetWaves();
+        var waves = activeConfig.GetWaves();
         for (int i = 0; i < waves.Count; i++)
         {
             WaveConfigAsset.WaveEntry wave = waves[i];
@@ -139,26 +150,40 @@ public class SpawnManager : MonoBehaviour
 
     private bool TryGetWave(int waveIndex, out WaveConfigAsset.WaveEntry wave)
     {
-        if (waveConfig == null)
+        WaveConfigAsset activeConfig = GetActiveWaveConfig();
+        if (activeConfig == null)
         {
             wave = default;
             return false;
         }
 
-        return waveConfig.TryGetWave(waveIndex, out wave);
+        return activeConfig.TryGetWave(waveIndex, out wave);
     }
 
     private void ConfigureSpawnedEnemy(EnemyBase enemy)
     {
-        if (enemy == null || playerTarget == null)
+        if (enemy == null)
         {
             return;
         }
 
         EnemyAIController ai = enemy.GetComponent<EnemyAIController>();
-        if (ai != null)
+        ai.SetTarget(playerTarget);
+
+        FragmentDropOnDeath drop = enemy.GetComponent<FragmentDropOnDeath>();
+        drop.SetRunContextService(runContextService);
+
+        EnemyWorldHealthBar healthBar = enemy.GetComponent<EnemyWorldHealthBar>();
+        healthBar.ConfigurePresentation(enemyHealthBarCanvas, mainCamera);
+    }
+
+    private WaveConfigAsset GetActiveWaveConfig()
+    {
+        if (runContextService == null || runContextService.ActiveRunConfig == null)
         {
-            ai.SetTarget(playerTarget);
+            return null;
         }
+
+        return runContextService.ActiveRunConfig.WaveConfig;
     }
 }

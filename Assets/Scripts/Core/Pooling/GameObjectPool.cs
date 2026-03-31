@@ -60,7 +60,9 @@ public class GameObjectPool
         PooledObject pooledObject = instance.GetComponent<PooledObject>();
         if (pooledObject == null)
         {
-            pooledObject = instance.AddComponent<PooledObject>();
+            throw new System.InvalidOperationException(
+                $"Pooled prefab '{prefab.name}' is missing required PooledObject component."
+            );
         }
 
         pooledObject.Initialize(prefab, this);

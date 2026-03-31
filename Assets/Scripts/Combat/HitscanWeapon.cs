@@ -24,14 +24,17 @@ public class HitscanWeapon : WeaponBase, IWeaponAimPointProvider
     public override void BindOwner(PlayerCombat owner)
     {
         base.BindOwner(owner);
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
     }
 
     private void Start()
     {
+        if (firePoint == null || mainCamera == null)
+        {
+            Debug.LogError($"{name} missing firePoint/mainCamera reference.", this);
+            enabled = false;
+            return;
+        }
+
         PrepareParticleTemplate(muzzleFlashPrefab);
         PrepareParticleTemplate(impactEffectPrefab);
     }
@@ -140,16 +143,6 @@ public class HitscanWeapon : WeaponBase, IWeaponAimPointProvider
             return (targetPoint - firePoint.position).normalized;
         }
 
-        if (hipFireForwardReference != null)
-        {
-            return hipFireForwardReference.forward;
-        }
-
-        if (ownerCombat != null)
-        {
-            return ownerCombat.transform.forward;
-        }
-
         return firePoint.forward;
     }
 
@@ -167,11 +160,6 @@ public class HitscanWeapon : WeaponBase, IWeaponAimPointProvider
 
     private Vector3 GetCameraAimPoint()
     {
-        if (mainCamera == null)
-        {
-            return firePoint.position + firePoint.forward * range;
-        }
-
         Ray cameraRay = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         if (drawDebugRay)
         {

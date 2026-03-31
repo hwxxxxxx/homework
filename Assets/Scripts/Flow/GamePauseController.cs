@@ -4,7 +4,7 @@ public class GamePauseController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GameInput gameInput;
-    [SerializeField] private GameFlowManager gameFlowManager;
+    [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private GameObject pausePanel;
 
     [Header("Cursor")]
@@ -17,10 +17,10 @@ public class GamePauseController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (gameFlowManager != null)
+        if (gameStateService != null)
         {
-            gameFlowManager.OnStateChanged += HandleFlowStateChanged;
-            HandleFlowStateChanged(gameFlowManager.CurrentState);
+            gameStateService.OnStateChanged += HandleGameStateChanged;
+            HandleGameStateChanged(gameStateService.CurrentState, gameStateService.CurrentState);
         }
         else
         {
@@ -30,9 +30,9 @@ public class GamePauseController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (gameFlowManager != null)
+        if (gameStateService != null)
         {
-            gameFlowManager.OnStateChanged -= HandleFlowStateChanged;
+            gameStateService.OnStateChanged -= HandleGameStateChanged;
         }
 
         if (IsPaused)
@@ -59,31 +59,6 @@ public class GamePauseController : MonoBehaviour
         }
 
         SetPaused(!IsPaused);
-    }
-
-    private void HandleFlowStateChanged(GameFlowManager.GameFlowState state)
-    {
-        isEndState = state == GameFlowManager.GameFlowState.Victory || state == GameFlowManager.GameFlowState.Fail;
-        if (isEndState && IsPaused)
-        {
-            IsPaused = false;
-        }
-
-        if (isEndState)
-        {
-            Time.timeScale = 0f;
-        }
-        else if (!IsPaused)
-        {
-            Time.timeScale = 1f;
-        }
-
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(IsPaused && !isEndState);
-        }
-
-        ApplyCursorState();
     }
 
     private void SetPaused(bool paused)
@@ -115,5 +90,35 @@ public class GamePauseController : MonoBehaviour
         }
 
         Cursor.lockState = shouldShowCursor ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+
+    private void HandleGameStateChanged(GameStateId previous, GameStateId current)
+    {
+        bool inRun = current == GameStateId.InRun;
+        isEndState = !inRun;
+
+        if (isEndState && IsPaused)
+        {
+            IsPaused = false;
+        }
+
+        if (inRun)
+        {
+            if (!IsPaused)
+            {
+                Time.timeScale = 1f;
+            }
+        }
+        else
+        {
+            Time.timeScale = 0f;
+        }
+
+        if (pausePanel != null)
+        {
+            pausePanel.SetActive(IsPaused && !isEndState);
+        }
+
+        ApplyCursorState();
     }
 }

@@ -1,11 +1,27 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class MainMenuUI : MonoBehaviour
 {
+    [SerializeField] private GameStateMachineService gameStateService;
+
     public void OnStartGame()
     {
-        SceneManager.LoadScene("GameScene");
+        if (gameStateService != null)
+        {
+            if (gameStateService.CurrentState == GameStateId.Boot)
+            {
+                gameStateService.TrySetState(GameStateId.Base);
+            }
+
+            if (gameStateService.CurrentState == GameStateId.Base)
+            {
+                gameStateService.TrySetState(GameStateId.RunSelect);
+            }
+
+            return;
+        }
+
+        Debug.LogError("MainMenuUI: missing GameStateMachineService reference.", this);
     }
 
     public void OnQuitGame()

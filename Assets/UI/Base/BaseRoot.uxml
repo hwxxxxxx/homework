@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:Style src="project://database/Assets/UI/Base/BaseRoot.uss" />
+    <ui:VisualElement name="base-root" class="base-root">
+        <ui:Label name="title" text="BASE SCENE" class="title" />
+        <ui:VisualElement name="progress-panel" class="panel">
+            <ui:Label text="Progress Placeholder" class="panel-title" />
+            <ui:Label text="Body: --  Soul: --  Memory: --" />
+        </ui:VisualElement>
+        <ui:VisualElement name="unlock-panel" class="panel">
+            <ui:Label text="Upgrade Placeholder" class="panel-title" />
+            <ui:Label text="升级、解锁节点将在这里展示" />
+        </ui:VisualElement>
+        <ui:Label name="interaction-hint" class="hint" text="" />
+
+        <ui:VisualElement name="battle-panel" class="modal">
+            <ui:Label text="战斗地点 - 选关" class="panel-title" />
+            <ui:Button name="level1-btn" text="第一关：Body Level 1" />
+            <ui:Button name="start-level-btn" text="进入关卡" />
+            <ui:Button name="close-battle-btn" text="关闭" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="upgrade-panel" class="modal">
+            <ui:Label text="强化地点 - 占位界面" class="panel-title" />
+            <ui:Label text="强化功能后续接入" />
+            <ui:Button name="close-upgrade-btn" text="关闭" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

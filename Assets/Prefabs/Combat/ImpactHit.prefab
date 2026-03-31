@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1189198765843546666}
   - component: {fileID: 3428350957589149707}
   - component: {fileID: 2932964017963321727}
+  - component: {fileID: 910000000000000103}
   m_Layer: 0
   m_Name: ImpactHit
   m_TagString: Untagged
@@ -4841,5 +4842,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5c54963a72550b6408c8b4310f8bd1ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &910000000000000103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7091434870036472900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dccffb8362bc0144c89f858051ed16e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 

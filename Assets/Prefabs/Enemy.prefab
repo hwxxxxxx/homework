@@ -21,6 +21,8 @@ GameObject:
   - component: {fileID: 6438487179467282784}
   - component: {fileID: 8728213059352869662}
   - component: {fileID: 8925468993562356664}
+  - component: {fileID: 5082454077755263225}
+  - component: {fileID: 990000000000000001}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -268,3 +270,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldOffset: {x: 0, y: 2.2, z: 0}
   size: {x: 72, y: 8}
+--- !u!114 &5082454077755263225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e9e4e9b9c3e8c64b838fd64990fcb98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropTable: {fileID: 11400000, guid: 7028b16b05b7a674cb8936b09b8caf4d, type: 2}
+  runContextService: {fileID: 0}
+--- !u!114 &990000000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dccffb8362bc0144c89f858051ed16e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

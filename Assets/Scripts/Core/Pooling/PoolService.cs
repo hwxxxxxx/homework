@@ -63,8 +63,8 @@ public static class PoolService
                 return;
             }
         }
-
-        Object.Destroy(instance);
+        
+        Debug.LogError($"PoolService.Despawn called on non-pooled object '{instance.name}'.", instance);
     }
 
     public static void DespawnAfterDelay(GameObject instance, float delay)
@@ -119,6 +119,7 @@ public static class PoolService
         GameObject rootObject = new GameObject("GlobalObjectPools");
         Object.DontDestroyOnLoad(rootObject);
         poolRoot = rootObject.transform;
+        coroutineRunner = rootObject.AddComponent<PoolCoroutineRunner>();
     }
 
     private static void EnsureRunner()
@@ -129,11 +130,6 @@ public static class PoolService
         }
 
         EnsureRoot();
-        coroutineRunner = poolRoot.gameObject.GetComponent<PoolCoroutineRunner>();
-        if (coroutineRunner == null)
-        {
-            coroutineRunner = poolRoot.gameObject.AddComponent<PoolCoroutineRunner>();
-        }
     }
 
     private class PoolCoroutineRunner : MonoBehaviour

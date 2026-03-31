@@ -5,7 +5,9 @@ using UnityEngine;
 public class WaveManager : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private GameFlowManager gameFlowManager;
+    [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private GameStateMachineService gameStateService;
+    [SerializeField] private RunContextService runContextService;
     [SerializeField] private SpawnManager spawnManager;
 
     [Header("Optional Wave Rewards")]
@@ -20,15 +22,17 @@ public class WaveManager : MonoBehaviour
     private float waveStartTime;
     private WaveConfigAsset.WaveCompletionPolicy currentCompletionPolicy;
     private float currentTimeoutSeconds;
+    private bool runStarted;
 
     public event Action<int> OnWaveStarted;
     public event Action<int> OnWaveCleared;
 
     private void OnEnable()
     {
-        if (gameFlowManager != null)
+        if (gameStateService != null)
         {
-            gameFlowManager.OnCombatStarted += HandleCombatStarted;
+            gameStateService.OnStateChanged += HandleGameStateChanged;
+            HandleGameStateChanged(gameStateService.CurrentState, gameStateService.CurrentState);
         }
 
         if (spawnManager != null)
@@ -40,9 +44,11 @@ public class WaveManager : MonoBehaviour
 
     private void OnDisable()
     {
-        if (gameFlowManager != null)
+        runStarted = false;
+
+        if (gameStateService != null)
         {
-            gameFlowManager.OnCombatStarted -= HandleCombatStarted;
+            gameStateService.OnStateChanged -= HandleGameStateChanged;
         }
 
         if (spawnManager != null)
@@ -69,6 +75,17 @@ public class WaveManager : MonoBehaviour
 
     private void HandleCombatStarted()
     {
+        if (runStarted)
+        {
+            return;
+        }
+
+        runStarted = true;
+        if (runContextService != null)
+        {
+            runContextService.BeginRun();
+        }
+
         currentWaveIndex = 0;
         aliveEnemyCountInCurrentWave = 0;
         waveSpawnFinished = false;
@@ -79,20 +96,20 @@ public class WaveManager : MonoBehaviour
 
     private void StartCurrentWave()
     {
-        if (spawnManager == null || gameFlowManager == null)
+        if (spawnManager == null)
         {
             return;
         }
 
         if (currentWaveIndex >= spawnManager.WaveCount)
         {
-            gameFlowManager.NotifyAllWavesCleared();
+            CompleteRunWithVictory();
             return;
         }
 
         if (!spawnManager.TryGetWaveEntry(currentWaveIndex, out WaveConfigAsset.WaveEntry waveEntry))
         {
-            gameFlowManager.NotifyAllWavesCleared();
+            CompleteRunWithVictory();
             return;
         }
 
@@ -208,6 +225,20 @@ public class WaveManager : MonoBehaviour
         StartCurrentWave();
     }
 
+    private void CompleteRunWithVictory()
+    {
+        runStarted = false;
+        if (runContextService != null)
+        {
+            runContextService.CompleteRun(true);
+        }
+
+        if (gameStateService != null)
+        {
+            gameStateService.TrySetState(GameStateId.RunResult);
+        }
+    }
+
     private EffectAsset GetWaveReward(int waveIndex)
     {
         if (playerEffectsOnWaveCleared == null || waveIndex < 0 || waveIndex >= playerEffectsOnWaveCleared.Length)
@@ -241,12 +272,22 @@ public class WaveManager : MonoBehaviour
             return playerEffectController;
         }
 
-        if (gameFlowManager == null || gameFlowManager.PlayerStatsRef == null)
+        if (playerStats == null)
         {
             return null;
         }
 
-        playerEffectController = gameFlowManager.PlayerStatsRef.GetComponent<EffectController>();
+        playerEffectController = playerStats.GetComponent<EffectController>();
         return playerEffectController;
+    }
+
+    private void HandleGameStateChanged(GameStateId previous, GameStateId current)
+    {
+        if (current != GameStateId.InRun)
+        {
+            return;
+        }
+
+        HandleCombatStarted();
     }
 }

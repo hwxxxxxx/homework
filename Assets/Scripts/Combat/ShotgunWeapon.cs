@@ -25,14 +25,17 @@ public class ShotgunWeapon : WeaponBase, IWeaponAimPointProvider
     public override void BindOwner(PlayerCombat owner)
     {
         base.BindOwner(owner);
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
     }
 
     private void Start()
     {
+        if (firePoint == null || mainCamera == null)
+        {
+            Debug.LogError($"{name} missing firePoint/mainCamera reference.", this);
+            enabled = false;
+            return;
+        }
+
         PrepareParticleTemplate(muzzleFlashPrefab);
         PrepareParticleTemplate(impactEffectPrefab);
     }
@@ -129,17 +132,7 @@ public class ShotgunWeapon : WeaponBase, IWeaponAimPointProvider
             return cameraRay.direction.normalized;
         }
 
-        if (hipFireForwardReference != null)
-        {
-            return hipFireForwardReference.forward;
-        }
-
-        if (ownerCombat != null)
-        {
-            return ownerCombat.transform.forward;
-        }
-
-        return firePoint != null ? firePoint.forward : transform.forward;
+        return firePoint.forward;
     }
 
     private Vector3 ApplySpread(Vector3 direction, float spreadAngle)

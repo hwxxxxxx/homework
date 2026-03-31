@@ -16,14 +16,10 @@ public class DynamicCrosshair : MonoBehaviour
 
     private void Start()
     {
-        if (mainCamera == null)
+        if (mainCamera == null || playerCombat == null || crosshairRect == null || canvasRect == null)
         {
-            mainCamera = Camera.main;
-        }
-
-        if (playerCombat == null)
-        {
-            Debug.LogWarning("DynamicCrosshair: missing PlayerCombat reference.", this);
+            Debug.LogError("DynamicCrosshair references are not fully assigned.", this);
+            enabled = false;
             return;
         }
 
@@ -46,7 +42,7 @@ public class DynamicCrosshair : MonoBehaviour
             return;
         }
 
-        if (crosshairRect == null || canvasRect == null || currentAimPointProvider == null || mainCamera == null)
+        if (currentAimPointProvider == null)
         {
             return;
         }

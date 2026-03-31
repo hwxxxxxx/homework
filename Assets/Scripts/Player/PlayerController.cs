@@ -44,6 +44,11 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        if (gameInput == null || cameraRoot == null)
+        {
+            Debug.LogError("PlayerController references are not fully assigned.", this);
+            enabled = false;
+        }
     }
 
     private void Update()
@@ -56,16 +61,8 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovement()
     {
-        if (gameInput == null)
-        {
-            return;
-        }
-
         bool isAiming = playerCombat != null && playerCombat.IsAiming;
-        if (!TryGetCameraBasis(out Vector3 cameraForward, out Vector3 cameraRight))
-        {
-            return;
-        }
+        GetCameraBasis(out Vector3 cameraForward, out Vector3 cameraRight);
         lastCameraForward = cameraForward;
 
         cameraForward.y = 0f;
@@ -134,7 +131,7 @@ public class PlayerController : MonoBehaviour
 
     private void HandleGravityAndJump()
     {
-        if (gameInput != null && gameInput.IsJumpPressed())
+        if (gameInput.IsJumpPressed())
         {
             jumpBufferTimer = jumpBufferTime;
         }
@@ -175,7 +172,7 @@ public class PlayerController : MonoBehaviour
 
     private float GetTargetMoveSpeed()
     {
-        return gameInput != null && gameInput.IsRunPressed() ? runSpeed : moveSpeed;
+        return gameInput.IsRunPressed() ? runSpeed : moveSpeed;
     }
 
     private void UpdateGroundedState()
@@ -189,29 +186,11 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool TryGetCameraBasis(out Vector3 forward, out Vector3 right)
+    private void GetCameraBasis(out Vector3 forward, out Vector3 right)
     {
-        if (cameraRoot != null)
-        {
-            usedCameraRootBasis = true;
-            forward = cameraRoot.forward;
-            right = cameraRoot.right;
-            return true;
-        }
-
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null)
-        {
-            usedCameraRootBasis = false;
-            forward = mainCamera.transform.forward;
-            right = mainCamera.transform.right;
-            return true;
-        }
-
-        usedCameraRootBasis = false;
-        forward = Vector3.forward;
-        right = Vector3.right;
-        return false;
+        usedCameraRootBasis = true;
+        forward = cameraRoot.forward;
+        right = cameraRoot.right;
     }
 
     private void TryDebugLog(bool isAiming)
