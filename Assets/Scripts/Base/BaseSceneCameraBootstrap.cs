@@ -12,6 +12,8 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        GamePauseController.EnsureBaseControllerExists();
+
         if (!ValidateReferences())
         {
             enabled = false;
@@ -21,6 +23,8 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
         SetupBrain();
         SetupNormalCamera();
         cameraController.ConfigureBaseMode(gameInput, cameraRoot, normalCamera);
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private bool ValidateReferences()

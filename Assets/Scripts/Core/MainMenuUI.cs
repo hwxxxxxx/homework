@@ -1,27 +1,34 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MainMenuUI : MonoBehaviour
 {
     [SerializeField] private GameStateMachineService gameStateService;
+    [SerializeField] private string baseSceneName = "BaseScene_Main";
+
+    private void OnEnable()
+    {
+        Time.timeScale = 1f;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
 
     public void OnStartGame()
     {
-        if (gameStateService != null)
+        if (!string.IsNullOrWhiteSpace(baseSceneName))
         {
-            if (gameStateService.CurrentState == GameStateId.Boot)
-            {
-                gameStateService.TrySetState(GameStateId.Base);
-            }
-
-            if (gameStateService.CurrentState == GameStateId.Base)
-            {
-                gameStateService.TrySetState(GameStateId.RunSelect);
-            }
-
+            Time.timeScale = 1f;
+            SceneManager.LoadScene(baseSceneName, LoadSceneMode.Single);
             return;
         }
 
-        Debug.LogError("MainMenuUI: missing GameStateMachineService reference.", this);
+        if (gameStateService != null)
+        {
+            gameStateService.TrySetState(GameStateId.Base);
+            return;
+        }
+
+        Debug.LogError("MainMenuUI: missing Base scene name and GameStateMachineService reference.", this);
     }
 
     public void OnQuitGame()

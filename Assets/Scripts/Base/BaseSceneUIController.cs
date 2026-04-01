@@ -70,6 +70,8 @@ public class BaseSceneUIController : MonoBehaviour
         {
             battlePanel.style.display = DisplayStyle.Flex;
         }
+
+        ApplyModalCursorState(true);
     }
 
     public void ShowUpgradePanel()
@@ -79,6 +81,8 @@ public class BaseSceneUIController : MonoBehaviour
         {
             upgradePanel.style.display = DisplayStyle.Flex;
         }
+
+        ApplyModalCursorState(true);
     }
 
     public void HideAllPanels()
@@ -92,6 +96,8 @@ public class BaseSceneUIController : MonoBehaviour
         {
             upgradePanel.style.display = DisplayStyle.None;
         }
+
+        ApplyModalCursorState(false);
     }
 
     public void SetInteractionHint(string hint)
@@ -176,5 +182,25 @@ public class BaseSceneUIController : MonoBehaviour
     private static bool IsVisible(VisualElement panel)
     {
         return panel != null && panel.style.display.value != DisplayStyle.None;
+    }
+
+    private static void ApplyModalCursorState(bool modalOpen)
+    {
+        if (modalOpen)
+        {
+            UnityEngine.Cursor.visible = true;
+            UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.None;
+            return;
+        }
+
+        if (GamePauseController.IsPaused)
+        {
+            UnityEngine.Cursor.visible = true;
+            UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.None;
+            return;
+        }
+
+        UnityEngine.Cursor.visible = false;
+        UnityEngine.Cursor.lockState = UnityEngine.CursorLockMode.Locked;
     }
 }
