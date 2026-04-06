@@ -1,10 +1,8 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class MainMenuUI : MonoBehaviour
 {
-    [SerializeField] private GameStateMachineService gameStateService;
-    [SerializeField] private string baseSceneName = "BaseScene_Main";
+    [SerializeField] private MainMenuFlowController flowController;
 
     private void OnEnable()
     {
@@ -15,20 +13,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void OnStartGame()
     {
-        if (!string.IsNullOrWhiteSpace(baseSceneName))
-        {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene(baseSceneName, LoadSceneMode.Single);
-            return;
-        }
-
-        if (gameStateService != null)
-        {
-            gameStateService.TrySetState(GameStateId.Base);
-            return;
-        }
-
-        Debug.LogError("MainMenuUI: missing Base scene name and GameStateMachineService reference.", this);
+        flowController.EnterBase();
     }
 
     public void OnQuitGame()

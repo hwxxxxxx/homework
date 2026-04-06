@@ -185,21 +185,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   runSelectorService: {fileID: 1300059931}
-  firstLevelDefinition: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819,
+  levelUnlockService: {fileID: 1300059936}
+  progressService: {fileID: 1300059933}
+  bodyLevel1Definition: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819,
     type: 2}
-  firstLevelSceneName: GameScene
---- !u!134 &107414639
-PhysicMaterial:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: ' (Instance) (Instance) (Instance)'
-  dynamicFriction: 0.6
-  staticFriction: 0.6
-  bounciness: 0
-  frictionCombine: 0
-  bounceCombine: 0
+  bodyLevel2Definition: {fileID: 11400000, guid: b10a88e95222f894f8282d34c09058ae,
+    type: 2}
+  soulLevel1Definition: {fileID: 11400000, guid: bbf91fe0b85d63c40a214134f5acaa0c,
+    type: 2}
+  memoryLevel1Definition: {fileID: 11400000, guid: 107c78865ef72a648864fa63802ca36a,
+    type: 2}
 --- !u!1 &171103465
 GameObject:
   m_ObjectHideFlags: 0
@@ -612,6 +607,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!134 &657657324
+PhysicMaterial:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ' (Instance) (Instance) (Instance) (Instance)'
+  dynamicFriction: 0.6
+  staticFriction: 0.6
+  bounciness: 0
+  frictionCombine: 0
+  bounceCombine: 0
 --- !u!1 &675467525
 GameObject:
   m_ObjectHideFlags: 0
@@ -1211,6 +1218,7 @@ GameObject:
   - component: {fileID: 1300059932}
   - component: {fileID: 1300059931}
   - component: {fileID: 1300059935}
+  - component: {fileID: 1300059936}
   m_Layer: 0
   m_Name: BaseSystems
   m_TagString: Untagged
@@ -1309,6 +1317,20 @@ MonoBehaviour:
   normalCamera: {fileID: 1176052001}
   cameraController: {fileID: 675467526}
   collisionIgnoreTag: Player
+--- !u!114 &1300059936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300059929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af49914f29601dc4e8d8670488bf42e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameStateService: {fileID: 1300059934}
+  progressService: {fileID: 1300059933}
 --- !u!1 &1355090672
 GameObject:
   m_ObjectHideFlags: 0
@@ -1431,7 +1453,7 @@ CharacterController:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1814571832}
-  m_Material: {fileID: 107414639}
+  m_Material: {fileID: 657657324}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0

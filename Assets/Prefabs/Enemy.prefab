@@ -23,6 +23,7 @@ GameObject:
   - component: {fileID: 8925468993562356664}
   - component: {fileID: 5082454077755263225}
   - component: {fileID: 990000000000000001}
+  - component: {fileID: 3357778906300038978}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -166,8 +167,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  navMeshAgent: {fileID: 0}
-  enemyCombat: {fileID: 0}
   detectionRange: 15
   repathInterval: 0.1
   faceTargetSpeed: 10
@@ -270,6 +269,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldOffset: {x: 0, y: 2.2, z: 0}
   size: {x: 72, y: 8}
+  canvas: {fileID: 0}
+  mainCamera: {fileID: 0}
 --- !u!114 &5082454077755263225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -296,3 +297,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dccffb8362bc0144c89f858051ed16e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3357778906300038978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bdbe689b2048b5d4d8b4bc40a2903cc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dropTable: {fileID: 11400000, guid: 75ed659aed9a17e458d5360c25c639bc, type: 2}
+  runContextService: {fileID: 0}
+  targetEffectController: {fileID: 0}

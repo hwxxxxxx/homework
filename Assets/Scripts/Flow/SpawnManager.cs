@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -28,16 +29,6 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        if (!prewarmPoolsOnStart)
-        {
-            return;
-        }
-
-        PrewarmPools();
-    }
-
     public void SpawnWave(int waveIndex)
     {
         if (!TryGetWave(waveIndex, out WaveConfigAsset.WaveEntry _))
@@ -49,7 +40,6 @@ public class SpawnManager : MonoBehaviour
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
             Debug.LogWarning("SpawnManager: no spawn points configured.");
-            OnWaveSpawnCompleted?.Invoke(waveIndex);
             return;
         }
 
@@ -77,20 +67,56 @@ public class SpawnManager : MonoBehaviour
         return TryGetWave(waveIndex, out waveEntry);
     }
 
+    public void ConfigureRuntimeBinding(LevelRuntimeBinding binding)
+    {
+        if (binding == null || binding.SpawnPoints == null || binding.SpawnPoints.Length == 0)
+        {
+            return;
+        }
+
+        List<Transform> resolved = new List<Transform>();
+        for (int i = 0; i < binding.SpawnPoints.Length; i++)
+        {
+            LevelSpawnPoint point = binding.SpawnPoints[i];
+            if (point != null)
+            {
+                resolved.Add(point.transform);
+            }
+        }
+
+        if (resolved.Count == 0)
+        {
+            return;
+        }
+
+        spawnPoints = resolved.ToArray();
+    }
+
+    public void PrewarmForCurrentRun()
+    {
+        if (!prewarmPoolsOnStart)
+        {
+            return;
+        }
+
+        PrewarmPools();
+    }
+
     private IEnumerator SpawnWaveRoutine(int waveIndex)
     {
         if (!TryGetWave(waveIndex, out WaveConfigAsset.WaveEntry wave))
         {
-            OnWaveSpawnCompleted?.Invoke(waveIndex);
+            Debug.LogWarning($"SpawnManager: failed to resolve wave {waveIndex}.");
             yield break;
         }
 
         if (wave.enemyPrefab == null || wave.enemyCount <= 0)
         {
-            OnWaveSpawnCompleted?.Invoke(waveIndex);
+            Debug.LogWarning($"SpawnManager: wave {waveIndex} has invalid enemy config.");
             yield break;
         }
 
+        int successfulSpawnCount = 0;
         for (int i = 0; i < wave.enemyCount; i++)
         {
             Transform spawnPoint = GetSpawnPoint(i);
@@ -104,11 +130,22 @@ public class SpawnManager : MonoBehaviour
             ConfigureSpawnedEnemy(spawnedEnemy);
 
             OnEnemySpawned?.Invoke(waveIndex, spawnedEnemy);
+            if (spawnedEnemy != null)
+            {
+                successfulSpawnCount++;
+            }
 
             if (wave.spawnInterval > 0f)
             {
                 yield return new WaitForSeconds(wave.spawnInterval);
             }
+        }
+
+        if (successfulSpawnCount <= 0)
+        {
+            Debug.LogWarning($"SpawnManager: wave {waveIndex} spawned 0 enemies.");
+            spawningCoroutine = null;
+            yield break;
         }
 
         OnWaveSpawnCompleted?.Invoke(waveIndex);
@@ -172,6 +209,13 @@ public class SpawnManager : MonoBehaviour
 
         FragmentDropOnDeath drop = enemy.GetComponent<FragmentDropOnDeath>();
         drop.SetRunContextService(runContextService);
+
+        BuffDropOnDeath buffDrop = enemy.GetComponent<BuffDropOnDeath>();
+        if (buffDrop != null)
+        {
+            buffDrop.SetRunContextService(runContextService);
+            buffDrop.SetTargetEffectController(playerTarget != null ? playerTarget.GetComponent<EffectController>() : null);
+        }
 
         EnemyWorldHealthBar healthBar = enemy.GetComponent<EnemyWorldHealthBar>();
         healthBar.ConfigurePresentation(enemyHealthBarCanvas, mainCamera);

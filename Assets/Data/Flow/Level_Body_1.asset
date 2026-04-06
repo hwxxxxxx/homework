@@ -14,5 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelId: body_1
   displayName: Body Level 1
+  sceneName: GameScene
   runConfig: {fileID: 11400000, guid: 743a4a42045793b468d6bbbe8c190430, type: 2}
+  unlockCostType: 0
+  unlockCostAmount: 0
   prerequisiteLevelIds: []

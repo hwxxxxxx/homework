@@ -78,6 +78,11 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         }
 
         hasDied = true;
+        if (TryGetComponent<BossEnemyController>(out BossEnemyController _))
+        {
+            EventBus.Publish(new BossDefeatedEvent(gameObject));
+        }
+
         OnEnemyDied?.Invoke(this);
 
         if (enemyAIController != null)

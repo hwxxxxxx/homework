@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class GameResultUIController : MonoBehaviour
@@ -7,11 +6,19 @@ public class GameResultUIController : MonoBehaviour
     [Header("References")]
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private RunContextService runContextService;
+    [SerializeField] private GameFlowManager gameFlowManager;
     [SerializeField] private GameObject victoryPanel;
     [SerializeField] private GameObject failPanel;
     [SerializeField] private Button victoryBackToBaseButton;
     [SerializeField] private Button failBackToBaseButton;
-    [SerializeField] private string baseSceneName = "BaseScene_Main";
+
+    private void Awake()
+    {
+        if (gameFlowManager == null)
+        {
+            gameFlowManager = FindObjectOfType<GameFlowManager>();
+        }
+    }
 
     private void OnEnable()
     {
@@ -81,12 +88,11 @@ public class GameResultUIController : MonoBehaviour
 
     private void HandleBackToBaseClicked()
     {
-        if (string.IsNullOrWhiteSpace(baseSceneName))
+        if (gameFlowManager == null)
         {
             return;
         }
 
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(baseSceneName);
+        gameFlowManager.TryReturnToBaseFromResult();
     }
 }

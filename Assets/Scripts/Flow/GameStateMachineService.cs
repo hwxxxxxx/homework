@@ -53,11 +53,11 @@ public class GameStateMachineService : MonoBehaviour, IGameStateService
             case GameStateId.RunSelect:
                 return to == GameStateId.LoadingRun || to == GameStateId.Base;
             case GameStateId.LoadingRun:
-                return to == GameStateId.InRun || to == GameStateId.Base;
+                return to == GameStateId.InRun;
             case GameStateId.InRun:
-                return to == GameStateId.RunResult || to == GameStateId.LoadingBase;
+                return to == GameStateId.RunResult;
             case GameStateId.RunResult:
-                return to == GameStateId.LoadingBase || to == GameStateId.Base;
+                return to == GameStateId.LoadingBase;
             case GameStateId.LoadingBase:
                 return to == GameStateId.Base;
             default:

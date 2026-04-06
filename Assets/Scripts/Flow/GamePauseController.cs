@@ -31,36 +31,41 @@ public class GamePauseController : MonoBehaviour
     private bool hasAppliedCursorState;
     private bool lastShouldShowCursor;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void RegisterBasePauseControllerBootstrap()
-    {
-        SceneManager.sceneLoaded -= HandleSceneLoaded;
-        SceneManager.sceneLoaded += HandleSceneLoaded;
-    }
-
-    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        if (scene.name != "BaseScene_Main")
-        {
-            return;
-        }
-
-        EnsureBaseControllerExists();
-    }
-
     public static GamePauseController EnsureBaseControllerExists()
     {
         GamePauseController existing = Object.FindObjectOfType<GamePauseController>();
         if (existing != null)
         {
-            existing.ConfigureForBaseScene();
+            existing.ConfigurePauseOnlyWhenInRun(false);
+            existing.ConfigureReturnScene("MainMenu");
             return existing;
         }
 
         GameObject pauseControllerObject = new GameObject("BasePauseController");
         GamePauseController pauseController = pauseControllerObject.AddComponent<GamePauseController>();
-        pauseController.ConfigureForBaseScene();
+        pauseController.ConfigurePauseOnlyWhenInRun(false);
+        pauseController.ConfigureReturnScene("MainMenu");
         return pauseController;
+    }
+
+    public void ConfigureDependencies(GameInput input, GameObject panel, Button returnButton)
+    {
+        gameInput = input;
+        pausePanel = panel;
+        returnToMainMenuButton = returnButton;
+    }
+
+    public void ConfigureReturnScene(string sceneName)
+    {
+        if (!string.IsNullOrWhiteSpace(sceneName))
+        {
+            mainMenuSceneName = sceneName;
+        }
+    }
+
+    public void ConfigurePauseOnlyWhenInRun(bool value)
+    {
+        pauseOnlyWhenInRun = value;
     }
 
     private void OnEnable()
@@ -344,11 +349,4 @@ public class GamePauseController : MonoBehaviour
         }
     }
 
-    private void ConfigureForBaseScene()
-    {
-        pauseOnlyWhenInRun = false;
-        hideCursorDuringGameplay = true;
-        lockCursorDuringGameplay = true;
-        showFallbackPauseOverlay = true;
-    }
 }

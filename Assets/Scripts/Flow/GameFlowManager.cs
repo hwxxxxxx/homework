@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameFlowManager : MonoBehaviour
 {
@@ -7,6 +8,7 @@ public class GameFlowManager : MonoBehaviour
     [SerializeField] private PlayerStats playerStats;
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private RunContextService runContextService;
+    [SerializeField] private string baseSceneName = "BaseScene_Main";
     
     private bool runStarted;
 
@@ -77,8 +79,32 @@ public class GameFlowManager : MonoBehaviour
         }
     }
 
+    public bool TryReturnToBaseFromResult()
+    {
+        if (gameStateService == null || gameStateService.CurrentState != GameStateId.RunResult)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(baseSceneName))
+        {
+            return false;
+        }
+
+        if (!gameStateService.TrySetState(GameStateId.LoadingBase))
+        {
+            return false;
+        }
+
+        RunSceneRequest.Clear();
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(baseSceneName, LoadSceneMode.Single);
+        return true;
+    }
+
     private void HandlePlayerDied()
     {
+        EventBus.Publish(new PlayerDiedEvent());
         TriggerFail();
     }
 

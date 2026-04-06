@@ -57,3 +57,27 @@ public readonly struct DamageRequestedEvent : IGameEvent
         EffectId = effectId;
     }
 }
+
+public readonly struct BossDefeatedEvent : IGameEvent
+{
+    public readonly GameObject BossObject;
+
+    public BossDefeatedEvent(GameObject bossObject)
+    {
+        BossObject = bossObject;
+    }
+}
+
+public readonly struct LevelUnlockedEvent : IGameEvent
+{
+    public readonly string LevelId;
+
+    public LevelUnlockedEvent(string levelId)
+    {
+        LevelId = levelId;
+    }
+}
+
+public readonly struct PlayerDiedEvent : IGameEvent
+{
+}

@@ -73,7 +73,7 @@ public class EnemyAIController : MonoBehaviour
             navMeshAgent.enabled = true;
         }
 
-        if (navMeshAgent.enabled)
+        if (CanOperateNavMeshAgent())
         {
             navMeshAgent.isStopped = true;
             navMeshAgent.ResetPath();
@@ -116,7 +116,7 @@ public class EnemyAIController : MonoBehaviour
 
     public void MoveToTarget()
     {
-        if (target == null || !navMeshAgent.enabled)
+        if (target == null || !CanOperateNavMeshAgent())
         {
             return;
         }
@@ -131,7 +131,7 @@ public class EnemyAIController : MonoBehaviour
 
     public void StopMoving()
     {
-        if (!navMeshAgent.enabled)
+        if (!CanOperateNavMeshAgent())
         {
             return;
         }
@@ -176,9 +176,18 @@ public class EnemyAIController : MonoBehaviour
         if (navMeshAgent.enabled)
         {
             navMeshAgent.isStopped = true;
-            navMeshAgent.ResetPath();
+            if (navMeshAgent.isOnNavMesh)
+            {
+                navMeshAgent.ResetPath();
+            }
+
             navMeshAgent.enabled = false;
         }
+    }
+
+    private bool CanOperateNavMeshAgent()
+    {
+        return navMeshAgent != null && navMeshAgent.enabled && navMeshAgent.isOnNavMesh;
     }
 
     public void ChangeState(EnemyStateId newStateId)

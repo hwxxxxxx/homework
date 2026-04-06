@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -106,6 +107,64 @@ public class ProgressService : MonoBehaviour
 
         data.unlockedLevelIds.Add(levelId);
         Save();
+        EventBus.Publish(new LevelUnlockedEvent(levelId));
+        return true;
+    }
+
+    public bool TryUnlockLevelWithCost(LevelDefinitionAsset levelDefinition)
+    {
+        if (levelDefinition == null)
+        {
+            return false;
+        }
+
+        if (!ArePrerequisitesMet(levelDefinition.PrerequisiteLevelIds))
+        {
+            return false;
+        }
+
+        int costAmount = Mathf.Max(0, levelDefinition.UnlockCostAmount);
+        if (costAmount > 0 && GetFragment(levelDefinition.UnlockCostType) < costAmount)
+        {
+            return false;
+        }
+
+        if (IsLevelUnlocked(levelDefinition.LevelId))
+        {
+            return false;
+        }
+
+        if (costAmount > 0)
+        {
+            ConsumeFragmentWithoutSave(levelDefinition.UnlockCostType, costAmount);
+        }
+
+        data.unlockedLevelIds.Add(levelDefinition.LevelId);
+        Save();
+        EventBus.Publish(new LevelUnlockedEvent(levelDefinition.LevelId));
+        return true;
+    }
+
+    public bool IsAchievementUnlocked(AchievementId achievementId)
+    {
+        if (data.unlockedAchievementIds == null)
+        {
+            return false;
+        }
+
+        return data.unlockedAchievementIds.Contains(ToAchievementKey(achievementId));
+    }
+
+    public bool TryUnlockAchievement(AchievementId achievementId)
+    {
+        string achievementKey = ToAchievementKey(achievementId);
+        if (data.unlockedAchievementIds.Contains(achievementKey))
+        {
+            return false;
+        }
+
+        data.unlockedAchievementIds.Add(achievementKey);
+        Save();
         return true;
     }
 
@@ -139,6 +198,11 @@ public class ProgressService : MonoBehaviour
             data.unlockedLevelIds = new System.Collections.Generic.List<string>();
         }
 
+        if (data.unlockedAchievementIds == null)
+        {
+            data.unlockedAchievementIds = new System.Collections.Generic.List<string>();
+        }
+
         if (data.unlockedLevelIds.Count == 0 && !string.IsNullOrWhiteSpace(initialUnlockedLevelId))
         {
             data.unlockedLevelIds.Add(initialUnlockedLevelId);
@@ -165,8 +229,58 @@ public class ProgressService : MonoBehaviour
         OnProgressChanged?.Invoke();
     }
 
+    private bool ArePrerequisitesMet(IReadOnlyList<string> prerequisiteLevelIds)
+    {
+        if (prerequisiteLevelIds == null || prerequisiteLevelIds.Count == 0)
+        {
+            return true;
+        }
+
+        for (int i = 0; i < prerequisiteLevelIds.Count; i++)
+        {
+            string prerequisiteLevelId = prerequisiteLevelIds[i];
+            if (string.IsNullOrWhiteSpace(prerequisiteLevelId))
+            {
+                continue;
+            }
+
+            if (!IsLevelUnlocked(prerequisiteLevelId))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void ConsumeFragmentWithoutSave(FragmentType fragmentType, int amount)
+    {
+        if (amount <= 0)
+        {
+            return;
+        }
+
+        switch (fragmentType)
+        {
+            case FragmentType.Body:
+                data.bodyFragments -= amount;
+                break;
+            case FragmentType.Soul:
+                data.soulFragments -= amount;
+                break;
+            case FragmentType.Memory:
+                data.memoryFragments -= amount;
+                break;
+        }
+    }
+
     private string GetSavePath()
     {
         return Path.Combine(Application.persistentDataPath, saveFileName);
+    }
+
+    private static string ToAchievementKey(AchievementId achievementId)
+    {
+        return achievementId.ToString();
     }
 }

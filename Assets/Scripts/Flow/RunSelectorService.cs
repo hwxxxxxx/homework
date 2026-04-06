@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RunSelectorService : MonoBehaviour
 {
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private RunContextService runContextService;
     [SerializeField] private ProgressService progressService;
+    [SerializeField] private string gameplayCommonSceneName = "GameplayCommon";
 
     public bool TrySelectLevel(LevelDefinitionAsset levelDefinition)
     {
@@ -49,6 +51,15 @@ public class RunSelectorService : MonoBehaviour
             return false;
         }
 
-        return gameStateService.TrySetState(GameStateId.InRun);
+        string sceneName = runContextService.SelectedLevel.SceneName;
+        if (string.IsNullOrWhiteSpace(sceneName))
+        {
+            return false;
+        }
+
+        RunSceneRequest.SetPendingLevelScene(sceneName);
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(gameplayCommonSceneName, LoadSceneMode.Single);
+        return true;
     }
 }
