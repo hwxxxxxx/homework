@@ -27,6 +27,19 @@ public class WaveManager : MonoBehaviour
     public event Action<int> OnWaveStarted;
     public event Action<int> OnWaveCleared;
 
+    private void Awake()
+    {
+        if (gameStateService == null)
+        {
+            gameStateService = FindObjectOfType<GameStateMachineService>(true);
+        }
+
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+    }
+
     private void OnEnable()
     {
         if (gameStateService != null)

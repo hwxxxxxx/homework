@@ -14,6 +14,14 @@ public class AchievementService : MonoBehaviour
         progressService = service;
     }
 
+    private void Awake()
+    {
+        if (progressService == null)
+        {
+            progressService = FindObjectOfType<ProgressService>(true);
+        }
+    }
+
     private void OnEnable()
     {
         bossDefeatedSubscription = EventBus.Subscribe<BossDefeatedEvent>(HandleBossDefeated);

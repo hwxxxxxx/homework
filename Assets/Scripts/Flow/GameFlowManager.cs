@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameFlowManager : MonoBehaviour
 {
@@ -12,7 +10,18 @@ public class GameFlowManager : MonoBehaviour
     
     private bool runStarted;
 
-    public event Action OnCombatStarted;
+    private void Awake()
+    {
+        if (gameStateService == null)
+        {
+            gameStateService = FindObjectOfType<GameStateMachineService>(true);
+        }
+
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+    }
 
     private void OnEnable()
     {
@@ -41,24 +50,6 @@ public class GameFlowManager : MonoBehaviour
         }
 
         runStarted = false;
-    }
-
-    public void NotifyAllWavesCleared()
-    {
-        if (!runStarted || gameStateService == null || gameStateService.CurrentState != GameStateId.InRun)
-        {
-            return;
-        }
-
-        if (runContextService != null && runContextService.IsRunActive)
-        {
-            runContextService.CompleteRun(true);
-        }
-
-        if (gameStateService != null)
-        {
-            gameStateService.TrySetState(GameStateId.RunResult);
-        }
     }
 
     public void TriggerFail()
@@ -98,8 +89,10 @@ public class GameFlowManager : MonoBehaviour
 
         RunSceneRequest.Clear();
         Time.timeScale = 1f;
-        SceneManager.LoadScene(baseSceneName, LoadSceneMode.Single);
-        return true;
+        return LoadingScreenService.TryLoadSceneSingle(
+            baseSceneName,
+            "Returning to base...",
+            keepVisibleAfterSceneLoad: false);
     }
 
     private void HandlePlayerDied()
@@ -110,16 +103,6 @@ public class GameFlowManager : MonoBehaviour
 
     private void HandleGameStateChanged(GameStateId previous, GameStateId current)
     {
-        if (current == GameStateId.InRun)
-        {
-            if (!runStarted)
-            {
-                runStarted = true;
-                OnCombatStarted?.Invoke();
-            }
-            return;
-        }
-
-        runStarted = false;
+        runStarted = current == GameStateId.InRun;
     }
 }

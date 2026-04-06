@@ -12,6 +12,24 @@ public class GameplayRunBootstrap : MonoBehaviour
 
     private bool hasStarted;
 
+    private void Awake()
+    {
+        if (gameStateService == null)
+        {
+            gameStateService = FindObjectOfType<GameStateMachineService>(true);
+        }
+
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+
+        if (spawnManager == null)
+        {
+            spawnManager = FindObjectOfType<SpawnManager>(true);
+        }
+    }
+
     private void Start()
     {
         if (hasStarted)
@@ -52,6 +70,8 @@ public class GameplayRunBootstrap : MonoBehaviour
             {
                 while (!loadOperation.isDone)
                 {
+                    float normalized = Mathf.Clamp01(loadOperation.progress / 0.9f);
+                    LoadingScreenService.SetProgress(0.15f + normalized * 0.55f);
                     yield return null;
                 }
             }
@@ -69,6 +89,7 @@ public class GameplayRunBootstrap : MonoBehaviour
             yield break;
         }
 
+        LoadingScreenService.SetProgress(0.75f);
         SceneManager.SetActiveScene(loadedLevelScene);
         LevelRuntimeBinding runtimeBinding = ResolveRuntimeBinding(loadedLevelScene);
         if (runtimeBinding == null)
@@ -78,6 +99,7 @@ public class GameplayRunBootstrap : MonoBehaviour
         }
 
         BuildNavMesh(runtimeBinding);
+        LoadingScreenService.SetProgress(0.88f);
         EnsureSpawnManagerReference();
         if (spawnManager == null)
         {
@@ -87,6 +109,7 @@ public class GameplayRunBootstrap : MonoBehaviour
 
         spawnManager.ConfigureRuntimeBinding(runtimeBinding);
         spawnManager.PrewarmForCurrentRun();
+        LoadingScreenService.SetProgress(0.97f);
 
         RunSceneRequest.Clear();
 
@@ -94,6 +117,9 @@ public class GameplayRunBootstrap : MonoBehaviour
         {
             gameStateService.TrySetState(GameStateId.InRun);
         }
+
+        LoadingScreenService.SetProgress(1f);
+        LoadingScreenService.Hide();
     }
 
     private string ResolveFallbackLevelScene()

@@ -184,9 +184,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd292a8f7f6ad943b0c99124bda4515, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  runSelectorService: {fileID: 1300059931}
-  levelUnlockService: {fileID: 1300059936}
-  progressService: {fileID: 1300059933}
+  runSelectorService: {fileID: 0}
+  levelUnlockService: {fileID: 0}
+  progressService: {fileID: 0}
   bodyLevel1Definition: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819,
     type: 2}
   bodyLevel2Definition: {fileID: 11400000, guid: b10a88e95222f894f8282d34c09058ae,
@@ -1213,12 +1213,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1300059930}
-  - component: {fileID: 1300059934}
-  - component: {fileID: 1300059933}
-  - component: {fileID: 1300059932}
-  - component: {fileID: 1300059931}
   - component: {fileID: 1300059935}
-  - component: {fileID: 1300059936}
   m_Layer: 0
   m_Name: BaseSystems
   m_TagString: Untagged
@@ -1243,62 +1238,6 @@ Transform:
   - {fileID: 65999487}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1300059931
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300059929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b060519daa102cc428406612cfb67b6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameStateService: {fileID: 1300059934}
-  runContextService: {fileID: 1300059932}
-  progressService: {fileID: 1300059933}
---- !u!114 &1300059932
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300059929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8123c37bcef716c43b07c4d941ff9c95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  progressService: {fileID: 1300059933}
-  defaultLevel: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819, type: 2}
---- !u!114 &1300059933
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300059929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d09422fbc3c85c43a8943475d1dc156, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  saveFileName: progress_save.json
-  initialUnlockedLevelId: body_1
---- !u!114 &1300059934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300059929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2188cff5b709831489b639acf93a5e2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  initialState: 1
 --- !u!114 &1300059935
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1317,20 +1256,6 @@ MonoBehaviour:
   normalCamera: {fileID: 1176052001}
   cameraController: {fileID: 675467526}
   collisionIgnoreTag: Player
---- !u!114 &1300059936
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300059929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af49914f29601dc4e8d8670488bf42e5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameStateService: {fileID: 1300059934}
-  progressService: {fileID: 1300059933}
 --- !u!1 &1355090672
 GameObject:
   m_ObjectHideFlags: 0

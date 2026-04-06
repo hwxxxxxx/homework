@@ -12,8 +12,6 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
 
     private void Awake()
     {
-        GamePauseController.EnsureBaseControllerExists();
-
         if (!ValidateReferences())
         {
             enabled = false;

@@ -20,6 +20,14 @@ public class SpawnManager : MonoBehaviour
     public event Action<int, EnemyBase> OnEnemySpawned;
     public event Action<int> OnWaveSpawnCompleted;
 
+    private void Awake()
+    {
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+    }
+
     public int WaveCount
     {
         get

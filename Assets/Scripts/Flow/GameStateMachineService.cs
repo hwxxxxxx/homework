@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class GameStateMachineService : MonoBehaviour, IGameStateService
+public class GameStateMachineService : MonoBehaviour
 {
     [SerializeField] private GameStateId initialState = GameStateId.Boot;
 

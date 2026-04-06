@@ -37,11 +37,12 @@ public class BaseSceneUIController : MonoBehaviour
     private void Awake()
     {
         uiDocument = GetComponent<UIDocument>();
-        if (runSelectorService == null || levelUnlockService == null || progressService == null ||
-            bodyLevel1Definition == null || bodyLevel2Definition == null ||
+        ResolveRuntimeServices();
+
+        if (bodyLevel1Definition == null || bodyLevel2Definition == null ||
             soulLevel1Definition == null || memoryLevel1Definition == null)
         {
-            Debug.LogError("BaseSceneUIController references are not fully assigned.", this);
+            Debug.LogError("BaseSceneUIController level definitions are not fully assigned.", this);
             enabled = false;
             return;
         }
@@ -49,6 +50,7 @@ public class BaseSceneUIController : MonoBehaviour
 
     private void OnEnable()
     {
+        ResolveRuntimeServices();
         BindUi();
         HideAllPanels();
         SetInteractionHint(string.Empty);
@@ -399,5 +401,23 @@ public class BaseSceneUIController : MonoBehaviour
 
         UnityEngine.Cursor.visible = false;
         UnityEngine.Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void ResolveRuntimeServices()
+    {
+        if (runSelectorService == null)
+        {
+            runSelectorService = FindObjectOfType<RunSelectorService>(true);
+        }
+
+        if (levelUnlockService == null)
+        {
+            levelUnlockService = FindObjectOfType<LevelUnlockService>(true);
+        }
+
+        if (progressService == null)
+        {
+            progressService = FindObjectOfType<ProgressService>(true);
+        }
     }
 }

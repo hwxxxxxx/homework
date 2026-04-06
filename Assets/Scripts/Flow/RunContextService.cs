@@ -19,6 +19,11 @@ public class RunContextService : MonoBehaviour
 
     private void Awake()
     {
+        if (progressService == null)
+        {
+            progressService = FindObjectOfType<ProgressService>(true);
+        }
+
         if (defaultLevel != null)
         {
             SetSelectedLevel(defaultLevel);

@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class RunSelectorService : MonoBehaviour
 {
@@ -7,6 +6,25 @@ public class RunSelectorService : MonoBehaviour
     [SerializeField] private RunContextService runContextService;
     [SerializeField] private ProgressService progressService;
     [SerializeField] private string gameplayCommonSceneName = "GameplayCommon";
+    [SerializeField] private string loadingMessage = "Preparing mission...";
+
+    private void Awake()
+    {
+        if (gameStateService == null)
+        {
+            gameStateService = FindObjectOfType<GameStateMachineService>(true);
+        }
+
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+
+        if (progressService == null)
+        {
+            progressService = FindObjectOfType<ProgressService>(true);
+        }
+    }
 
     public bool TrySelectLevel(LevelDefinitionAsset levelDefinition)
     {
@@ -59,7 +77,9 @@ public class RunSelectorService : MonoBehaviour
 
         RunSceneRequest.SetPendingLevelScene(sceneName);
         Time.timeScale = 1f;
-        SceneManager.LoadScene(gameplayCommonSceneName, LoadSceneMode.Single);
-        return true;
+        return LoadingScreenService.TryLoadSceneSingle(
+            gameplayCommonSceneName,
+            loadingMessage,
+            keepVisibleAfterSceneLoad: true);
     }
 }

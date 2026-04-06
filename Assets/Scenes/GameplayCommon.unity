@@ -1017,7 +1017,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spawnPoints: []
-  runContextService: {fileID: 1546930309}
+  runContextService: {fileID: 0}
   playerTarget: {fileID: 1755864932}
   mainCamera: {fileID: 1911171989}
   enemyHealthBarCanvas: {fileID: 162286891}
@@ -2658,8 +2658,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e925e2b7713b6b14badd57e920f79042, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameStateService: {fileID: 1546930306}
-  runContextService: {fileID: 1546930309}
+  gameStateService: {fileID: 0}
+  runContextService: {fileID: 0}
   gameFlowManager: {fileID: 1546930304}
   victoryPanel: {fileID: 1361808278}
   failPanel: {fileID: 710644630}
@@ -2852,74 +2852,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1481207215}
   m_CullTransparentMesh: 1
---- !u!1 &1487410703
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1487410706}
-  - component: {fileID: 1487410705}
-  - component: {fileID: 1487410704}
-  m_Layer: 0
-  m_Name: EventSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1487410704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1487410703}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
---- !u!114 &1487410705
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1487410703}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_FirstSelected: {fileID: 0}
-  m_sendNavigationEvents: 1
-  m_DragThreshold: 10
---- !u!4 &1487410706
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1487410703}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1492247839
 GameObject:
   m_ObjectHideFlags: 0
@@ -3048,9 +2980,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1546930305}
   - component: {fileID: 1546930304}
-  - component: {fileID: 1546930306}
-  - component: {fileID: 1546930309}
-  - component: {fileID: 1546930308}
   - component: {fileID: 1546930310}
   m_Layer: 0
   m_Name: GameFlowRoot
@@ -3072,8 +3001,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerStats: {fileID: 1755864935}
-  gameStateService: {fileID: 1546930306}
-  runContextService: {fileID: 1546930309}
+  gameStateService: {fileID: 0}
+  runContextService: {fileID: 0}
   baseSceneName: BaseScene_Main
 --- !u!4 &1546930305
 Transform:
@@ -3090,47 +3019,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1015510186}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1546930306
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546930303}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2188cff5b709831489b639acf93a5e2a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  initialState: 3
---- !u!114 &1546930308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546930303}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d09422fbc3c85c43a8943475d1dc156, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  saveFileName: progress_save.json
-  initialUnlockedLevelId: body_1
---- !u!114 &1546930309
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546930303}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8123c37bcef716c43b07c4d941ff9c95, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  progressService: {fileID: 1546930308}
-  defaultLevel: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819, type: 2}
 --- !u!114 &1546930310
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3143,8 +3031,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 097fa28038843644fadf808745bb6e75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameStateService: {fileID: 1546930306}
-  runContextService: {fileID: 1546930309}
+  gameStateService: {fileID: 0}
+  runContextService: {fileID: 0}
   spawnManager: {fileID: 431065309}
   availableLevels:
   - {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819, type: 2}
@@ -3849,8 +3737,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerStats: {fileID: 1755864935}
-  gameStateService: {fileID: 1546930306}
-  runContextService: {fileID: 1546930309}
+  gameStateService: {fileID: 0}
+  runContextService: {fileID: 0}
   spawnManager: {fileID: 431065309}
   playerEffectsOnWaveCleared: []
   playerEffectController: {fileID: 0}
@@ -4489,7 +4377,6 @@ SceneRoots:
   - {fileID: 1492247841}
   - {fileID: 1755864932}
   - {fileID: 162286892}
-  - {fileID: 1487410706}
   - {fileID: 2105479131}
   - {fileID: 884479626}
   - {fileID: 465801387}

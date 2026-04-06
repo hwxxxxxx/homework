@@ -14,6 +14,16 @@ public class GameResultUIController : MonoBehaviour
 
     private void Awake()
     {
+        if (gameStateService == null)
+        {
+            gameStateService = FindObjectOfType<GameStateMachineService>(true);
+        }
+
+        if (runContextService == null)
+        {
+            runContextService = FindObjectOfType<RunContextService>(true);
+        }
+
         if (gameFlowManager == null)
         {
             gameFlowManager = FindObjectOfType<GameFlowManager>();

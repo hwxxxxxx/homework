@@ -117,7 +117,8 @@ public static class PoolService
         }
 
         GameObject rootObject = new GameObject("GlobalObjectPools");
-        Object.DontDestroyOnLoad(rootObject);
+        PersistentRuntimeRoot runtimeRoot = Object.FindObjectOfType<PersistentRuntimeRoot>(true);
+        rootObject.transform.SetParent(runtimeRoot.transform, false);
         poolRoot = rootObject.transform;
         coroutineRunner = rootObject.AddComponent<PoolCoroutineRunner>();
     }
@@ -130,6 +131,18 @@ public static class PoolService
         }
 
         EnsureRoot();
+    }
+
+    public static void ClearAllPools()
+    {
+        Pools.Clear();
+        if (poolRoot != null)
+        {
+            Object.Destroy(poolRoot.gameObject);
+        }
+
+        poolRoot = null;
+        coroutineRunner = null;
     }
 
     private class PoolCoroutineRunner : MonoBehaviour
