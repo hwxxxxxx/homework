@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="HUD.uss" />
+    <ui:VisualElement name="hud-root" class="hud-root">
+        <ui:Label name="health-text" class="hud-health" text="HP 0 / 0" />
+        <ui:Label name="ammo-text" class="hud-ammo" text="0 / 0" />
+        <ui:Label name="skill-cooldown-text" class="hud-skill-text" text="Q READY" />
+        <ui:VisualElement name="skill-cooldown-bg" class="hud-skill-bg">
+            <ui:VisualElement name="skill-cooldown-fill" class="hud-skill-fill" />
+        </ui:VisualElement>
+        <ui:Label name="tutorial-text" class="hud-tutorial" text="RMB: Aim&#10;LMB: Fire&#10;Shift: Sprint&#10;Space: Jump&#10;R: Reload&#10;Q: Skill" />
+    </ui:VisualElement>
+</ui:UXML>

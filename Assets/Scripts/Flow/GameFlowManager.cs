@@ -87,7 +87,6 @@ public class GameFlowManager : MonoBehaviour
             return false;
         }
 
-        RunSceneRequest.Clear();
         Time.timeScale = 1f;
         return LoadingScreenService.TryLoadSceneSingle(
             baseSceneName,

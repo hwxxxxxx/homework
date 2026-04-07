@@ -1,16 +1,19 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public static class LoadingScreenService
 {
     private const string RootName = "GlobalLoadingScreenRoot";
+    private static Font runtimeFont;
 
     private static LoadingScreenRunner runner;
-    private static CanvasGroup canvasGroup;
-    private static Slider progressSlider;
-    private static Text statusText;
+    private static UIDocument document;
+    private static PanelSettings panelSettings;
+    private static VisualElement root;
+    private static Label statusText;
+    private static VisualElement progressFill;
     private static bool isTransitionInProgress;
 
     public static bool IsTransitionInProgress => isTransitionInProgress;
@@ -32,10 +35,8 @@ public static class LoadingScreenService
 
     public static void SetProgress(float normalizedProgress)
     {
-        if (progressSlider != null)
-        {
-            progressSlider.value = Mathf.Clamp01(normalizedProgress);
-        }
+        float value = Mathf.Clamp01(normalizedProgress);
+        progressFill.style.width = Length.Percent(value * 100f);
     }
 
     public static void Hide()
@@ -80,22 +81,22 @@ public static class LoadingScreenService
 
     private static void HideImmediate()
     {
-        canvasGroup.alpha = 0f;
-        canvasGroup.blocksRaycasts = false;
+        root.style.display = DisplayStyle.None;
         SetStatus(string.Empty);
         SetProgress(0f);
         isTransitionInProgress = false;
         Object.Destroy(runner.gameObject);
         runner = null;
-        canvasGroup = null;
-        progressSlider = null;
+        document = null;
+        panelSettings = null;
+        root = null;
+        progressFill = null;
         statusText = null;
     }
 
     private static void SetVisible(bool visible)
     {
-        canvasGroup.alpha = visible ? 1f : 0f;
-        canvasGroup.blocksRaycasts = visible;
+        root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     private static void SetStatus(string message)
@@ -110,115 +111,70 @@ public static class LoadingScreenService
             return;
         }
 
+        runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
         GameObject root = new GameObject(RootName);
         Object.DontDestroyOnLoad(root);
         runner = root.AddComponent<LoadingScreenRunner>();
 
-        GameObject canvasObject = new GameObject("LoadingCanvas",
-            typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster), typeof(CanvasGroup));
-        canvasObject.transform.SetParent(root.transform, false);
+        panelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+        panelSettings.scaleMode = PanelScaleMode.ScaleWithScreenSize;
+        panelSettings.referenceResolution = new Vector2Int(1920, 1080);
+        panelSettings.match = 0.5f;
+        panelSettings.clearColor = false;
+        panelSettings.sortingOrder = 6000;
 
-        Canvas canvas = canvasObject.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 6000;
+        document = root.AddComponent<UIDocument>();
+        document.panelSettings = panelSettings;
 
-        CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
+        VisualElement visualRoot = document.rootVisualElement;
+        visualRoot.style.flexGrow = 1f;
+        visualRoot.style.position = Position.Absolute;
+        visualRoot.style.left = 0f;
+        visualRoot.style.top = 0f;
+        visualRoot.style.right = 0f;
+        visualRoot.style.bottom = 0f;
 
-        canvasGroup = canvasObject.GetComponent<CanvasGroup>();
-        canvasGroup.alpha = 0f;
-        canvasGroup.blocksRaycasts = false;
-        canvasGroup.interactable = false;
+        LoadingScreenService.root = new VisualElement();
+        LoadingScreenService.root.style.position = Position.Absolute;
+        LoadingScreenService.root.style.left = 0f;
+        LoadingScreenService.root.style.top = 0f;
+        LoadingScreenService.root.style.right = 0f;
+        LoadingScreenService.root.style.bottom = 0f;
+        LoadingScreenService.root.style.backgroundColor = new Color(0f, 0f, 0f, 0.92f);
+        LoadingScreenService.root.style.alignItems = Align.Center;
+        LoadingScreenService.root.style.justifyContent = Justify.Center;
+        LoadingScreenService.root.style.display = DisplayStyle.None;
 
-        CreateBackground(canvasObject.transform);
-        statusText = CreateStatusText(canvasObject.transform);
-        progressSlider = CreateProgressBar(canvasObject.transform);
-    }
+        VisualElement content = new VisualElement();
+        content.style.width = 760f;
+        content.style.alignItems = Align.Stretch;
 
-    private static void CreateBackground(Transform parent)
-    {
-        GameObject background = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        background.transform.SetParent(parent, false);
+        statusText = new Label("Loading...");
+        statusText.style.unityFont = runtimeFont;
+        statusText.style.color = Color.white;
+        statusText.style.fontSize = 34;
+        statusText.style.unityTextAlign = TextAnchor.MiddleCenter;
+        statusText.style.marginBottom = 20f;
+        content.Add(statusText);
 
-        RectTransform rect = background.GetComponent<RectTransform>();
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.one;
-        rect.offsetMin = Vector2.zero;
-        rect.offsetMax = Vector2.zero;
+        VisualElement progressBg = new VisualElement();
+        progressBg.style.height = 30f;
+        progressBg.style.backgroundColor = new Color(1f, 1f, 1f, 0.14f);
+        progressBg.style.paddingLeft = 4f;
+        progressBg.style.paddingRight = 4f;
+        progressBg.style.paddingTop = 4f;
+        progressBg.style.paddingBottom = 4f;
 
-        Image image = background.GetComponent<Image>();
-        image.color = new Color(0f, 0f, 0f, 0.92f);
-    }
+        progressFill = new VisualElement();
+        progressFill.style.height = Length.Percent(100f);
+        progressFill.style.width = Length.Percent(0f);
+        progressFill.style.backgroundColor = new Color(0.2f, 0.78f, 0.37f, 1f);
+        progressBg.Add(progressFill);
 
-    private static Text CreateStatusText(Transform parent)
-    {
-        GameObject textObject = new GameObject("StatusText", typeof(RectTransform), typeof(CanvasRenderer), typeof(Text));
-        textObject.transform.SetParent(parent, false);
-
-        RectTransform rect = textObject.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(760f, 80f);
-        rect.anchoredPosition = new Vector2(0f, 40f);
-
-        Text text = textObject.GetComponent<Text>();
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 34;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-        text.text = "Loading...";
-        return text;
-    }
-
-    private static Slider CreateProgressBar(Transform parent)
-    {
-        GameObject sliderObject = new GameObject("ProgressBar",
-            typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Slider));
-        sliderObject.transform.SetParent(parent, false);
-
-        RectTransform sliderRect = sliderObject.GetComponent<RectTransform>();
-        sliderRect.anchorMin = new Vector2(0.5f, 0.5f);
-        sliderRect.anchorMax = new Vector2(0.5f, 0.5f);
-        sliderRect.sizeDelta = new Vector2(760f, 30f);
-        sliderRect.anchoredPosition = new Vector2(0f, -40f);
-
-        Image background = sliderObject.GetComponent<Image>();
-        background.color = new Color(1f, 1f, 1f, 0.14f);
-
-        Slider slider = sliderObject.GetComponent<Slider>();
-        slider.minValue = 0f;
-        slider.maxValue = 1f;
-        slider.wholeNumbers = false;
-        slider.value = 0f;
-        slider.transition = Selectable.Transition.None;
-
-        GameObject fillArea = new GameObject("FillArea", typeof(RectTransform));
-        fillArea.transform.SetParent(sliderObject.transform, false);
-        RectTransform fillAreaRect = fillArea.GetComponent<RectTransform>();
-        fillAreaRect.anchorMin = Vector2.zero;
-        fillAreaRect.anchorMax = Vector2.one;
-        fillAreaRect.offsetMin = new Vector2(4f, 4f);
-        fillAreaRect.offsetMax = new Vector2(-4f, -4f);
-
-        GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fill.transform.SetParent(fillArea.transform, false);
-        RectTransform fillRect = fill.GetComponent<RectTransform>();
-        fillRect.anchorMin = Vector2.zero;
-        fillRect.anchorMax = Vector2.one;
-        fillRect.offsetMin = Vector2.zero;
-        fillRect.offsetMax = Vector2.zero;
-
-        Image fillImage = fill.GetComponent<Image>();
-        fillImage.color = new Color(0.2f, 0.78f, 0.37f, 1f);
-
-        slider.fillRect = fillRect;
-        slider.targetGraphic = fillImage;
-        slider.direction = Slider.Direction.LeftToRight;
-        slider.handleRect = null;
-        return slider;
+        content.Add(progressBg);
+        LoadingScreenService.root.Add(content);
+        visualRoot.Add(LoadingScreenService.root);
     }
 
     private sealed class LoadingScreenRunner : MonoBehaviour

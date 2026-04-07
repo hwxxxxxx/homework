@@ -1,6 +1,6 @@
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 
 public class PlayerHUD : MonoBehaviour
 {
@@ -9,74 +9,65 @@ public class PlayerHUD : MonoBehaviour
     [SerializeField] private PlayerStats playerStats;
     [SerializeField] private PlayerSkillSystem playerSkillSystem;
     [SerializeField] private EffectController playerEffectController;
-
-    [Header("Ammo UI")]
-    [SerializeField] private TextMeshProUGUI ammoText;
-
-    [Header("Health UI")]
-    [SerializeField] private TextMeshProUGUI healthText;
-
-    [Header("Skill Cooldown UI")]
-    [SerializeField] private Image skillCooldownFillImage;
-    [SerializeField] private TextMeshProUGUI skillCooldownText;
-
-    [Header("Tutorial UI")]
-    [SerializeField] private TextMeshProUGUI tutorialText;
     [SerializeField, TextArea(2, 4)] private string tutorialMessage =
         "RMB: Aim\nLMB: Fire\nShift: Sprint\nSpace: Jump\nR: Reload\nQ: Skill";
 
     private WeaponBase currentWeapon;
+    private UIDocument hudDocument;
+    private Label ammoText;
+    private Label healthText;
+    private Label skillCooldownText;
+    private Label tutorialText;
+    private VisualElement skillCooldownFill;
+    private VisualElement hudRoot;
 
-    private void Start()
+    private void Awake()
     {
-        if (playerCombat == null || playerStats == null || playerSkillSystem == null || playerEffectController == null ||
-            ammoText == null || healthText == null || skillCooldownFillImage == null || skillCooldownText == null ||
-            tutorialText == null)
-        {
-            Debug.LogError("PlayerHUD references are not fully assigned.", this);
-            enabled = false;
-            return;
-        }
-
+        hudDocument = GetComponent<UIDocument>();
+        VisualElement root = hudDocument.rootVisualElement;
+        hudRoot = root.Q<VisualElement>("hud-root");
+        ammoText = root.Q<Label>("ammo-text");
+        healthText = root.Q<Label>("health-text");
+        skillCooldownText = root.Q<Label>("skill-cooldown-text");
+        tutorialText = root.Q<Label>("tutorial-text");
+        skillCooldownFill = root.Q<VisualElement>("skill-cooldown-fill");
         tutorialText.text = tutorialMessage;
-
-        playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
-        HandleCurrentWeaponChanged(playerCombat.GetCurrentWeapon());
-
-        if (skillCooldownFillImage != null && skillCooldownFillImage.type != Image.Type.Filled)
-        {
-            skillCooldownFillImage.type = Image.Type.Filled;
-            skillCooldownFillImage.fillMethod = Image.FillMethod.Radial360;
-            skillCooldownFillImage.fillClockwise = false;
-            skillCooldownFillImage.fillOrigin = (int)Image.Origin360.Top;
-        }
-
-        playerStats.OnHealthChanged += HandlePlayerHealthChanged;
-        HandlePlayerHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
-
-        RefreshSkillCooldownUI();
     }
 
-    private void Update()
+    private void OnEnable()
     {
-        RefreshSkillCooldownUI();
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+        RebindForScene(SceneManager.GetActiveScene().name);
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        UnbindPlayerEvents();
     }
 
     private void OnDestroy()
     {
-        if (playerCombat != null)
-        {
-            playerCombat.OnCurrentWeaponChanged -= HandleCurrentWeaponChanged;
-        }
+        UnbindPlayerEvents();
+    }
 
-        if (playerStats != null)
+    private void Update()
+    {
+        if (hudRoot.style.display == DisplayStyle.Flex)
         {
-            playerStats.OnHealthChanged -= HandlePlayerHealthChanged;
-        }
+            WeaponBase latestWeapon = playerCombat.GetCurrentWeapon();
+            if (latestWeapon != currentWeapon)
+            {
+                HandleCurrentWeaponChanged(latestWeapon);
+            }
 
-        if (currentWeapon != null)
-        {
-            currentWeapon.OnAmmoChanged -= UpdateAmmoText;
+            if (currentWeapon != null)
+            {
+                UpdateAmmoText(currentWeapon.GetCurrentAmmoInMagazine(), currentWeapon.GetReserveAmmo());
+            }
+
+            HandlePlayerHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
+            RefreshSkillCooldownUI();
         }
     }
 
@@ -103,11 +94,6 @@ public class PlayerHUD : MonoBehaviour
 
     private void HandlePlayerHealthChanged(int current, int max)
     {
-        if (healthText == null)
-        {
-            return;
-        }
-
         healthText.text = $"HP {current} / {max}";
     }
 
@@ -118,9 +104,15 @@ public class PlayerHUD : MonoBehaviour
 
     private void RefreshSkillCooldownUI()
     {
-        SkillBase skill = playerSkillSystem != null ? playerSkillSystem.EquippedSkill : null;
-        EffectAsset cooldownEffect = skill != null ? skill.CooldownEffect : null;
-        if (skill == null || cooldownEffect == null || playerEffectController == null)
+        SkillBase skill = playerSkillSystem.EquippedSkill;
+        if (skill == null)
+        {
+            SetSkillCooldownUI(0f, true, 0f);
+            return;
+        }
+
+        EffectAsset cooldownEffect = skill.CooldownEffect;
+        if (cooldownEffect == null)
         {
             SetSkillCooldownUI(0f, true, 0f);
             return;
@@ -138,8 +130,75 @@ public class PlayerHUD : MonoBehaviour
 
     private void SetSkillCooldownUI(float fill, bool ready, float remaining)
     {
-        skillCooldownFillImage.fillAmount = fill;
-        skillCooldownFillImage.enabled = !ready;
+        skillCooldownFill.style.width = Length.Percent(fill * 100f);
+        skillCooldownFill.style.display = ready ? DisplayStyle.None : DisplayStyle.Flex;
         skillCooldownText.text = ready ? "Q READY" : $"Q {remaining:0.0}s";
+    }
+
+    private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        RebindForScene(scene.name);
+    }
+
+    private void RebindForScene(string sceneName)
+    {
+        bool gameplayScene = IsGameplayScene(sceneName);
+        hudRoot.style.display = gameplayScene ? DisplayStyle.Flex : DisplayStyle.None;
+
+        if (!gameplayScene)
+        {
+            UnbindPlayerEvents();
+            UpdateAmmoText(0, 0);
+            HandlePlayerHealthChanged(0, 0);
+            SetSkillCooldownUI(0f, true, 0f);
+            return;
+        }
+
+        BindPlayerReferences();
+    }
+
+    private void BindPlayerReferences()
+    {
+        UnbindPlayerEvents();
+
+        playerCombat = FindObjectOfType<PlayerCombat>(true);
+        playerStats = FindObjectOfType<PlayerStats>(true);
+        playerSkillSystem = FindObjectOfType<PlayerSkillSystem>(true);
+        playerEffectController = FindObjectOfType<EffectController>(true);
+
+        playerCombat.OnCurrentWeaponChanged += HandleCurrentWeaponChanged;
+        HandleCurrentWeaponChanged(playerCombat.GetCurrentWeapon());
+
+        playerStats.OnHealthChanged += HandlePlayerHealthChanged;
+        HandlePlayerHealthChanged(playerStats.CurrentHealth, playerStats.MaxHealth);
+
+        RefreshSkillCooldownUI();
+    }
+
+    private void UnbindPlayerEvents()
+    {
+        if (playerCombat != null)
+        {
+            playerCombat.OnCurrentWeaponChanged -= HandleCurrentWeaponChanged;
+        }
+
+        if (playerStats != null)
+        {
+            playerStats.OnHealthChanged -= HandlePlayerHealthChanged;
+        }
+
+        if (currentWeapon != null)
+        {
+            currentWeapon.OnAmmoChanged -= UpdateAmmoText;
+            currentWeapon = null;
+        }
+    }
+
+    private static bool IsGameplayScene(string sceneName)
+    {
+        return sceneName == "GameScene" ||
+               sceneName == "Level_Body_2" ||
+               sceneName == "Level_Soul_1" ||
+               sceneName == "Level_Memory_1";
     }
 }

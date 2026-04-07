@@ -7,7 +7,6 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
     [SerializeField] private Transform cameraRoot;
     [SerializeField] private Camera mainCamera;
     [SerializeField] private CinemachineVirtualCamera normalCamera;
-    [SerializeField] private PlayerCameraAimController cameraController;
     [SerializeField] private string collisionIgnoreTag = "Player";
 
     private void Awake()
@@ -20,14 +19,13 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
 
         SetupBrain();
         SetupNormalCamera();
-        cameraController.ConfigureBaseMode(gameInput, cameraRoot, normalCamera);
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
     private bool ValidateReferences()
     {
-        if (gameInput != null && cameraRoot != null && mainCamera != null && normalCamera != null && cameraController != null)
+        if (gameInput != null && cameraRoot != null && mainCamera != null && normalCamera != null)
         {
             return true;
         }

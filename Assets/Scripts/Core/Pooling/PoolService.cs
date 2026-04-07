@@ -135,6 +135,11 @@ public static class PoolService
 
     public static void ClearAllPools()
     {
+        foreach (KeyValuePair<GameObject, GameObjectPool> pair in Pools)
+        {
+            pair.Value.Clear();
+        }
+
         Pools.Clear();
         if (poolRoot != null)
         {

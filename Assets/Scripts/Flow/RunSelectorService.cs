@@ -5,7 +5,6 @@ public class RunSelectorService : MonoBehaviour
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private RunContextService runContextService;
     [SerializeField] private ProgressService progressService;
-    [SerializeField] private string gameplayCommonSceneName = "GameplayCommon";
     [SerializeField] private string loadingMessage = "Preparing mission...";
 
     private void Awake()
@@ -75,11 +74,10 @@ public class RunSelectorService : MonoBehaviour
             return false;
         }
 
-        RunSceneRequest.SetPendingLevelScene(sceneName);
         Time.timeScale = 1f;
         return LoadingScreenService.TryLoadSceneSingle(
-            gameplayCommonSceneName,
+            sceneName,
             loadingMessage,
-            keepVisibleAfterSceneLoad: true);
+            keepVisibleAfterSceneLoad: false);
     }
 }

@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class SpawnManager : MonoBehaviour
 {
@@ -11,7 +10,6 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private RunContextService runContextService;
     [SerializeField] private Transform playerTarget;
     [SerializeField] private Camera mainCamera;
-    [SerializeField] private Canvas enemyHealthBarCanvas;
     [SerializeField] private bool randomSpawnPoint = true;
     [SerializeField] private bool prewarmPoolsOnStart = true;
 
@@ -226,7 +224,7 @@ public class SpawnManager : MonoBehaviour
         }
 
         EnemyWorldHealthBar healthBar = enemy.GetComponent<EnemyWorldHealthBar>();
-        healthBar.ConfigurePresentation(enemyHealthBarCanvas, mainCamera);
+        healthBar.ConfigurePresentation(mainCamera);
     }
 
     private WaveConfigAsset GetActiveWaveConfig()

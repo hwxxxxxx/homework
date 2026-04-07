@@ -1,17 +1,21 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 [RequireComponent(typeof(EnemyStats))]
 public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 {
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 2.2f, 0f);
     [SerializeField] private Vector2 size = new Vector2(72f, 8f);
-    [SerializeField] private Canvas canvas;
     [SerializeField] private Camera mainCamera;
 
+    private static GameObject overlayRootObject;
+    private static UIDocument overlayDocument;
+    private static PanelSettings overlayPanelSettings;
+    private static VisualElement overlayRoot;
+
     private EnemyStats enemyStats;
-    private RectTransform rectTransform;
-    private Image fillImage;
+    private VisualElement barRoot;
+    private VisualElement fillElement;
 
     private void Awake()
     {
@@ -28,160 +32,109 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
             HandleHealthChanged(enemyStats.CurrentHealth, enemyStats.MaxHealth);
         }
 
-        if (rectTransform != null)
-        {
-            rectTransform.gameObject.SetActive(true);
-        }
+        barRoot.style.display = DisplayStyle.Flex;
     }
 
     private void LateUpdate()
     {
-        if (rectTransform == null || mainCamera == null || canvas == null)
-        {
-            return;
-        }
-
         Vector3 worldPosition = transform.position + worldOffset;
         Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
         if (screenPosition.z <= 0f)
         {
-            rectTransform.gameObject.SetActive(false);
+            barRoot.style.display = DisplayStyle.None;
             return;
         }
 
-        if (!rectTransform.gameObject.activeSelf)
-        {
-            rectTransform.gameObject.SetActive(true);
-        }
-
-        RectTransform canvasRect = canvas.transform as RectTransform;
-        if (canvasRect == null)
-        {
-            return;
-        }
-
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvasRect,
-            screenPosition,
-            null,
-            out Vector2 localPoint
-        );
-        rectTransform.anchoredPosition = localPoint;
+        barRoot.style.display = DisplayStyle.Flex;
+        barRoot.style.left = screenPosition.x - (size.x * 0.5f);
+        barRoot.style.top = (Screen.height - screenPosition.y) - (size.y * 0.5f);
     }
 
     private void OnDisable()
     {
-        if (enemyStats != null)
-        {
-            enemyStats.OnHealthChanged -= HandleHealthChanged;
-        }
-
-        if (rectTransform != null)
-        {
-            rectTransform.gameObject.SetActive(false);
-        }
+        enemyStats.OnHealthChanged -= HandleHealthChanged;
+        barRoot.style.display = DisplayStyle.None;
     }
 
     private void OnDestroy()
     {
-        if (rectTransform != null)
-        {
-            Destroy(rectTransform.gameObject);
-        }
+        barRoot.RemoveFromHierarchy();
     }
 
     public void OnSpawnedFromPool()
     {
-        if (rectTransform != null)
-        {
-            rectTransform.gameObject.SetActive(true);
-        }
-
-        if (enemyStats != null)
-        {
-            HandleHealthChanged(enemyStats.CurrentHealth, enemyStats.MaxHealth);
-        }
+        barRoot.style.display = DisplayStyle.Flex;
+        HandleHealthChanged(enemyStats.CurrentHealth, enemyStats.MaxHealth);
     }
 
     public void OnDespawnedToPool()
     {
-        if (rectTransform != null)
-        {
-            rectTransform.gameObject.SetActive(false);
-        }
+        barRoot.style.display = DisplayStyle.None;
     }
 
-    public void ConfigurePresentation(Canvas targetCanvas, Camera targetCamera)
+    public void ConfigurePresentation(Camera targetCamera)
     {
-        canvas = targetCanvas;
         mainCamera = targetCamera;
         EnsureWidget();
     }
 
     private void HandleHealthChanged(int current, int max)
     {
-        if (fillImage == null)
-        {
-            return;
-        }
-
         float normalized = max <= 0 ? 0f : Mathf.Clamp01((float)current / max);
-        fillImage.fillAmount = normalized;
-        fillImage.rectTransform.localScale = new Vector3(Mathf.Max(0.001f, normalized), 1f, 1f);
+        fillElement.style.width = Length.Percent(normalized * 100f);
     }
 
     private void EnsureWidget()
     {
-        if (canvas == null || mainCamera == null)
+        EnsureOverlay();
+
+        if (barRoot != null)
         {
             return;
         }
 
-        string widgetName = $"HP_{GetInstanceID()}";
-        Transform existing = canvas.transform.Find(widgetName);
-        if (existing != null)
-        {
-            rectTransform = existing as RectTransform;
-            fillImage = existing.Find("Fill")?.GetComponent<Image>();
-            ConfigureFillImage(fillImage);
-            return;
-        }
+        barRoot = new VisualElement();
+        barRoot.style.position = Position.Absolute;
+        barRoot.style.width = size.x;
+        barRoot.style.height = size.y;
+        barRoot.style.backgroundColor = new Color(0f, 0f, 0f, 0.65f);
+        barRoot.style.paddingLeft = 1f;
+        barRoot.style.paddingRight = 1f;
+        barRoot.style.paddingTop = 1f;
+        barRoot.style.paddingBottom = 1f;
 
-        GameObject root = new GameObject(widgetName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        root.transform.SetParent(canvas.transform, false);
-        rectTransform = root.GetComponent<RectTransform>();
-        rectTransform.sizeDelta = size;
+        fillElement = new VisualElement();
+        fillElement.style.height = Length.Percent(100f);
+        fillElement.style.width = Length.Percent(100f);
+        fillElement.style.backgroundColor = new Color(0.15f, 0.95f, 0.25f, 0.95f);
+        barRoot.Add(fillElement);
 
-        Image background = root.GetComponent<Image>();
-        background.color = new Color(0f, 0f, 0f, 0.65f);
-
-        GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
-        fill.transform.SetParent(root.transform, false);
-        RectTransform fillRect = fill.GetComponent<RectTransform>();
-        fillRect.anchorMin = Vector2.zero;
-        fillRect.anchorMax = Vector2.one;
-        fillRect.pivot = new Vector2(0f, 0.5f);
-        fillRect.offsetMin = new Vector2(1f, 1f);
-        fillRect.offsetMax = new Vector2(-1f, -1f);
-
-        fillImage = fill.GetComponent<Image>();
-        ConfigureFillImage(fillImage);
+        overlayRoot.Add(barRoot);
     }
 
-    private static void ConfigureFillImage(Image image)
+    private static void EnsureOverlay()
     {
-        if (image == null)
+        if (overlayRootObject != null)
         {
             return;
         }
 
-        image.color = new Color(0.15f, 0.95f, 0.25f, 0.95f);
-        image.type = Image.Type.Filled;
-        image.fillMethod = Image.FillMethod.Horizontal;
-        image.fillOrigin = 0;
-        image.fillAmount = 1f;
-        image.rectTransform.pivot = new Vector2(0f, 0.5f);
-        image.rectTransform.localScale = Vector3.one;
-    }
+        overlayRootObject = new GameObject("EnemyHealthOverlay");
+        overlayPanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
+        overlayPanelSettings.scaleMode = PanelScaleMode.ConstantPixelSize;
+        overlayPanelSettings.clearColor = false;
+        overlayPanelSettings.sortingOrder = 250;
 
+        overlayDocument = overlayRootObject.AddComponent<UIDocument>();
+        overlayDocument.panelSettings = overlayPanelSettings;
+
+        overlayRoot = overlayDocument.rootVisualElement;
+        overlayRoot.style.flexGrow = 1f;
+        overlayRoot.style.position = Position.Absolute;
+        overlayRoot.style.left = 0f;
+        overlayRoot.style.top = 0f;
+        overlayRoot.style.right = 0f;
+        overlayRoot.style.bottom = 0f;
+        overlayRoot.pickingMode = PickingMode.Ignore;
+    }
 }

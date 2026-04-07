@@ -1,0 +1,38 @@
+.result-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+}
+
+.result-card {
+    width: 420px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    background-color: rgba(20, 20, 20, 0.95);
+    display: none;
+}
+
+.result-title {
+    color: white;
+    font-size: 26px;
+    unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 12px;
+}
+
+.result-button {
+    height: 42px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    background-color: rgba(46, 46, 46, 1);
+    color: white;
+    font-size: 18px;
+}

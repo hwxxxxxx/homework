@@ -1,16 +1,14 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class GamePauseController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GameInput gameInput;
     [SerializeField] private GameStateMachineService gameStateService;
-    [SerializeField] private GameObject pausePanel;
-    [SerializeField] private Button returnToBaseButton;
-    [SerializeField] private Button returnToMainMenuButton;
 
     [Header("Cursor")]
     [SerializeField] private bool hideCursorDuringGameplay = true;
@@ -31,8 +29,20 @@ public class GamePauseController : MonoBehaviour
     private BaseSceneUIController baseSceneUIController;
     private bool hasAppliedCursorState;
     private bool lastShouldShowCursor;
-    private Button boundReturnToBaseButton;
-    private Button boundReturnButton;
+
+    private UIDocument pauseDocument;
+    private VisualElement pauseRoot;
+    private Button returnToBaseButton;
+    private Button returnToMainMenuButton;
+
+    private void Awake()
+    {
+        pauseDocument = GetComponent<UIDocument>();
+        VisualElement root = pauseDocument.rootVisualElement;
+        pauseRoot = root.Q<VisualElement>("pause-root");
+        returnToBaseButton = root.Q<Button>("return-base-btn");
+        returnToMainMenuButton = root.Q<Button>("return-mainmenu-btn");
+    }
 
     public void ConfigureMainMenuScene(string sceneName)
     {
@@ -63,42 +73,26 @@ public class GamePauseController : MonoBehaviour
     private void OnEnable()
     {
         gameStateService.OnStateChanged += HandleGameStateChanged;
+        returnToBaseButton.clicked += OnReturnToBasePressed;
+        returnToMainMenuButton.clicked += OnReturnToMainMenuPressed;
         HandleGameStateChanged(gameStateService.CurrentState, gameStateService.CurrentState);
-
-        RebindReturnToBaseButtonListener();
-        RebindReturnToMainMenuButtonListener();
     }
 
     private void OnDisable()
     {
-        if (boundReturnToBaseButton != null)
-        {
-            boundReturnToBaseButton.onClick.RemoveListener(OnReturnToBasePressed);
-            boundReturnToBaseButton = null;
-        }
-
-        if (boundReturnButton != null)
-        {
-            boundReturnButton.onClick.RemoveListener(OnReturnToMainMenuPressed);
-            boundReturnButton = null;
-        }
-
         gameStateService.OnStateChanged -= HandleGameStateChanged;
+        returnToBaseButton.clicked -= OnReturnToBasePressed;
+        returnToMainMenuButton.clicked -= OnReturnToMainMenuPressed;
 
         IsPaused = false;
         Time.timeScale = 1f;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
+        UnityEngine.Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
     }
 
     private void Update()
     {
         RefreshCursorStateIfNeeded();
-
-        if (gameInput == null)
-        {
-            return;
-        }
 
         if (!gameInput.IsPausePressed())
         {
@@ -116,11 +110,7 @@ public class GamePauseController : MonoBehaviour
     private void SetPaused(bool paused)
     {
         IsPaused = paused;
-
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(IsPaused && !isEndState);
-        }
+        SetPauseVisible(IsPaused && !isEndState);
 
         if (!isEndState)
         {
@@ -133,15 +123,15 @@ public class GamePauseController : MonoBehaviour
     private void ApplyCursorState()
     {
         bool shouldShowCursor = ShouldShowCursor();
-        Cursor.visible = shouldShowCursor;
+        UnityEngine.Cursor.visible = shouldShowCursor;
 
         if (!lockCursorDuringGameplay)
         {
-            Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
             return;
         }
 
-        Cursor.lockState = shouldShowCursor ? CursorLockMode.None : CursorLockMode.Locked;
+        UnityEngine.Cursor.lockState = shouldShowCursor ? CursorLockMode.None : CursorLockMode.Locked;
     }
 
     private bool ShouldShowCursor()
@@ -161,7 +151,7 @@ public class GamePauseController : MonoBehaviour
 
     private bool IsInteractiveUiOpen()
     {
-        if (pausePanel != null && pausePanel.activeInHierarchy)
+        if (pauseRoot != null && pauseRoot.style.display.value != DisplayStyle.None)
         {
             return true;
         }
@@ -204,11 +194,7 @@ public class GamePauseController : MonoBehaviour
             Time.timeScale = 0f;
         }
 
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(IsPaused && !isEndState);
-        }
-
+        SetPauseVisible(IsPaused && !isEndState);
         ApplyCursorState();
     }
 
@@ -236,14 +222,10 @@ public class GamePauseController : MonoBehaviour
     {
         isReturningToMainMenu = false;
         SetPaused(false);
-        if (pausePanel != null)
-        {
-            pausePanel.SetActive(false);
-        }
-
+        SetPauseVisible(false);
         Time.timeScale = 1f;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
+        UnityEngine.Cursor.visible = true;
+        UnityEngine.Cursor.lockState = CursorLockMode.None;
     }
 
     private IEnumerator ReturnToSceneRoutine(string targetSceneName, string loadingMessage)
@@ -251,9 +233,19 @@ public class GamePauseController : MonoBehaviour
         isReturningToMainMenu = true;
         IsPaused = false;
         Time.timeScale = 1f;
-        if (pausePanel != null)
+        SetPauseVisible(false);
+
+        if (string.Equals(targetSceneName, mainMenuSceneName))
         {
-            pausePanel.SetActive(false);
+            EventSystem[] systems = FindObjectsOfType<EventSystem>(true);
+            for (int i = 0; i < systems.Length; i++)
+            {
+                EventSystem system = systems[i];
+                if (system != null && system.name == "GlobalEventSystem")
+                {
+                    system.gameObject.SetActive(false);
+                }
+            }
         }
 
         if (string.Equals(targetSceneName, baseSceneName) && gameStateService != null)
@@ -304,7 +296,6 @@ public class GamePauseController : MonoBehaviour
         }
 
         yield return Resources.UnloadUnusedAssets();
-
         isReturningToMainMenu = false;
     }
 
@@ -326,44 +317,8 @@ public class GamePauseController : MonoBehaviour
         return false;
     }
 
-    private void RebindReturnToBaseButtonListener()
+    private void SetPauseVisible(bool visible)
     {
-        if (boundReturnToBaseButton == returnToBaseButton)
-        {
-            return;
-        }
-
-        if (boundReturnToBaseButton != null)
-        {
-            boundReturnToBaseButton.onClick.RemoveListener(OnReturnToBasePressed);
-        }
-
-        boundReturnToBaseButton = returnToBaseButton;
-        if (boundReturnToBaseButton != null)
-        {
-            boundReturnToBaseButton.onClick.RemoveListener(OnReturnToBasePressed);
-            boundReturnToBaseButton.onClick.AddListener(OnReturnToBasePressed);
-        }
+        pauseRoot.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
     }
-
-    private void RebindReturnToMainMenuButtonListener()
-    {
-        if (boundReturnButton == returnToMainMenuButton)
-        {
-            return;
-        }
-
-        if (boundReturnButton != null)
-        {
-            boundReturnButton.onClick.RemoveListener(OnReturnToMainMenuPressed);
-        }
-
-        boundReturnButton = returnToMainMenuButton;
-        if (boundReturnButton != null)
-        {
-            boundReturnButton.onClick.RemoveListener(OnReturnToMainMenuPressed);
-            boundReturnButton.onClick.AddListener(OnReturnToMainMenuPressed);
-        }
-    }
-
 }

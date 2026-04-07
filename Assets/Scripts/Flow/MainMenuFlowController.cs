@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using System.Collections;
 
 public class MainMenuFlowController : MonoBehaviour
@@ -16,6 +17,12 @@ public class MainMenuFlowController : MonoBehaviour
 
     private IEnumerator EnterBaseRoutine()
     {
+        EventSystem menuEventSystem = FindObjectOfType<EventSystem>(true);
+        if (menuEventSystem != null && menuEventSystem.gameObject.scene.name == "MainMenu")
+        {
+            menuEventSystem.gameObject.SetActive(false);
+        }
+
         Scene persistentScene = SceneManager.GetSceneByName(persistentSceneName);
         if (!persistentScene.IsValid() || !persistentScene.isLoaded)
         {

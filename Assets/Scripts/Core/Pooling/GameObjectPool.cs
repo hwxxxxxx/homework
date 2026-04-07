@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameObjectPool
 {
     private readonly GameObject prefab;
     private readonly Transform poolRoot;
     private readonly Queue<GameObject> inactiveQueue = new Queue<GameObject>();
+    private readonly List<GameObject> allInstances = new List<GameObject>();
 
     public GameObjectPool(GameObject prefab, Transform poolRoot, int preloadCount)
     {
@@ -31,6 +33,11 @@ public class GameObjectPool
 
         Transform targetParent = parent == null ? null : parent;
         instance.transform.SetParent(targetParent, false);
+        if (targetParent == null)
+        {
+            SceneManager.MoveGameObjectToScene(instance, SceneManager.GetActiveScene());
+        }
+
         instance.transform.SetPositionAndRotation(position, rotation);
         instance.SetActive(true);
 
@@ -56,6 +63,7 @@ public class GameObjectPool
     {
         GameObject instance = Object.Instantiate(prefab, poolRoot);
         instance.name = prefab.name;
+        allInstances.Add(instance);
 
         PooledObject pooledObject = instance.GetComponent<PooledObject>();
         if (pooledObject == null)
@@ -67,6 +75,20 @@ public class GameObjectPool
 
         pooledObject.Initialize(prefab, this);
         return instance;
+    }
+
+    public void Clear()
+    {
+        for (int i = 0; i < allInstances.Count; i++)
+        {
+            if (allInstances[i] != null)
+            {
+                Object.Destroy(allInstances[i]);
+            }
+        }
+
+        allInstances.Clear();
+        inactiveQueue.Clear();
     }
 
     private static void NotifySpawned(GameObject instance)

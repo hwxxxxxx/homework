@@ -1,0 +1,82 @@
+.hud-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.hud-health {
+    position: absolute;
+    left: 28px;
+    bottom: 24px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: white;
+    font-size: 24px;
+    unity-font-style: bold;
+}
+
+.hud-ammo {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: white;
+    font-size: 22px;
+}
+
+.hud-skill-text {
+    position: absolute;
+    left: 50%;
+    bottom: 112px;
+    width: 220px;
+    translate: -110px 0;
+    color: white;
+    font-size: 20px;
+    unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+.hud-skill-bg {
+    position: absolute;
+    left: 50%;
+    bottom: 26px;
+    width: 84px;
+    height: 10px;
+    translate: -42px 0;
+    background-color: rgba(255, 255, 255, 0.15);
+    padding-left: 1px;
+    padding-right: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.hud-skill-fill {
+    width: 0%;
+    height: 100%;
+    background-color: rgba(64, 199, 250, 1);
+}
+
+.hud-tutorial {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    width: 320px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    color: white;
+    font-size: 18px;
+    white-space: normal;
+    -unity-text-align: upper-left;
+}
