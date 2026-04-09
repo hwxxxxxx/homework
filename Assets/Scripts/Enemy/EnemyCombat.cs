@@ -3,21 +3,21 @@ using UnityEngine;
 
 public class EnemyCombat : MonoBehaviour
 {
-    [Header("Attack")]
-    [SerializeField] private int damage = 10;
-    [SerializeField] private float attackInterval = 1f;
-    [SerializeField] private float attackRange = 2f;
+    [Header("References")]
     [SerializeField] private StatBlock statBlock;
+    [SerializeField] private Transform attackOrigin;
     [SerializeField] private string damageStatId = StatIds.EnemyAttackDamage;
     [SerializeField] private string attackIntervalStatId = StatIds.EnemyAttackInterval;
-    [SerializeField] private bool requireLineOfSight;
-    [SerializeField] private Transform attackOrigin;
-    [SerializeField] private LayerMask lineOfSightMask = ~0;
 
     private Transform target;
     private bool canAttack;
     private bool isDead;
-    private float lastAttackTime = -999f;
+    private float lastAttackTime = float.NegativeInfinity;
+    private float attackRange;
+    private bool requireLineOfSight;
+    private LayerMask lineOfSightMask;
+    private float attackOriginHeightOffset;
+    private float targetHeightOffset;
 
     public event Action OnAttack;
 
@@ -98,13 +98,22 @@ public class EnemyCombat : MonoBehaviour
         isDead = false;
         canAttack = false;
         target = null;
-        lastAttackTime = -999f;
+        lastAttackTime = float.NegativeInfinity;
+    }
+
+    public void ApplyConfig(EnemyConfigAsset config)
+    {
+        attackRange = config.AttackRange;
+        requireLineOfSight = config.RequireLineOfSight;
+        lineOfSightMask = config.LineOfSightMask;
+        attackOriginHeightOffset = config.AttackOriginHeightOffset;
+        targetHeightOffset = config.TargetHeightOffset;
     }
 
     private bool HasLineOfSight(Transform potentialTarget)
     {
-        Vector3 origin = attackOrigin.position + Vector3.up * 0.5f;
-        Vector3 targetPosition = potentialTarget.position + Vector3.up * 1f;
+        Vector3 origin = attackOrigin.position + Vector3.up * attackOriginHeightOffset;
+        Vector3 targetPosition = potentialTarget.position + Vector3.up * targetHeightOffset;
         Vector3 direction = targetPosition - origin;
 
         if (!Physics.Raycast(origin, direction.normalized, out RaycastHit hit, direction.magnitude, lineOfSightMask))
@@ -117,21 +126,11 @@ public class EnemyCombat : MonoBehaviour
 
     private int GetDamageValue()
     {
-        return Mathf.Max(1, Mathf.RoundToInt(GetStatOrDefault(damageStatId, damage)));
+        return Mathf.RoundToInt(statBlock.GetStatValue(damageStatId));
     }
 
     private float GetAttackInterval()
     {
-        return Mathf.Max(0.05f, GetStatOrDefault(attackIntervalStatId, attackInterval));
-    }
-
-    private float GetStatOrDefault(string statId, float defaultValue)
-    {
-        if (statBlock == null || string.IsNullOrWhiteSpace(statId) || !statBlock.HasStat(statId))
-        {
-            return defaultValue;
-        }
-
-        return statBlock.GetStatValue(statId);
+        return statBlock.GetStatValue(attackIntervalStatId);
     }
 }

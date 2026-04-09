@@ -18,15 +18,13 @@ public class EnemyAIController : MonoBehaviour
     private NavMeshAgent navMeshAgent;
     private EnemyCombat enemyCombat;
 
-    [Header("AI")]
-    [SerializeField] private float detectionRange = 15f;
-    [SerializeField] private float repathInterval = 0.1f;
-    [SerializeField] private float faceTargetSpeed = 10f;
-
     private EnemyStateMachine stateMachine;
     private EnemyStateId currentStateId = EnemyStateId.Idle;
     private bool isDead;
     private float nextRepathTime;
+    private float detectionRange;
+    private float repathInterval;
+    private float faceTargetSpeed;
 
     public EnemyStateId CurrentState => currentStateId;
     public Transform Target => target;
@@ -87,6 +85,13 @@ public class EnemyAIController : MonoBehaviour
     public void SetTarget(Transform newTarget)
     {
         target = newTarget;
+    }
+
+    public void ApplyConfig(EnemyConfigAsset config)
+    {
+        detectionRange = config.DetectionRange;
+        repathInterval = config.RepathInterval;
+        faceTargetSpeed = config.FaceTargetSpeed;
     }
 
     public bool EnsureTarget()

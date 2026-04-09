@@ -9,8 +9,9 @@ public class BaseInteractionTarget : MonoBehaviour
     }
 
     [SerializeField] private TargetType targetType;
-    [SerializeField] private string interactionLabel = "Interact";
 
     public TargetType Type => targetType;
-    public string InteractionLabel => interactionLabel;
+    public string InteractionLabel => targetType == TargetType.Battle
+        ? UiTextConfigProvider.Config.BattleInteractionLabel
+        : UiTextConfigProvider.Config.UpgradeInteractionLabel;
 }

@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class ProjectileBullet : MonoBehaviour, IPoolable
 {
-    [SerializeField] private float lifeSeconds = 4f;
-
     private Vector3 direction;
     private float speed;
     private float maxDistance;
@@ -11,6 +9,8 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
     private LayerMask hitMask;
     private string ignoreTag;
     private ParticleSystem impactEffectPrefab;
+    private float impactEffectLifetime;
+    private float lifeSeconds;
     private float traveledDistance;
     private float lifeTimer;
     private bool initialized;
@@ -22,16 +22,20 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
         int shotDamage,
         LayerMask shotHitMask,
         string shotIgnoreTag,
-        ParticleSystem impactPrefab
+        ParticleSystem impactPrefab,
+        float shotLifeSeconds,
+        float shotImpactEffectLifetime
     )
     {
         direction = shotDirection.normalized;
-        speed = Mathf.Max(1f, shotSpeed);
-        maxDistance = Mathf.Max(0.5f, shotRange);
-        damage = Mathf.Max(1, shotDamage);
+        speed = shotSpeed;
+        maxDistance = shotRange;
+        damage = shotDamage;
         hitMask = shotHitMask;
         ignoreTag = shotIgnoreTag ?? string.Empty;
         impactEffectPrefab = impactPrefab;
+        lifeSeconds = shotLifeSeconds;
+        impactEffectLifetime = shotImpactEffectLifetime;
         traveledDistance = 0f;
         lifeTimer = 0f;
         initialized = true;
@@ -126,7 +130,7 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
             {
                 fx.Clear(true);
                 fx.Play(true);
-                PoolService.DespawnAfterDelay(fx.gameObject, 2f);
+                PoolService.DespawnAfterDelay(fx.gameObject, impactEffectLifetime);
             }
         }
 

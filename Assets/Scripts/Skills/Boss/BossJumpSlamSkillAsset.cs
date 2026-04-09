@@ -47,7 +47,7 @@ public class BossJumpSlamSkillAsset : BossSkillAsset
             shouldRestoreAgent = true;
         }
 
-        float duration = Mathf.Max(0.05f, jumpDuration);
+        float duration = jumpDuration;
         float elapsed = 0f;
         while (elapsed < duration)
         {

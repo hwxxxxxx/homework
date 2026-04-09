@@ -52,7 +52,6 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private bool enableCameraCollision = true;
     [SerializeField] private float cameraCollisionRadius = 0.22f;
     [SerializeField] private LayerMask collisionLayers = ~0;
-    [SerializeField] private string collisionIgnoreTag = "Player";
     [SerializeField] private float collisionDampingInto = 0.12f;
     [SerializeField] private float collisionDampingFrom = 0.18f;
     [SerializeField] private bool forceBrainLateUpdate = true;
@@ -437,7 +436,7 @@ public class PlayerCameraAimController : MonoBehaviour
         }
 
         thirdPersonFollow.CameraCollisionFilter = collisionLayers;
-        thirdPersonFollow.IgnoreTag = collisionIgnoreTag;
+        thirdPersonFollow.IgnoreTag = CombatConfigProvider.Config.PlayerTag;
         thirdPersonFollow.CameraRadius = cameraCollisionRadius;
         thirdPersonFollow.DampingIntoCollision = collisionDampingInto;
         thirdPersonFollow.DampingFromCollision = collisionDampingFrom;
@@ -594,7 +593,7 @@ public class PlayerCameraAimController : MonoBehaviour
             Debug.LogWarning(
                 $"[CameraJumpDebug] delta={delta:F3} threshold={cameraJumpDistanceThreshold:F3} " +
                 $"camPos={currentPos:F3} lastPos={lastMainCameraPosition:F3} " +
-                $"collideMask={collisionLayers.value} ignoreTag={collisionIgnoreTag}"
+                $"collideMask={collisionLayers.value} ignoreTag={CombatConfigProvider.Config.PlayerTag}"
             );
         }
 

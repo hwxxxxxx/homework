@@ -42,6 +42,13 @@ public class DynamicCrosshair : MonoBehaviour
             return;
         }
 
+        if (playerCombat != null && playerCombat.IsAiming)
+        {
+            crosshairVelocity = Vector2.zero;
+            crosshairRect.anchoredPosition = Vector2.zero;
+            return;
+        }
+
         if (currentAimPointProvider == null)
         {
             return;

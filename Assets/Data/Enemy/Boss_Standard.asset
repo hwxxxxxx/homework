@@ -22,6 +22,8 @@ MonoBehaviour:
   enrageDamagePercentAdd: 0.4
   enrageAttackSpeedPercentAdd: 0.25
   enrageMoveSpeedPercentAdd: 0.2
+  enrageDamageModifierId: boss.enrage.damage
+  enrageAttackIntervalModifierId: boss.enrage.interval
   skills:
   - {fileID: 11400000, guid: 86ed4ae9ab4ca094abad778beb5aa711, type: 2}
   skillThinkInterval: 0.1

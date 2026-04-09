@@ -4,6 +4,19 @@ public class PersistentRuntimeRoot : MonoBehaviour
 {
     private static PersistentRuntimeRoot instance;
 
+    [Header("Player Runtime References")]
+    [SerializeField] private GameObject battleSharedRoot;
+    [SerializeField] private PlayerCombat playerCombat;
+    [SerializeField] private PlayerStats playerStats;
+    [SerializeField] private PlayerSkillSystem playerSkillSystem;
+    [SerializeField] private EffectController playerEffectController;
+
+    public GameObject BattleSharedRoot => battleSharedRoot;
+    public PlayerCombat PlayerCombat => playerCombat;
+    public PlayerStats PlayerStats => playerStats;
+    public PlayerSkillSystem PlayerSkillSystem => playerSkillSystem;
+    public EffectController PlayerEffectController => playerEffectController;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
     {
@@ -16,6 +29,15 @@ public class PersistentRuntimeRoot : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+
+        if (battleSharedRoot == null ||
+            playerCombat == null ||
+            playerStats == null ||
+            playerSkillSystem == null ||
+            playerEffectController == null)
+        {
+            throw new System.InvalidOperationException("PersistentRuntimeRoot gameplay runtime references are not fully assigned.");
         }
 
         instance = this;

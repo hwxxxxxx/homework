@@ -14,14 +14,6 @@ public class AchievementService : MonoBehaviour
         progressService = service;
     }
 
-    private void Awake()
-    {
-        if (progressService == null)
-        {
-            progressService = FindObjectOfType<ProgressService>(true);
-        }
-    }
-
     private void OnEnable()
     {
         bossDefeatedSubscription = EventBus.Subscribe<BossDefeatedEvent>(HandleBossDefeated);
@@ -41,25 +33,16 @@ public class AchievementService : MonoBehaviour
 
     private void HandleBossDefeated(BossDefeatedEvent _)
     {
-        if (progressService != null)
-        {
-            progressService.TryUnlockAchievement(AchievementId.DefeatFirstBoss);
-        }
+        progressService.TryUnlockAchievement(AchievementId.DefeatFirstBoss);
     }
 
     private void HandleLevelUnlocked(LevelUnlockedEvent _)
     {
-        if (progressService != null)
-        {
-            progressService.TryUnlockAchievement(AchievementId.UnlockFirstLevel);
-        }
+        progressService.TryUnlockAchievement(AchievementId.UnlockFirstLevel);
     }
 
     private void HandlePlayerDied(PlayerDiedEvent _)
     {
-        if (progressService != null)
-        {
-            progressService.TryUnlockAchievement(AchievementId.FirstDeath);
-        }
+        progressService.TryUnlockAchievement(AchievementId.FirstDeath);
     }
 }

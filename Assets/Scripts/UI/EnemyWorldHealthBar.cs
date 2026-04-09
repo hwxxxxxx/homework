@@ -37,6 +37,20 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 
     private void LateUpdate()
     {
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                if (barRoot != null)
+                {
+                    barRoot.style.display = DisplayStyle.None;
+                }
+
+                return;
+            }
+        }
+
         Vector3 worldPosition = transform.position + worldOffset;
         Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
         if (screenPosition.z <= 0f)
@@ -52,24 +66,44 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
 
     private void OnDisable()
     {
-        enemyStats.OnHealthChanged -= HandleHealthChanged;
-        barRoot.style.display = DisplayStyle.None;
+        if (enemyStats != null)
+        {
+            enemyStats.OnHealthChanged -= HandleHealthChanged;
+        }
+
+        if (barRoot != null)
+        {
+            barRoot.style.display = DisplayStyle.None;
+        }
     }
 
     private void OnDestroy()
     {
-        barRoot.RemoveFromHierarchy();
+        if (barRoot != null)
+        {
+            barRoot.RemoveFromHierarchy();
+        }
     }
 
     public void OnSpawnedFromPool()
     {
-        barRoot.style.display = DisplayStyle.Flex;
-        HandleHealthChanged(enemyStats.CurrentHealth, enemyStats.MaxHealth);
+        if (barRoot != null)
+        {
+            barRoot.style.display = DisplayStyle.Flex;
+        }
+
+        if (enemyStats != null)
+        {
+            HandleHealthChanged(enemyStats.CurrentHealth, enemyStats.MaxHealth);
+        }
     }
 
     public void OnDespawnedToPool()
     {
-        barRoot.style.display = DisplayStyle.None;
+        if (barRoot != null)
+        {
+            barRoot.style.display = DisplayStyle.None;
+        }
     }
 
     public void ConfigurePresentation(Camera targetCamera)
@@ -119,7 +153,7 @@ public class EnemyWorldHealthBar : MonoBehaviour, IPoolable
             return;
         }
 
-        overlayRootObject = new GameObject("EnemyHealthOverlay");
+        overlayRootObject = new GameObject(RuntimeNodeConfigProvider.Config.EnemyHealthOverlayRootName);
         overlayPanelSettings = ScriptableObject.CreateInstance<PanelSettings>();
         overlayPanelSettings.scaleMode = PanelScaleMode.ConstantPixelSize;
         overlayPanelSettings.clearColor = false;

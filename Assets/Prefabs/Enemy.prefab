@@ -167,9 +167,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 0}
-  detectionRange: 15
-  repathInterval: 0.1
-  faceTargetSpeed: 10
 --- !u!114 &3301847462671384716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -182,17 +179,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69f39848bb018964fa51afaae3a141c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage: 10
-  attackInterval: 1
-  attackRange: 2
   statBlock: {fileID: 0}
+  attackOrigin: {fileID: 0}
   damageStatId: EnemyDamage
   attackIntervalStatId: EnemyAttackInterval
-  requireLineOfSight: 0
-  attackOrigin: {fileID: 0}
-  lineOfSightMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &8137537163740921323
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,11 +195,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 043d63091cf9b024a8aa32ed97b087a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  enemyConfig: {fileID: 11400000, guid: e51a9677a6b944542adea27c57fdb699, type: 2}
   enemyStats: {fileID: 0}
   enemyAIController: {fileID: 0}
   enemyCombat: {fileID: 0}
+  statBlock: {fileID: 0}
   collidersToDisableOnDeath: []
-  despawnDelayOnDeath: 2
 --- !u!114 &8244933989182514567
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -269,7 +260,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   worldOffset: {x: 0, y: 2.2, z: 0}
   size: {x: 72, y: 8}
-  canvas: {fileID: 0}
   mainCamera: {fileID: 0}
 --- !u!114 &5082454077755263225
 MonoBehaviour:
@@ -283,8 +273,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e9e4e9b9c3e8c64b838fd64990fcb98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dropTable: {fileID: 11400000, guid: 7028b16b05b7a674cb8936b09b8caf4d, type: 2}
   runContextService: {fileID: 0}
+  dropTable: {fileID: 11400000, guid: 7028b16b05b7a674cb8936b09b8caf4d, type: 2}
 --- !u!114 &990000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,6 +299,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bdbe689b2048b5d4d8b4bc40a2903cc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dropTable: {fileID: 11400000, guid: 75ed659aed9a17e458d5360c25c639bc, type: 2}
   runContextService: {fileID: 0}
+  dropTable: {fileID: 11400000, guid: 75ed659aed9a17e458d5360c25c639bc, type: 2}
   targetEffectController: {fileID: 0}

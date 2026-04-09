@@ -11,9 +11,6 @@ public class BossEnemyController : MonoBehaviour, IPoolable
     [Header("Skill System")]
     [SerializeField] private BossSkillController skillController;
 
-    private const string EnrageDamageModifierId = "boss.enrage.damage";
-    private const string EnrageAttackIntervalModifierId = "boss.enrage.interval";
-
     private EnemyStats enemyStats;
     private EnemyAIController enemyAIController;
     private StatBlock statBlock;
@@ -190,27 +187,27 @@ public class BossEnemyController : MonoBehaviour, IPoolable
         statBlock.AddModifier(
             StatIds.EnemyAttackDamage,
             new StatModifier(
-                EnrageDamageModifierId,
+                definition.enrageDamageModifierId,
                 definition.enrageDamagePercentAdd,
                 StatModifierOperation.PercentAdd,
                 this,
-                100
+                definition.enrageDamageModifierOrder
             )
         );
         statBlock.AddModifier(
             StatIds.EnemyAttackInterval,
             new StatModifier(
-                EnrageAttackIntervalModifierId,
-                -Mathf.Abs(definition.enrageAttackSpeedPercentAdd),
+                definition.enrageAttackIntervalModifierId,
+                -definition.enrageAttackSpeedPercentAdd,
                 StatModifierOperation.PercentAdd,
                 this,
-                100
+                definition.enrageAttackIntervalModifierOrder
             )
         );
 
         if (navMeshAgent != null)
         {
-            navMeshAgent.speed *= 1f + Mathf.Max(0f, definition.enrageMoveSpeedPercentAdd);
+            navMeshAgent.speed *= 1f + definition.enrageMoveSpeedPercentAdd;
         }
     }
 
@@ -221,6 +218,6 @@ public class BossEnemyController : MonoBehaviour, IPoolable
 
     private float GetSkillThinkInterval()
     {
-        return definition != null ? definition.skillThinkInterval : 0.1f;
+        return definition.skillThinkInterval;
     }
 }

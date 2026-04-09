@@ -6,9 +6,6 @@ using UnityEngine;
 [DefaultExecutionOrder(-500)]
 public class ProgressService : MonoBehaviour
 {
-    [SerializeField] private string saveFileName = "progress_save.json";
-    [SerializeField] private string initialUnlockedLevelId = "body_1";
-
     private ProgressSaveData data;
 
     public event Action OnProgressChanged;
@@ -111,37 +108,37 @@ public class ProgressService : MonoBehaviour
         return true;
     }
 
-    public bool TryUnlockLevelWithCost(LevelDefinitionAsset levelDefinition)
+    public bool TryUnlockLevelWithCost(RunCatalogAsset.RunEntry runEntry)
     {
-        if (levelDefinition == null)
+        if (runEntry == null)
         {
             return false;
         }
 
-        if (!ArePrerequisitesMet(levelDefinition.PrerequisiteLevelIds))
+        if (!ArePrerequisitesMet(runEntry.PrerequisiteRunIds))
         {
             return false;
         }
 
-        int costAmount = Mathf.Max(0, levelDefinition.UnlockCostAmount);
-        if (costAmount > 0 && GetFragment(levelDefinition.UnlockCostType) < costAmount)
+        int costAmount = Mathf.Max(0, runEntry.UnlockCostAmount);
+        if (costAmount > 0 && GetFragment(runEntry.UnlockCostType) < costAmount)
         {
             return false;
         }
 
-        if (IsLevelUnlocked(levelDefinition.LevelId))
+        if (IsLevelUnlocked(runEntry.RunId))
         {
             return false;
         }
 
         if (costAmount > 0)
         {
-            ConsumeFragmentWithoutSave(levelDefinition.UnlockCostType, costAmount);
+            ConsumeFragmentWithoutSave(runEntry.UnlockCostType, costAmount);
         }
 
-        data.unlockedLevelIds.Add(levelDefinition.LevelId);
+        data.unlockedLevelIds.Add(runEntry.RunId);
         Save();
-        EventBus.Publish(new LevelUnlockedEvent(levelDefinition.LevelId));
+        EventBus.Publish(new LevelUnlockedEvent(runEntry.RunId));
         return true;
     }
 
@@ -174,12 +171,18 @@ public class ProgressService : MonoBehaviour
         Save();
     }
 
+    public string GetLastSelectedLevelId()
+    {
+        return data.lastSelectedLevelId;
+    }
+
     private void LoadOrCreate()
     {
+        ProgressConfigAsset config = ProgressConfigProvider.Config;
         string path = GetSavePath();
         if (!File.Exists(path))
         {
-            data = CreateDefaultData();
+            data = CreateDefaultData(config);
             Save();
             return;
         }
@@ -188,7 +191,7 @@ public class ProgressService : MonoBehaviour
         data = JsonUtility.FromJson<ProgressSaveData>(json);
         if (data == null)
         {
-            data = CreateDefaultData();
+            data = CreateDefaultData(config);
             Save();
             return;
         }
@@ -203,19 +206,29 @@ public class ProgressService : MonoBehaviour
             data.unlockedAchievementIds = new System.Collections.Generic.List<string>();
         }
 
-        if (data.unlockedLevelIds.Count == 0 && !string.IsNullOrWhiteSpace(initialUnlockedLevelId))
+        if (data.unlockedLevelIds.Count == 0 && !string.IsNullOrWhiteSpace(config.InitialUnlockedLevelId))
         {
-            data.unlockedLevelIds.Add(initialUnlockedLevelId);
+            data.unlockedLevelIds.Add(config.InitialUnlockedLevelId);
+        }
+
+        if (string.IsNullOrWhiteSpace(data.lastSelectedLevelId))
+        {
+            data.lastSelectedLevelId = data.unlockedLevelIds.Count > 0 ? data.unlockedLevelIds[0] : config.InitialUnlockedLevelId;
+        }
+
+        if (!string.IsNullOrWhiteSpace(data.lastSelectedLevelId) && !data.unlockedLevelIds.Contains(data.lastSelectedLevelId))
+        {
+            data.unlockedLevelIds.Add(data.lastSelectedLevelId);
         }
     }
 
-    private ProgressSaveData CreateDefaultData()
+    private ProgressSaveData CreateDefaultData(ProgressConfigAsset config)
     {
         var defaultData = new ProgressSaveData();
-        if (!string.IsNullOrWhiteSpace(initialUnlockedLevelId))
+        if (!string.IsNullOrWhiteSpace(config.InitialUnlockedLevelId))
         {
-            defaultData.unlockedLevelIds.Add(initialUnlockedLevelId);
-            defaultData.lastSelectedLevelId = initialUnlockedLevelId;
+            defaultData.unlockedLevelIds.Add(config.InitialUnlockedLevelId);
+            defaultData.lastSelectedLevelId = config.InitialUnlockedLevelId;
         }
 
         return defaultData;
@@ -276,7 +289,7 @@ public class ProgressService : MonoBehaviour
 
     private string GetSavePath()
     {
-        return Path.Combine(Application.persistentDataPath, saveFileName);
+        return Path.Combine(Application.persistentDataPath, ProgressConfigProvider.Config.SaveFileName);
     }
 
     private static string ToAchievementKey(AchievementId achievementId)

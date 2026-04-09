@@ -8,6 +8,7 @@ public static class PoolService
         new Dictionary<GameObject, GameObjectPool>();
 
     private static Transform poolRoot;
+    private static Transform persistentRuntimeRoot;
     private static PoolCoroutineRunner coroutineRunner;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -21,7 +22,13 @@ public static class PoolService
         }
 
         poolRoot = null;
+        persistentRuntimeRoot = null;
         coroutineRunner = null;
+    }
+
+    public static void ConfigurePersistentRoot(Transform root)
+    {
+        persistentRuntimeRoot = root;
     }
 
     public static T Spawn<T>(T prefab, Vector3 position, Quaternion rotation, Transform parent = null, int preloadCount = 0)
@@ -116,9 +123,8 @@ public static class PoolService
             return;
         }
 
-        GameObject rootObject = new GameObject("GlobalObjectPools");
-        PersistentRuntimeRoot runtimeRoot = Object.FindObjectOfType<PersistentRuntimeRoot>(true);
-        rootObject.transform.SetParent(runtimeRoot.transform, false);
+        GameObject rootObject = new GameObject(RuntimeNodeConfigProvider.Config.PoolRootName);
+        rootObject.transform.SetParent(persistentRuntimeRoot, false);
         poolRoot = rootObject.transform;
         coroutineRunner = rootObject.AddComponent<PoolCoroutineRunner>();
     }
@@ -147,6 +153,7 @@ public static class PoolService
         }
 
         poolRoot = null;
+        persistentRuntimeRoot = null;
         coroutineRunner = null;
     }
 

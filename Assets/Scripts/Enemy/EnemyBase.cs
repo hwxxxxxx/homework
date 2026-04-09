@@ -7,11 +7,14 @@ using UnityEngine;
 public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 {
     [Header("References")]
+    [SerializeField] private EnemyConfigAsset enemyConfig;
     [SerializeField] private EnemyStats enemyStats;
     [SerializeField] private EnemyAIController enemyAIController;
     [SerializeField] private EnemyCombat enemyCombat;
+    [SerializeField] private StatBlock statBlock;
     [SerializeField] private Collider[] collidersToDisableOnDeath;
-    [SerializeField] private float despawnDelayOnDeath = 2f;
+
+    private float despawnDelayOnDeath;
 
     public event Action<EnemyBase> OnEnemyDied;
     private bool hasDied;
@@ -33,10 +36,18 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
             enemyCombat = GetComponent<EnemyCombat>();
         }
 
+        if (statBlock == null)
+        {
+            statBlock = GetComponent<StatBlock>();
+        }
+
         if (collidersToDisableOnDeath == null || collidersToDisableOnDeath.Length == 0)
         {
             collidersToDisableOnDeath = GetComponentsInChildren<Collider>();
         }
+
+        ApplyConfig();
+        enemyStats.ResetStats();
     }
 
     private void OnEnable()
@@ -137,6 +148,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
     {
         hasDied = false;
         EnableColliders();
+        ApplyConfig();
 
         if (enemyStats != null)
         {
@@ -157,5 +169,28 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
     public void OnDespawnedToPool()
     {
         hasDied = false;
+    }
+
+    private void ApplyConfig()
+    {
+        if (enemyConfig == null)
+        {
+            Debug.LogError($"EnemyBase on '{name}' is missing EnemyConfigAsset.");
+            return;
+        }
+
+        if (statBlock == null || enemyCombat == null || enemyAIController == null)
+        {
+            Debug.LogError($"EnemyBase on '{name}' is missing required runtime components.");
+            return;
+        }
+
+        statBlock.SetBaseValue(StatIds.MaxHealth, enemyConfig.MaxHealth);
+        statBlock.SetBaseValue(StatIds.EnemyAttackDamage, enemyConfig.AttackDamage);
+        statBlock.SetBaseValue(StatIds.EnemyAttackInterval, enemyConfig.AttackInterval);
+
+        enemyCombat.ApplyConfig(enemyConfig);
+        enemyAIController.ApplyConfig(enemyConfig);
+        despawnDelayOnDeath = enemyConfig.DespawnDelayOnDeath;
     }
 }

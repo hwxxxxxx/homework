@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fe608a029ba1314a8ebdef02b757191, type: 3}
+  m_Name: RunCatalog
+  m_EditorClassIdentifier: 
+  runs:
+  - runId: body_1
+    displayName: Body Echo I
+    sceneId: body_1
+    unlockCostType: 0
+    unlockCostAmount: 0
+    prerequisiteRunIds: []
+  - runId: body_2
+    displayName: Body Echo II
+    sceneId: body_2
+    unlockCostType: 0
+    unlockCostAmount: 0
+    prerequisiteRunIds:
+    - body_1
+  - runId: soul_1
+    displayName: Soul Echo I
+    sceneId: soul_1
+    unlockCostType: 1
+    unlockCostAmount: 30
+    prerequisiteRunIds:
+    - body_2
+  - runId: memory_1
+    displayName: Memory Echo I
+    sceneId: memory_1
+    unlockCostType: 2
+    unlockCostAmount: 30
+    prerequisiteRunIds:
+    - body_2

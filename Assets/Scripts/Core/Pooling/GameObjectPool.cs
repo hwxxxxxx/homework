@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.AI;
 
 public class GameObjectPool
 {
@@ -61,7 +62,19 @@ public class GameObjectPool
 
     private GameObject CreateNewInstance()
     {
-        GameObject instance = Object.Instantiate(prefab, poolRoot);
+        GameObject instance;
+        if (RequiresNavMeshOnCreate(prefab))
+        {
+            // Create NavMeshAgent-based prefabs in the active gameplay scene first,
+            // otherwise instantiating under persistent pool root can spam "no valid NavMesh".
+            instance = Object.Instantiate(prefab);
+            SceneManager.MoveGameObjectToScene(instance, SceneManager.GetActiveScene());
+        }
+        else
+        {
+            instance = Object.Instantiate(prefab, poolRoot);
+        }
+
         instance.name = prefab.name;
         allInstances.Add(instance);
 
@@ -75,6 +88,12 @@ public class GameObjectPool
 
         pooledObject.Initialize(prefab, this);
         return instance;
+    }
+
+    private static bool RequiresNavMeshOnCreate(GameObject targetPrefab)
+    {
+        return targetPrefab != null &&
+               targetPrefab.GetComponentInChildren<NavMeshAgent>(true) != null;
     }
 
     public void Clear()

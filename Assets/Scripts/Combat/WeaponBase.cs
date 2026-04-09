@@ -11,19 +11,12 @@ public abstract class WeaponBase : MonoBehaviour
     }
 
     [Header("Weapon Settings")]
-    [SerializeField] protected string weaponDisplayName = "Weapon";
-    [SerializeField] protected WeaponKind weaponKind = WeaponKind.Rifle;
-    [SerializeField] protected int damage = 10;
-    [SerializeField] protected float fireRate = 5f;
-
-    [Header("Ammo Settings")]
-    [SerializeField] protected int magazineSize = 30;
-    [SerializeField] protected int reserveAmmo = 90;
-    [SerializeField] protected float reloadTime = 1.5f;
+    [SerializeField] protected WeaponConfigAsset weaponConfig;
     [SerializeField] protected StatBlock statBlock;
 
     protected float lastFireTime;
     protected int currentAmmoInMagazine;
+    protected int reserveAmmo;
     protected bool isReloading;
     protected PlayerCombat ownerCombat;
 
@@ -37,7 +30,12 @@ public abstract class WeaponBase : MonoBehaviour
             statBlock = GetComponentInParent<StatBlock>();
         }
 
-        currentAmmoInMagazine = magazineSize;
+        statBlock.SetBaseValue(StatIds.WeaponDamage, weaponConfig.Damage);
+        statBlock.SetBaseValue(StatIds.WeaponFireRate, weaponConfig.FireRate);
+        statBlock.SetBaseValue(StatIds.WeaponReloadTime, weaponConfig.ReloadTime);
+
+        currentAmmoInMagazine = weaponConfig.MagazineSize;
+        reserveAmmo = weaponConfig.ReserveAmmo;
         NotifyAmmoChanged();
     }
 
@@ -65,7 +63,7 @@ public abstract class WeaponBase : MonoBehaviour
     public virtual void StartReload(MonoBehaviour runner)
     {
         if (isReloading) return;
-        if (currentAmmoInMagazine >= magazineSize) return;
+        if (currentAmmoInMagazine >= weaponConfig.MagazineSize) return;
         if (reserveAmmo <= 0) return;
 
         runner.StartCoroutine(ReloadRoutine());
@@ -77,7 +75,7 @@ public abstract class WeaponBase : MonoBehaviour
 
         yield return new WaitForSeconds(GetReloadTimeValue());
 
-        int neededAmmo = magazineSize - currentAmmoInMagazine;
+        int neededAmmo = weaponConfig.MagazineSize - currentAmmoInMagazine;
         int ammoToLoad = Mathf.Min(neededAmmo, reserveAmmo);
 
         currentAmmoInMagazine += ammoToLoad;
@@ -104,17 +102,12 @@ public abstract class WeaponBase : MonoBehaviour
 
     public string GetWeaponDisplayName()
     {
-        if (!string.IsNullOrWhiteSpace(weaponDisplayName))
-        {
-            return weaponDisplayName;
-        }
-
-        return gameObject.name;
+        return weaponConfig.DisplayName;
     }
 
     public WeaponKind GetWeaponKind()
     {
-        return weaponKind;
+        return weaponConfig.WeaponKind;
     }
 
     public virtual void BindOwner(PlayerCombat owner)
@@ -129,17 +122,17 @@ public abstract class WeaponBase : MonoBehaviour
 
     protected int GetDamageValue()
     {
-        return Mathf.Max(1, Mathf.RoundToInt(GetStatOrDefault(StatIds.WeaponDamage, damage)));
+        return Mathf.RoundToInt(GetStatValue(StatIds.WeaponDamage));
     }
 
     protected float GetFireRateValue()
     {
-        return Mathf.Max(0.01f, GetStatOrDefault(StatIds.WeaponFireRate, fireRate));
+        return GetStatValue(StatIds.WeaponFireRate);
     }
 
     protected float GetReloadTimeValue()
     {
-        return Mathf.Max(0.05f, GetStatOrDefault(StatIds.WeaponReloadTime, reloadTime));
+        return GetStatValue(StatIds.WeaponReloadTime);
     }
 
     protected void SpawnPooledEffect(
@@ -163,7 +156,7 @@ public abstract class WeaponBase : MonoBehaviour
         fx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         fx.Clear(true);
         fx.Play(true);
-        PoolService.DespawnAfterDelay(fx.gameObject, GetEffectLifetime(fx, fallbackLifetime));
+        PoolService.DespawnAfterDelay(fx.gameObject, fallbackLifetime);
     }
 
     protected void PrepareParticleTemplate(ParticleSystem template)
@@ -190,30 +183,9 @@ public abstract class WeaponBase : MonoBehaviour
         return CombatTargetResolver.TryResolveDamageable(collider, out damageable);
     }
 
-    private float GetStatOrDefault(string statId, float defaultValue)
+    private float GetStatValue(string statId)
     {
-        if (statBlock == null || string.IsNullOrWhiteSpace(statId) || !statBlock.HasStat(statId))
-        {
-            return defaultValue;
-        }
-
         return statBlock.GetStatValue(statId);
-    }
-
-    private static float GetEffectLifetime(ParticleSystem effect, float fallbackLifetime)
-    {
-        if (effect == null)
-        {
-            return Mathf.Max(0.05f, fallbackLifetime);
-        }
-
-        ParticleSystem.MainModule main = effect.main;
-        float duration = main.duration;
-        float startLifetime = main.startLifetime.mode == ParticleSystemCurveMode.TwoConstants
-            ? main.startLifetime.constantMax
-            : main.startLifetime.constant;
-        float computed = duration + startLifetime + 0.05f;
-        return Mathf.Max(0.05f, Mathf.Max(fallbackLifetime, computed));
     }
 
     protected void NotifyAmmoChanged()

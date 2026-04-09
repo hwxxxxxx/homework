@@ -230,6 +230,7 @@ GameObject:
   - component: {fileID: 203872266}
   - component: {fileID: 203872268}
   - component: {fileID: 203872267}
+  - component: {fileID: 203872269}
   m_Layer: 0
   m_Name: GlobalEventSystem
   m_TagString: Untagged
@@ -287,6 +288,18 @@ MonoBehaviour:
   m_FirstSelected: {fileID: 0}
   m_sendNavigationEvents: 1
   m_DragThreshold: 10
+--- !u!114 &203872269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 203872265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1511ccae7919cfc46b603b9b337fdc94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &240568919
 GameObject:
   m_ObjectHideFlags: 0
@@ -791,7 +804,6 @@ MonoBehaviour:
   collisionLayers:
     serializedVersion: 2
     m_Bits: 64
-  collisionIgnoreTag: Player
   collisionDampingInto: 0.12
   collisionDampingFrom: 0.18
   forceBrainLateUpdate: 1
@@ -849,9 +861,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e925e2b7713b6b14badd57e920f79042, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameStateService: {fileID: 0}
-  runContextService: {fileID: 0}
-  gameFlowManager: {fileID: 1577728276}
+  gameStateService: {fileID: 2105649507}
+  runContextService: {fileID: 2105649505}
+  gameFlowOrchestrator: {fileID: 2105649510}
 --- !u!114 &316318441
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1043,31 +1055,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52fa8e8d2fcc572469cb5d7dc2a4c87d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDisplayName: Rifle
-  weaponKind: 0
-  damage: 10
-  fireRate: 8
-  magazineSize: 30
-  reserveAmmo: 120
-  reloadTime: 1.4
+  weaponConfig: {fileID: 11400000, guid: 0c0189252ee5d4e49ac935eeb1846c83, type: 2}
   statBlock: {fileID: 0}
-  range: 120
-  projectileSpeed: 220
   firePoint: {fileID: 1447030918}
   hipFireForwardReference: {fileID: 1772594986}
   mainCamera: {fileID: 271076050}
-  hitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  ignoreTag: Player
   projectilePrefab: {fileID: 8906621317764847892, guid: 3616bb7248338be43a17fb3e51f866d4,
     type: 3}
   muzzleFlashPrefab: {fileID: 8824106111876130916, guid: b5272956690f27f42907dca25f14931f,
     type: 3}
   impactEffectPrefab: {fileID: 1189198765843546666, guid: 7b6a239e70811c241ac5a646cd8418da,
     type: 3}
-  aimSpreadAngle: 0.08
-  hipFireSpreadAngle: 2.2
   drawDebugRay: 0
 --- !u!1 &375566053
 GameObject:
@@ -1879,7 +1877,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 987823899}
-  - component: {fileID: 987823900}
   m_Layer: 0
   m_Name: WaveRoot
   m_TagString: Untagged
@@ -1902,24 +1899,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 303914190}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &987823900
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 987823898}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4b1388b9a74ccb459f1f923dba22b21, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerStats: {fileID: 667205113}
-  gameStateService: {fileID: 2105649507}
-  runContextService: {fileID: 2105649505}
-  spawnManager: {fileID: 1682864955}
-  playerEffectsOnWaveCleared: []
-  playerEffectController: {fileID: 667205111}
 --- !u!1 &1096512870
 GameObject:
   m_ObjectHideFlags: 0
@@ -2064,6 +2043,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6365d6c59a6c6ee4c846c13ae8f252be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  battleSharedRoot: {fileID: 1147287822}
+  playerCombat: {fileID: 667205114}
+  playerStats: {fileID: 667205113}
+  playerSkillSystem: {fileID: 667205109}
+  playerEffectController: {fileID: 667205111}
 --- !u!4 &1147005285
 Transform:
   m_ObjectHideFlags: 0
@@ -2533,7 +2517,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1577728278}
-  - component: {fileID: 1577728276}
   m_Layer: 0
   m_Name: GameFlowRoot
   m_TagString: Untagged
@@ -2541,22 +2524,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1577728276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1577728275}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c143618c171c58d478207e62f0bc321b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerStats: {fileID: 667205113}
-  gameStateService: {fileID: 2105649507}
-  runContextService: {fileID: 2105649505}
-  baseSceneName: BaseScene_Main
 --- !u!4 &1577728278
 Transform:
   m_ObjectHideFlags: 0
@@ -2613,7 +2580,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1682864956}
-  - component: {fileID: 1682864955}
   m_Layer: 0
   m_Name: SpawnRoot
   m_TagString: Untagged
@@ -2621,24 +2587,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1682864955
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1682864954}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b6833488e9ce0646a0345b5687ec3fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  spawnPoints: []
-  runContextService: {fileID: 2105649505}
-  playerTarget: {fileID: 667205107}
-  mainCamera: {fileID: 271076050}
-  randomSpawnPoint: 1
-  prewarmPoolsOnStart: 1
 --- !u!4 &1682864956
 Transform:
   m_ObjectHideFlags: 0
@@ -3071,18 +3019,6 @@ MonoBehaviour:
   playerStats: {fileID: 667205113}
   playerSkillSystem: {fileID: 667205109}
   playerEffectController: {fileID: 667205111}
-  tutorialMessage: 'RMB: Aim
-
-    LMB: Fire
-
-    Shift: Sprint
-
-    Space: Jump
-
-    R:
-    Reload
-
-    Q: Skill'
 --- !u!114 &1923603264
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3147,32 +3083,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de9a3a3f4d991bc44bce4974c39edb1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weaponDisplayName: Shotgun
-  weaponKind: 1
-  damage: 9
-  fireRate: 1.1
-  magazineSize: 8
-  reserveAmmo: 40
-  reloadTime: 2.1
+  weaponConfig: {fileID: 11400000, guid: 81fd0d3d5ce4fff43b4d99ca8ba37437, type: 2}
   statBlock: {fileID: 0}
-  pelletCount: 8
-  range: 45
-  projectileSpeed: 120
   firePoint: {fileID: 1447030918}
   hipFireForwardReference: {fileID: 1772594986}
   mainCamera: {fileID: 271076050}
-  hitMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  ignoreTag: Player
   projectilePrefab: {fileID: 8906621317764847892, guid: 3616bb7248338be43a17fb3e51f866d4,
     type: 3}
   muzzleFlashPrefab: {fileID: 8824106111876130916, guid: b5272956690f27f42907dca25f14931f,
     type: 3}
   impactEffectPrefab: {fileID: 1189198765843546666, guid: 7b6a239e70811c241ac5a646cd8418da,
     type: 3}
-  aimSpreadAngle: 2.8
-  hipFireSpreadAngle: 8.5
   drawDebugRay: 0
 --- !u!1 &2105649498
 GameObject:
@@ -3189,9 +3110,14 @@ GameObject:
   - component: {fileID: 2105649507}
   - component: {fileID: 2105649506}
   - component: {fileID: 2105649505}
-  - component: {fileID: 2105649504}
   - component: {fileID: 2105649503}
   - component: {fileID: 2105649508}
+  - component: {fileID: 2105649512}
+  - component: {fileID: 2105649513}
+  - component: {fileID: 2105649510}
+  - component: {fileID: 2105649514}
+  - component: {fileID: 2105649516}
+  - component: {fileID: 2105649515}
   m_Layer: 0
   m_Name: GlobalSystems
   m_TagString: Untagged
@@ -3239,16 +3165,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a119392ffc230e4692185cab7a8e6aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameInput: {fileID: 2105649502}
-  gameStateService: {fileID: 2105649507}
-  hideCursorDuringGameplay: 1
-  lockCursorDuringGameplay: 1
-  pauseOnlyWhenInRun: 0
-  mainMenuSceneName: MainMenu
-  baseSceneName: BaseScene_Main
-  scenesToUnloadOnReturn:
-  - BaseScene_Main
-  - GameScene
 --- !u!114 &2105649502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3275,22 +3191,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameStateService: {fileID: 2105649507}
   progressService: {fileID: 2105649506}
---- !u!114 &2105649504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2105649498}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b060519daa102cc428406612cfb67b6a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gameStateService: {fileID: 2105649507}
-  runContextService: {fileID: 2105649505}
-  progressService: {fileID: 2105649506}
-  loadingMessage: Preparing mission...
 --- !u!114 &2105649505
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3304,7 +3204,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   progressService: {fileID: 2105649506}
-  defaultLevel: {fileID: 11400000, guid: 2e9d2a8dd3c048a4da65382cf11e0819, type: 2}
 --- !u!114 &2105649506
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3317,8 +3216,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0d09422fbc3c85c43a8943475d1dc156, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  saveFileName: progress_save.json
-  initialUnlockedLevelId: body_1
 --- !u!114 &2105649507
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3349,6 +3246,102 @@ MonoBehaviour:
   sourceAsset: {fileID: 9197481963319205126, guid: 3ee329dd5ed4c7f419325e10a1f1ca57,
     type: 3}
   m_SortingOrder: 300
+--- !u!114 &2105649510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d97f6abec58b7b4d84c5620ef7ba8c3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  runtimeShell: {fileID: 2105649514}
+--- !u!114 &2105649512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4629f654b108040833871d46a3be36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &2105649513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 025b97f91dace3e47bc46fe0102d0490, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lifecycleParticipants: []
+--- !u!114 &2105649514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b286b4814875d23478d354e1287347dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  persistentRoot: {fileID: 1147005284}
+  pauseController: {fileID: 2105649501}
+  gameStateService: {fileID: 2105649507}
+  progressService: {fileID: 2105649506}
+  levelUnlockService: {fileID: 2105649503}
+  achievementService: {fileID: 2105649500}
+  runContextService: {fileID: 2105649505}
+  phaseCoordinator: {fileID: 2105649513}
+  sceneTransitionOrchestrator: {fileID: 2105649512}
+  gameFlowOrchestrator: {fileID: 2105649510}
+  sceneCatalog: {fileID: 11400000, guid: 343df82b6d5033d4db7eb6cdf75a0a02, type: 2}
+  runCatalog: {fileID: 11400000, guid: e3784a8411a9a814ab6c6703f149cf92, type: 2}
+  globalEventSystem: {fileID: 203872268}
+  playerHud: {fileID: 1923603263}
+  globalAudioListener: {fileID: 271076049}
+--- !u!114 &2105649515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc596530374a38a4793c0b12d9a00aa7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameInput: {fileID: 337179297}
+  pauseController: {fileID: 2105649501}
+  gameFlowOrchestrator: {fileID: 2105649510}
+  gameStateService: {fileID: 2105649507}
+--- !u!114 &2105649516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2105649498}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e0dd6ffe878f3c4582a4bfb57e039f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameStateService: {fileID: 2105649507}
+  runContextService: {fileID: 2105649505}
+  pauseController: {fileID: 2105649501}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

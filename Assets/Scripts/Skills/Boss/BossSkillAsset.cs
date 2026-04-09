@@ -3,7 +3,7 @@ using UnityEngine;
 
 public abstract class BossSkillAsset : ScriptableObject
 {
-    [SerializeField] private string skillId = "boss.skill";
+    [SerializeField] private string skillId;
     [SerializeField] private EffectAsset cooldownEffect;
     [SerializeField] private float minTriggerDistance = 0f;
     [SerializeField] private float maxTriggerDistance = 8f;

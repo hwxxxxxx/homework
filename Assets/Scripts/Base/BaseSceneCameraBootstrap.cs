@@ -7,7 +7,6 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
     [SerializeField] private Transform cameraRoot;
     [SerializeField] private Camera mainCamera;
     [SerializeField] private CinemachineVirtualCamera normalCamera;
-    [SerializeField] private string collisionIgnoreTag = "Player";
 
     private void Awake()
     {
@@ -19,8 +18,6 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
 
         SetupBrain();
         SetupNormalCamera();
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private bool ValidateReferences()
@@ -67,6 +64,6 @@ public class BaseSceneCameraBootstrap : MonoBehaviour
         follow.CameraRadius = 0.22f;
         follow.DampingIntoCollision = 0.12f;
         follow.DampingFromCollision = 0.18f;
-        follow.IgnoreTag = collisionIgnoreTag;
+        follow.IgnoreTag = CombatConfigProvider.Config.PlayerTag;
     }
 }

@@ -6,6 +6,8 @@ public class PlayerStats : HealthComponent, IDamageable
 
     protected override void OnDiedInternal()
     {
+        EventBus.Publish(new PlayerDiedEvent());
+
         if (!disableComponentsOnDeath)
         {
             return;

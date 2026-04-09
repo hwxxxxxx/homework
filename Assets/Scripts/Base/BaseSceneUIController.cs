@@ -1,18 +1,20 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 [RequireComponent(typeof(UIDocument))]
 public class BaseSceneUIController : MonoBehaviour
 {
-    [SerializeField] private RunSelectorService runSelectorService;
+    private const string CursorOwner = "BaseModalUI";
+
+    [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
+    [SerializeField] private RunCatalogAsset runCatalog;
     [SerializeField] private LevelUnlockService levelUnlockService;
     [SerializeField] private ProgressService progressService;
 
-    [Header("Level Definitions")]
-    [SerializeField] private LevelDefinitionAsset bodyLevel1Definition;
-    [SerializeField] private LevelDefinitionAsset bodyLevel2Definition;
-    [SerializeField] private LevelDefinitionAsset soulLevel1Definition;
-    [SerializeField] private LevelDefinitionAsset memoryLevel1Definition;
+    private readonly List<Action> battleLevelHandlers = new List<Action>();
+    private readonly List<Action> unlockLevelHandlers = new List<Action>();
 
     private UIDocument uiDocument;
     private Label interactionHintLabel;
@@ -20,37 +22,37 @@ public class BaseSceneUIController : MonoBehaviour
     private Label unlockStatusLabel;
     private VisualElement battlePanel;
     private VisualElement upgradePanel;
-    private Button levelBody1Button;
-    private Button levelBody2Button;
-    private Button levelSoul1Button;
-    private Button levelMemory1Button;
+    private List<Button> battleLevelButtons;
+    private List<Button> unlockLevelButtons;
     private Button startLevelButton;
     private Button closeBattleButton;
-    private Button unlockBody2Button;
-    private Button unlockSoul1Button;
-    private Button unlockMemory1Button;
     private Button closeUpgradeButton;
-    private LevelDefinitionAsset selectedLevel;
+    private RunCatalogAsset.RunEntry selectedRun;
+    private UiTextConfigAsset textConfig;
 
     public bool IsModalOpen => IsVisible(battlePanel) || IsVisible(upgradePanel);
+
+    public void ConfigureRuntimeServices(
+        GameFlowOrchestrator flowOrchestrator,
+        RunCatalogAsset runtimeRunCatalog,
+        LevelUnlockService unlockService,
+        ProgressService runtimeProgressService
+    )
+    {
+        gameFlowOrchestrator = flowOrchestrator;
+        runCatalog = runtimeRunCatalog;
+        levelUnlockService = unlockService;
+        progressService = runtimeProgressService;
+    }
 
     private void Awake()
     {
         uiDocument = GetComponent<UIDocument>();
-        ResolveRuntimeServices();
-
-        if (bodyLevel1Definition == null || bodyLevel2Definition == null ||
-            soulLevel1Definition == null || memoryLevel1Definition == null)
-        {
-            Debug.LogError("BaseSceneUIController level definitions are not fully assigned.", this);
-            enabled = false;
-            return;
-        }
+        textConfig = UiTextConfigProvider.Config;
     }
 
     private void OnEnable()
     {
-        ResolveRuntimeServices();
         BindUi();
         HideAllPanels();
         SetInteractionHint(string.Empty);
@@ -58,105 +60,37 @@ public class BaseSceneUIController : MonoBehaviour
 
     private void OnDisable()
     {
-        if (levelBody1Button != null)
-        {
-            levelBody1Button.clicked -= HandleSelectBody1;
-        }
-
-        if (levelBody2Button != null)
-        {
-            levelBody2Button.clicked -= HandleSelectBody2;
-        }
-
-        if (levelSoul1Button != null)
-        {
-            levelSoul1Button.clicked -= HandleSelectSoul1;
-        }
-
-        if (levelMemory1Button != null)
-        {
-            levelMemory1Button.clicked -= HandleSelectMemory1;
-        }
-
-        if (startLevelButton != null)
-        {
-            startLevelButton.clicked -= HandleStartLevel;
-        }
-
-        if (closeBattleButton != null)
-        {
-            closeBattleButton.clicked -= HideAllPanels;
-        }
-
-        if (unlockBody2Button != null)
-        {
-            unlockBody2Button.clicked -= HandleUnlockBody2;
-        }
-
-        if (unlockSoul1Button != null)
-        {
-            unlockSoul1Button.clicked -= HandleUnlockSoul1;
-        }
-
-        if (unlockMemory1Button != null)
-        {
-            unlockMemory1Button.clicked -= HandleUnlockMemory1;
-        }
-
-        if (closeUpgradeButton != null)
-        {
-            closeUpgradeButton.clicked -= HideAllPanels;
-        }
+        CursorPolicyService.ReleaseUiCursor(CursorOwner);
+        UnbindUi();
     }
 
     public void ShowBattlePanel()
     {
         HideAllPanels();
-        selectedLevel = null;
-        if (battlePanel != null)
-        {
-            battlePanel.style.display = DisplayStyle.Flex;
-        }
-
+        selectedRun = null;
+        battlePanel.style.display = DisplayStyle.Flex;
+        CursorPolicyService.AcquireUiCursor(CursorOwner);
         RefreshBattlePanel();
-        ApplyModalCursorState(true);
     }
 
     public void ShowUpgradePanel()
     {
         HideAllPanels();
-        if (upgradePanel != null)
-        {
-            upgradePanel.style.display = DisplayStyle.Flex;
-        }
-
+        upgradePanel.style.display = DisplayStyle.Flex;
+        CursorPolicyService.AcquireUiCursor(CursorOwner);
         RefreshUpgradePanel();
         SetUnlockStatus(string.Empty);
-        ApplyModalCursorState(true);
     }
 
     public void HideAllPanels()
     {
-        if (battlePanel != null)
-        {
-            battlePanel.style.display = DisplayStyle.None;
-        }
-
-        if (upgradePanel != null)
-        {
-            upgradePanel.style.display = DisplayStyle.None;
-        }
-
-        ApplyModalCursorState(false);
+        battlePanel.style.display = DisplayStyle.None;
+        upgradePanel.style.display = DisplayStyle.None;
+        CursorPolicyService.ReleaseUiCursor(CursorOwner);
     }
 
     public void SetInteractionHint(string hint)
     {
-        if (interactionHintLabel == null)
-        {
-            return;
-        }
-
         bool hasHint = !string.IsNullOrWhiteSpace(hint);
         interactionHintLabel.text = hasHint ? hint : string.Empty;
         interactionHintLabel.style.display = hasHint ? DisplayStyle.Flex : DisplayStyle.None;
@@ -164,260 +98,208 @@ public class BaseSceneUIController : MonoBehaviour
 
     private void BindUi()
     {
-        if (uiDocument == null || uiDocument.rootVisualElement == null)
-        {
-            Debug.LogError("BaseSceneUIController UIDocument root is missing.", this);
-            enabled = false;
-            return;
-        }
-
         VisualElement root = uiDocument.rootVisualElement;
         interactionHintLabel = root.Q<Label>("interaction-hint");
         battleStatusLabel = root.Q<Label>("battle-status");
         unlockStatusLabel = root.Q<Label>("unlock-status");
         battlePanel = root.Q<VisualElement>("battle-panel");
         upgradePanel = root.Q<VisualElement>("upgrade-panel");
-        levelBody1Button = root.Q<Button>("level-body1-btn");
-        levelBody2Button = root.Q<Button>("level-body2-btn");
-        levelSoul1Button = root.Q<Button>("level-soul1-btn");
-        levelMemory1Button = root.Q<Button>("level-memory1-btn");
+        battleLevelButtons = root.Query<Button>(className: "battle-level-btn").ToList();
+        unlockLevelButtons = root.Query<Button>(className: "unlock-level-btn").ToList();
         startLevelButton = root.Q<Button>("start-level-btn");
         closeBattleButton = root.Q<Button>("close-battle-btn");
-        unlockBody2Button = root.Q<Button>("unlock-body2-btn");
-        unlockSoul1Button = root.Q<Button>("unlock-soul1-btn");
-        unlockMemory1Button = root.Q<Button>("unlock-memory1-btn");
         closeUpgradeButton = root.Q<Button>("close-upgrade-btn");
 
-        if (interactionHintLabel == null || battleStatusLabel == null || unlockStatusLabel == null ||
-            battlePanel == null || upgradePanel == null || levelBody1Button == null || levelBody2Button == null ||
-            levelSoul1Button == null || levelMemory1Button == null || startLevelButton == null ||
-            closeBattleButton == null || unlockBody2Button == null || unlockSoul1Button == null ||
-            unlockMemory1Button == null || closeUpgradeButton == null)
+        for (int i = 0; i < battleLevelButtons.Count; i++)
         {
-            Debug.LogError("BaseSceneUIController missing required UI nodes in UXML.", this);
-            enabled = false;
-            return;
+            int index = i;
+            Action handler = () => HandleSelectLevel(index);
+            battleLevelButtons[i].clicked += handler;
+            battleLevelHandlers.Add(handler);
         }
 
-        levelBody1Button.clicked -= HandleSelectBody1;
-        levelBody1Button.clicked += HandleSelectBody1;
-        levelBody2Button.clicked -= HandleSelectBody2;
-        levelBody2Button.clicked += HandleSelectBody2;
-        levelSoul1Button.clicked -= HandleSelectSoul1;
-        levelSoul1Button.clicked += HandleSelectSoul1;
-        levelMemory1Button.clicked -= HandleSelectMemory1;
-        levelMemory1Button.clicked += HandleSelectMemory1;
-        startLevelButton.clicked -= HandleStartLevel;
+        for (int i = 0; i < unlockLevelButtons.Count; i++)
+        {
+            int index = i;
+            Action handler = () => HandleUnlockLevel(index);
+            unlockLevelButtons[i].clicked += handler;
+            unlockLevelHandlers.Add(handler);
+        }
+
         startLevelButton.clicked += HandleStartLevel;
-        closeBattleButton.clicked -= HideAllPanels;
         closeBattleButton.clicked += HideAllPanels;
-        unlockBody2Button.clicked -= HandleUnlockBody2;
-        unlockBody2Button.clicked += HandleUnlockBody2;
-        unlockSoul1Button.clicked -= HandleUnlockSoul1;
-        unlockSoul1Button.clicked += HandleUnlockSoul1;
-        unlockMemory1Button.clicked -= HandleUnlockMemory1;
-        unlockMemory1Button.clicked += HandleUnlockMemory1;
-        closeUpgradeButton.clicked -= HideAllPanels;
         closeUpgradeButton.clicked += HideAllPanels;
     }
 
-    private void HandleSelectBody1()
+    private void UnbindUi()
     {
-        TrySelectLevel(bodyLevel1Definition);
+        for (int i = 0; i < battleLevelButtons.Count; i++)
+        {
+            battleLevelButtons[i].clicked -= battleLevelHandlers[i];
+        }
+        battleLevelHandlers.Clear();
+
+        for (int i = 0; i < unlockLevelButtons.Count; i++)
+        {
+            unlockLevelButtons[i].clicked -= unlockLevelHandlers[i];
+        }
+        unlockLevelHandlers.Clear();
+
+        startLevelButton.clicked -= HandleStartLevel;
+        closeBattleButton.clicked -= HideAllPanels;
+        closeUpgradeButton.clicked -= HideAllPanels;
     }
 
-    private void HandleSelectBody2()
+    private void HandleSelectLevel(int index)
     {
-        TrySelectLevel(bodyLevel2Definition);
-    }
-
-    private void HandleSelectSoul1()
-    {
-        TrySelectLevel(soulLevel1Definition);
-    }
-
-    private void HandleSelectMemory1()
-    {
-        TrySelectLevel(memoryLevel1Definition);
-    }
-
-    private void TrySelectLevel(LevelDefinitionAsset levelDefinition)
-    {
-        if (levelDefinition == null || runSelectorService == null)
+        IReadOnlyList<RunCatalogAsset.RunEntry> runs = GetRuns();
+        if (index < 0 || index >= runs.Count)
         {
             return;
         }
 
-        if (!runSelectorService.TrySelectLevel(levelDefinition))
+        RunCatalogAsset.RunEntry runEntry = runs[index];
+        if (!progressService.IsLevelUnlocked(runEntry.RunId))
         {
-            SetBattleStatus($"Locked: {levelDefinition.DisplayName}");
+            SetBattleStatus(FormatText(textConfig.BattleStatusLockedTemplate, runEntry.DisplayName));
             return;
         }
 
-        selectedLevel = levelDefinition;
-        SetBattleStatus($"Selected: {levelDefinition.DisplayName}");
+        selectedRun = runEntry;
+        progressService.SetLastSelectedLevel(runEntry.RunId);
+        SetBattleStatus(FormatText(textConfig.BattleStatusSelectedTemplate, runEntry.DisplayName));
     }
 
     private void HandleStartLevel()
     {
-        if (selectedLevel == null)
+        if (selectedRun == null)
         {
-            SetBattleStatus("Select an unlocked level first.");
+            SetBattleStatus(textConfig.BattleStatusSelectUnlockedHint);
             return;
         }
 
-        if (runSelectorService == null || !runSelectorService.TryStartSelectedRun())
-        {
-            return;
-        }
-
+        gameFlowOrchestrator.EnterRun(selectedRun.RunId);
         HideAllPanels();
     }
 
-    private void HandleUnlockBody2()
+    private void HandleUnlockLevel(int index)
     {
-        TryUnlockLevel(bodyLevel2Definition);
-    }
-
-    private void HandleUnlockSoul1()
-    {
-        TryUnlockLevel(soulLevel1Definition);
-    }
-
-    private void HandleUnlockMemory1()
-    {
-        TryUnlockLevel(memoryLevel1Definition);
-    }
-
-    private void TryUnlockLevel(LevelDefinitionAsset levelDefinition)
-    {
-        if (levelDefinition == null || levelUnlockService == null || progressService == null)
+        List<RunCatalogAsset.RunEntry> unlockableRuns = GetUnlockableRuns();
+        if (index < 0 || index >= unlockableRuns.Count)
         {
             return;
         }
 
-        if (progressService.IsLevelUnlocked(levelDefinition.LevelId))
+        RunCatalogAsset.RunEntry runEntry = unlockableRuns[index];
+        TryUnlockRun(runEntry);
+    }
+
+    private void TryUnlockRun(RunCatalogAsset.RunEntry runEntry)
+    {
+        if (progressService.IsLevelUnlocked(runEntry.RunId))
         {
-            SetUnlockStatus($"Already unlocked: {levelDefinition.DisplayName}");
+            SetUnlockStatus(FormatText(textConfig.UnlockStatusAlreadyUnlockedTemplate, runEntry.DisplayName));
             RefreshUpgradePanel();
             return;
         }
 
-        bool unlocked = levelUnlockService.TryUnlock(levelDefinition);
+        bool unlocked = levelUnlockService.TryUnlock(runEntry);
         SetUnlockStatus(unlocked
-            ? $"Unlocked: {levelDefinition.DisplayName}"
-            : $"Unlock failed: {levelDefinition.DisplayName}");
+            ? FormatText(textConfig.UnlockStatusUnlockedTemplate, runEntry.DisplayName)
+            : FormatText(textConfig.UnlockStatusFailedTemplate, runEntry.DisplayName));
         RefreshUpgradePanel();
     }
 
     private void RefreshBattlePanel()
     {
-        if (progressService == null)
+        IReadOnlyList<RunCatalogAsset.RunEntry> runs = GetRuns();
+        for (int i = 0; i < battleLevelButtons.Count; i++)
         {
-            return;
+            if (i < runs.Count)
+            {
+                SetRunButtonState(battleLevelButtons[i], runs[i]);
+            }
+            else
+            {
+                battleLevelButtons[i].text = string.Empty;
+                battleLevelButtons[i].SetEnabled(false);
+            }
         }
 
-        SetLevelButtonState(levelBody1Button, bodyLevel1Definition);
-        SetLevelButtonState(levelBody2Button, bodyLevel2Definition);
-        SetLevelButtonState(levelSoul1Button, soulLevel1Definition);
-        SetLevelButtonState(levelMemory1Button, memoryLevel1Definition);
-        SetBattleStatus("Select an unlocked level.");
+        SetBattleStatus(textConfig.BattleStatusSelectUnlockedHint);
     }
 
     private void RefreshUpgradePanel()
     {
-        if (progressService == null)
+        List<RunCatalogAsset.RunEntry> unlockableRuns = GetUnlockableRuns();
+        for (int i = 0; i < unlockLevelButtons.Count; i++)
         {
-            return;
+            if (i < unlockableRuns.Count)
+            {
+                SetUnlockButtonState(unlockLevelButtons[i], unlockableRuns[i]);
+            }
+            else
+            {
+                unlockLevelButtons[i].text = string.Empty;
+                unlockLevelButtons[i].SetEnabled(false);
+            }
         }
-
-        SetUnlockButtonState(unlockBody2Button, bodyLevel2Definition);
-        SetUnlockButtonState(unlockSoul1Button, soulLevel1Definition);
-        SetUnlockButtonState(unlockMemory1Button, memoryLevel1Definition);
     }
 
-    private void SetLevelButtonState(Button button, LevelDefinitionAsset levelDefinition)
+    private List<RunCatalogAsset.RunEntry> GetUnlockableRuns()
     {
-        if (button == null || levelDefinition == null || progressService == null)
+        IReadOnlyList<RunCatalogAsset.RunEntry> runs = GetRuns();
+        List<RunCatalogAsset.RunEntry> unlockable = new List<RunCatalogAsset.RunEntry>();
+        for (int i = 0; i < runs.Count; i++)
         {
-            return;
+            RunCatalogAsset.RunEntry runEntry = runs[i];
+            if (runEntry.UnlockCostAmount > 0 || runEntry.PrerequisiteRunIds.Count > 0)
+            {
+                unlockable.Add(runEntry);
+            }
         }
 
-        bool unlocked = progressService.IsLevelUnlocked(levelDefinition.LevelId);
-        button.text = $"{levelDefinition.DisplayName} {(unlocked ? "[Unlocked]" : "[Locked]")}";
+        return unlockable;
+    }
+
+    private IReadOnlyList<RunCatalogAsset.RunEntry> GetRuns()
+    {
+        return runCatalog.Runs;
+    }
+
+    private void SetRunButtonState(Button button, RunCatalogAsset.RunEntry runEntry)
+    {
+        bool unlocked = progressService.IsLevelUnlocked(runEntry.RunId);
+        button.text = $"{runEntry.DisplayName} {(unlocked ? textConfig.LevelButtonUnlockedSuffix : textConfig.LevelButtonLockedSuffix)}";
         button.SetEnabled(unlocked);
     }
 
-    private void SetUnlockButtonState(Button button, LevelDefinitionAsset levelDefinition)
+    private void SetUnlockButtonState(Button button, RunCatalogAsset.RunEntry runEntry)
     {
-        if (button == null || levelDefinition == null || progressService == null)
-        {
-            return;
-        }
-
-        bool unlocked = progressService.IsLevelUnlocked(levelDefinition.LevelId);
+        bool unlocked = progressService.IsLevelUnlocked(runEntry.RunId);
         button.text = unlocked
-            ? $"Unlocked: {levelDefinition.DisplayName}"
-            : $"Unlock: {levelDefinition.DisplayName}";
+            ? FormatText(textConfig.UnlockButtonUnlockedTemplate, runEntry.DisplayName)
+            : FormatText(textConfig.UnlockButtonActionTemplate, runEntry.DisplayName);
         button.SetEnabled(!unlocked);
     }
 
     private void SetBattleStatus(string text)
     {
-        if (battleStatusLabel != null)
-        {
-            battleStatusLabel.text = text ?? string.Empty;
-        }
+        battleStatusLabel.text = text ?? string.Empty;
     }
 
     private void SetUnlockStatus(string text)
     {
-        if (unlockStatusLabel != null)
-        {
-            unlockStatusLabel.text = text ?? string.Empty;
-        }
+        unlockStatusLabel.text = text ?? string.Empty;
     }
 
     private static bool IsVisible(VisualElement panel)
     {
-        return panel != null && panel.style.display.value != DisplayStyle.None;
+        return panel.style.display.value != DisplayStyle.None;
     }
 
-    private static void ApplyModalCursorState(bool modalOpen)
+    private static string FormatText(string template, string value)
     {
-        if (modalOpen)
-        {
-            UnityEngine.Cursor.visible = true;
-            UnityEngine.Cursor.lockState = CursorLockMode.None;
-            return;
-        }
-
-        if (GamePauseController.IsPaused)
-        {
-            UnityEngine.Cursor.visible = true;
-            UnityEngine.Cursor.lockState = CursorLockMode.None;
-            return;
-        }
-
-        UnityEngine.Cursor.visible = false;
-        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
-    }
-
-    private void ResolveRuntimeServices()
-    {
-        if (runSelectorService == null)
-        {
-            runSelectorService = FindObjectOfType<RunSelectorService>(true);
-        }
-
-        if (levelUnlockService == null)
-        {
-            levelUnlockService = FindObjectOfType<LevelUnlockService>(true);
-        }
-
-        if (progressService == null)
-        {
-            progressService = FindObjectOfType<ProgressService>(true);
-        }
+        return string.Format(template, value);
     }
 }

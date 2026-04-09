@@ -5,22 +5,9 @@ public class LevelUnlockService : MonoBehaviour
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private ProgressService progressService;
 
-    private void Awake()
+    public bool TryUnlock(RunCatalogAsset.RunEntry runEntry)
     {
-        if (gameStateService == null)
-        {
-            gameStateService = FindObjectOfType<GameStateMachineService>(true);
-        }
-
-        if (progressService == null)
-        {
-            progressService = FindObjectOfType<ProgressService>(true);
-        }
-    }
-
-    public bool TryUnlock(LevelDefinitionAsset levelDefinition)
-    {
-        if (gameStateService == null || progressService == null || levelDefinition == null)
+        if (runEntry == null)
         {
             return false;
         }
@@ -30,6 +17,6 @@ public class LevelUnlockService : MonoBehaviour
             return false;
         }
 
-        return progressService.TryUnlockLevelWithCost(levelDefinition);
+        return progressService.TryUnlockLevelWithCost(runEntry);
     }
 }

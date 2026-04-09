@@ -3,10 +3,12 @@ using UnityEngine.UIElements;
 
 public class GameResultUIController : MonoBehaviour
 {
+    private const string CursorOwner = "RunResultUI";
+
     [Header("References")]
     [SerializeField] private GameStateMachineService gameStateService;
     [SerializeField] private RunContextService runContextService;
-    [SerializeField] private GameFlowManager gameFlowManager;
+    [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
 
     private UIDocument resultDocument;
     private VisualElement resultRoot;
@@ -17,10 +19,6 @@ public class GameResultUIController : MonoBehaviour
 
     private void Awake()
     {
-        gameStateService = FindObjectOfType<GameStateMachineService>(true);
-        runContextService = FindObjectOfType<RunContextService>(true);
-        gameFlowManager = FindObjectOfType<GameFlowManager>(true);
-
         resultDocument = GetComponent<UIDocument>();
         VisualElement root = resultDocument.rootVisualElement;
         resultRoot = root.Q<VisualElement>("result-root");
@@ -32,6 +30,11 @@ public class GameResultUIController : MonoBehaviour
 
     private void OnEnable()
     {
+        if (gameStateService == null || runContextService == null || gameFlowOrchestrator == null)
+        {
+            throw new System.InvalidOperationException("GameResultUIController references are not fully assigned.");
+        }
+
         gameStateService.OnStateChanged += HandleGameStateChanged;
         HandleGameStateChanged(gameStateService.CurrentState, gameStateService.CurrentState);
         victoryBackToBaseButton.clicked += HandleBackToBaseClicked;
@@ -40,6 +43,7 @@ public class GameResultUIController : MonoBehaviour
 
     private void OnDisable()
     {
+        CursorPolicyService.ReleaseUiCursor(CursorOwner);
         gameStateService.OnStateChanged -= HandleGameStateChanged;
         victoryBackToBaseButton.clicked -= HandleBackToBaseClicked;
         failBackToBaseButton.clicked -= HandleBackToBaseClicked;
@@ -50,6 +54,7 @@ public class GameResultUIController : MonoBehaviour
         if (current != GameStateId.RunResult)
         {
             resultRoot.style.display = DisplayStyle.None;
+            CursorPolicyService.ReleaseUiCursor(CursorOwner);
             return;
         }
 
@@ -57,10 +62,11 @@ public class GameResultUIController : MonoBehaviour
         resultRoot.style.display = DisplayStyle.Flex;
         victoryPanel.style.display = won ? DisplayStyle.Flex : DisplayStyle.None;
         failPanel.style.display = won ? DisplayStyle.None : DisplayStyle.Flex;
+        CursorPolicyService.AcquireUiCursor(CursorOwner);
     }
 
     private void HandleBackToBaseClicked()
     {
-        gameFlowManager.TryReturnToBaseFromResult();
+        gameFlowOrchestrator.ReturnToBase();
     }
 }

@@ -7,9 +7,12 @@ public class BaseInteractionController : MonoBehaviour
     [SerializeField] private Transform interactionRoot;
     [SerializeField] private float interactDistance = 2.8f;
     private BaseInteractionTarget[] interactionTargets;
+    private UiTextConfigAsset textConfig;
 
     private void Awake()
     {
+        textConfig = UiTextConfigProvider.Config;
+
         if (gameInput == null || uiController == null || interactionRoot == null)
         {
             Debug.LogError("BaseInteractionController references are not fully assigned.", this);
@@ -29,13 +32,13 @@ public class BaseInteractionController : MonoBehaviour
     {
         if (uiController.IsModalOpen)
         {
-            uiController.SetInteractionHint("Press E to interact");
+            uiController.SetInteractionHint(textConfig.InteractionPromptIdle);
         }
 
         BaseInteractionTarget nearestTarget = GetNearestTarget();
         if (nearestTarget != null && !uiController.IsModalOpen)
         {
-            uiController.SetInteractionHint($"Press E to interact: {nearestTarget.InteractionLabel}");
+            uiController.SetInteractionHint(string.Format(textConfig.InteractionPromptWithTargetTemplate, nearestTarget.InteractionLabel));
         }
         else if (!uiController.IsModalOpen)
         {

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59728d3f5f1747f8be673351662dcf1b, type: 3}
+  m_Name: UiTextConfig
+  m_EditorClassIdentifier: 
+  battleInteractionLabel: Battle
+  upgradeInteractionLabel: Upgrade
+  tutorialMessage: 'RMB: Aim
+
+    LMB: Fire
+
+    Shift: Sprint
+
+    Space: Jump
+
+    R:
+    Reload
+
+    Q: Skill'
+  battleStatusLockedTemplate: 'Locked: {0}'
+  battleStatusSelectedTemplate: 'Selected: {0}'
+  battleStatusSelectUnlockedHint: Select an unlocked level first.
+  unlockStatusAlreadyUnlockedTemplate: 'Already unlocked: {0}'
+  unlockStatusUnlockedTemplate: 'Unlocked: {0}'
+  unlockStatusFailedTemplate: 'Unlock failed: {0}'
+  levelButtonUnlockedSuffix: '[Unlocked]'
+  levelButtonLockedSuffix: '[Locked]'
+  unlockButtonUnlockedTemplate: 'Unlocked: {0}'
+  unlockButtonActionTemplate: 'Unlock: {0}'
+  hudHealthTemplate: HP {0} / {1}
+  hudSkillReadyText: Q READY
+  hudSkillCooldownTemplate: Q {0:0.0}s
+  interactionPromptIdle: Press E to interact
+  interactionPromptWithTargetTemplate: 'Press E to interact: {0}'

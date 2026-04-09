@@ -19,7 +19,7 @@ public class BossSkillController : MonoBehaviour
             return;
         }
 
-        nextThinkTime = Time.time + Mathf.Max(0.02f, thinkInterval);
+        nextThinkTime = Time.time + thinkInterval;
         BossSkillAsset selectedSkill = SelectSkill(caster, target);
         if (selectedSkill == null)
         {
