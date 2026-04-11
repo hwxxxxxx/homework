@@ -1,26 +1,25 @@
-using UnityEngine;
-
 public static class UiTextConfigProvider
 {
-    private const string ResourcePath = "UI/UiTextConfig";
     private static UiTextConfigAsset cached;
 
-    public static UiTextConfigAsset Config
+    public static void Configure(UiTextConfigAsset config)
     {
-        get
+        if (config == null)
         {
-            if (cached != null)
-            {
-                return cached;
-            }
-
-            cached = Resources.Load<UiTextConfigAsset>(ResourcePath);
-            if (cached == null)
-            {
-                Debug.LogError($"Missing UiTextConfigAsset at Resources/{ResourcePath}.asset");
-            }
-
-            return cached;
+            throw new System.ArgumentNullException(nameof(config));
         }
+
+        cached = config;
+    }
+
+    public static UiTextConfigAsset Config =>
+        cached != null
+            ? cached
+            : throw new System.InvalidOperationException("UiTextConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        cached = null;
     }
 }

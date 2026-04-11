@@ -18,6 +18,7 @@ public class EnemyCombat : MonoBehaviour
     private LayerMask lineOfSightMask;
     private float attackOriginHeightOffset;
     private float targetHeightOffset;
+    private bool isBoss;
 
     public event Action OnAttack;
 
@@ -34,6 +35,8 @@ public class EnemyCombat : MonoBehaviour
         {
             statBlock = GetComponent<StatBlock>();
         }
+
+        isBoss = GetComponent<BossEnemyController>() != null;
     }
 
     private void Update()
@@ -73,6 +76,7 @@ public class EnemyCombat : MonoBehaviour
 
         damageable.TakeDamage(GetDamageValue());
         lastAttackTime = Time.time;
+        EventBus.Publish(new EnemyAttackEvent(gameObject, isBoss, transform.position));
         OnAttack?.Invoke();
     }
 

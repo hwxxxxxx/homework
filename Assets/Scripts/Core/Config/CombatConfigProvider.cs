@@ -1,26 +1,25 @@
-using UnityEngine;
-
 public static class CombatConfigProvider
 {
-    private const string ResourcePath = "Combat/CombatConfig";
     private static CombatConfigAsset cached;
 
-    public static CombatConfigAsset Config
+    public static void Configure(CombatConfigAsset config)
     {
-        get
+        if (config == null)
         {
-            if (cached != null)
-            {
-                return cached;
-            }
-
-            cached = Resources.Load<CombatConfigAsset>(ResourcePath);
-            if (cached == null)
-            {
-                Debug.LogError($"Missing CombatConfigAsset at Resources/{ResourcePath}.asset");
-            }
-
-            return cached;
+            throw new System.ArgumentNullException(nameof(config));
         }
+
+        cached = config;
+    }
+
+    public static CombatConfigAsset Config =>
+        cached != null
+            ? cached
+            : throw new System.InvalidOperationException("CombatConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        cached = null;
     }
 }

@@ -59,6 +59,7 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
         currentAmmoInMagazine--;
         lastFireTime = Time.time;
         OnFired?.Invoke();
+        EventBus.Publish(new WeaponFiredEvent(transform.position));
 
         NotifyAmmoChanged();
     }

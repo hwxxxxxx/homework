@@ -27,6 +27,9 @@ public class RuntimeShell : MonoBehaviour
     [SerializeField] private PlayerHUD playerHud;
     [SerializeField] private AudioListener globalAudioListener;
 
+    [Header("Audio")]
+    [SerializeField] private AudioRuntimeService audioRuntimeService;
+
     public static RuntimeShell Instance => instance;
     public PersistentRuntimeRoot PersistentRoot => persistentRoot;
     public GamePauseController PauseController => pauseController;
@@ -43,6 +46,7 @@ public class RuntimeShell : MonoBehaviour
     public EventSystem GlobalEventSystem => globalEventSystem;
     public PlayerHUD PlayerHud => playerHud;
     public AudioListener GlobalAudioListener => globalAudioListener;
+    public AudioRuntimeService AudioRuntimeService => audioRuntimeService;
 
     protected virtual void Awake()
     {
@@ -67,6 +71,7 @@ public class RuntimeShell : MonoBehaviour
         ServiceRegistry.Register(phaseCoordinator);
         ServiceRegistry.Register(sceneTransitionOrchestrator);
         ServiceRegistry.Register(gameFlowOrchestrator);
+        ServiceRegistry.Register(audioRuntimeService);
     }
 
     private void ValidateRequiredReferences()
@@ -85,7 +90,8 @@ public class RuntimeShell : MonoBehaviour
             runCatalog == null ||
             globalEventSystem == null ||
             playerHud == null ||
-            globalAudioListener == null)
+            globalAudioListener == null ||
+            audioRuntimeService == null)
         {
             throw new InvalidOperationException("RuntimeShell has unassigned required serialized references.");
         }

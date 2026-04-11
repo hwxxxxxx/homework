@@ -1,8 +1,8 @@
-public static class RuntimeUiConfigProvider
+public static class AudioConfigProvider
 {
-    private static RuntimeUiConfigAsset cached;
+    private static AudioConfigAsset cached;
 
-    public static void Configure(RuntimeUiConfigAsset config)
+    public static void Configure(AudioConfigAsset config)
     {
         if (config == null)
         {
@@ -12,10 +12,10 @@ public static class RuntimeUiConfigProvider
         cached = config;
     }
 
-    public static RuntimeUiConfigAsset Config =>
+    public static AudioConfigAsset Config =>
         cached != null
             ? cached
-            : throw new System.InvalidOperationException("RuntimeUiConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
+            : throw new System.InvalidOperationException("AudioConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
 
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()

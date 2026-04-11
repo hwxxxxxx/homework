@@ -3,7 +3,19 @@ using UnityEngine;
 
 public class BootEntry : MonoBehaviour
 {
+    [SerializeField] private GlobalRuntimeConfigAsset globalRuntimeConfig;
+
     private bool started;
+
+    private void Awake()
+    {
+        if (globalRuntimeConfig == null)
+        {
+            throw new System.InvalidOperationException("BootEntry requires GlobalRuntimeConfigAsset reference.");
+        }
+
+        globalRuntimeConfig.Install();
+    }
 
     private void Start()
     {

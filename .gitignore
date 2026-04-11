@@ -102,3 +102,4 @@ InitTestScene*.unity*
 
 # Local parking lot for unused assets
 /[Aa]ssets/_UnusedLocal/
+/[Aa]ssets/_UnusedLocal.meta

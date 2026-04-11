@@ -1,26 +1,25 @@
-using UnityEngine;
-
 public static class FlowConfigProvider
 {
-    private const string ResourcePath = "Flow/FlowConfig";
     private static FlowConfigAsset cached;
 
-    public static FlowConfigAsset Config
+    public static void Configure(FlowConfigAsset config)
     {
-        get
+        if (config == null)
         {
-            if (cached != null)
-            {
-                return cached;
-            }
-
-            cached = Resources.Load<FlowConfigAsset>(ResourcePath);
-            if (cached == null)
-            {
-                Debug.LogError($"Missing FlowConfigAsset at Resources/{ResourcePath}.asset");
-            }
-
-            return cached;
+            throw new System.ArgumentNullException(nameof(config));
         }
+
+        cached = config;
+    }
+
+    public static FlowConfigAsset Config =>
+        cached != null
+            ? cached
+            : throw new System.InvalidOperationException("FlowConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        cached = null;
     }
 }

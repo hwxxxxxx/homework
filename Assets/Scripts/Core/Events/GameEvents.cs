@@ -81,3 +81,41 @@ public readonly struct LevelUnlockedEvent : IGameEvent
 public readonly struct PlayerDiedEvent : IGameEvent
 {
 }
+
+public readonly struct WeaponFiredEvent : IGameEvent
+{
+    public readonly Vector3 Position;
+
+    public WeaponFiredEvent(Vector3 position)
+    {
+        Position = position;
+    }
+}
+
+public readonly struct EnemyAttackEvent : IGameEvent
+{
+    public readonly GameObject EnemyObject;
+    public readonly bool IsBoss;
+    public readonly Vector3 Position;
+
+    public EnemyAttackEvent(GameObject enemyObject, bool isBoss, Vector3 position)
+    {
+        EnemyObject = enemyObject;
+        IsBoss = isBoss;
+        Position = position;
+    }
+}
+
+public readonly struct EnemyDiedEvent : IGameEvent
+{
+    public readonly GameObject EnemyObject;
+    public readonly bool IsBoss;
+    public readonly Vector3 Position;
+
+    public EnemyDiedEvent(GameObject enemyObject, bool isBoss, Vector3 position)
+    {
+        EnemyObject = enemyObject;
+        IsBoss = isBoss;
+        Position = position;
+    }
+}

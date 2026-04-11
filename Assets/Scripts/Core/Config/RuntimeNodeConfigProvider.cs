@@ -1,26 +1,25 @@
-using UnityEngine;
-
 public static class RuntimeNodeConfigProvider
 {
-    private const string ResourcePath = "Runtime/RuntimeNodeConfig";
     private static RuntimeNodeConfigAsset cached;
 
-    public static RuntimeNodeConfigAsset Config
+    public static void Configure(RuntimeNodeConfigAsset config)
     {
-        get
+        if (config == null)
         {
-            if (cached != null)
-            {
-                return cached;
-            }
-
-            cached = Resources.Load<RuntimeNodeConfigAsset>(ResourcePath);
-            if (cached == null)
-            {
-                Debug.LogError($"Missing RuntimeNodeConfigAsset at Resources/{ResourcePath}.asset");
-            }
-
-            return cached;
+            throw new System.ArgumentNullException(nameof(config));
         }
+
+        cached = config;
+    }
+
+    public static RuntimeNodeConfigAsset Config =>
+        cached != null
+            ? cached
+            : throw new System.InvalidOperationException("RuntimeNodeConfigProvider is not configured. Install GlobalRuntimeConfigAsset during boot.");
+
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        cached = null;
     }
 }
