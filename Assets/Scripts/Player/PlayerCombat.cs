@@ -14,6 +14,7 @@ public class PlayerCombat : MonoBehaviour
     public event Action<WeaponBase> OnCurrentWeaponChanged;
 
     public bool IsAiming { get; private set; }
+    private bool weaponsInitialized;
 
     private void Awake()
     {
@@ -23,7 +24,6 @@ public class PlayerCombat : MonoBehaviour
             enabled = false;
             return;
         }
-
         InitializeWeapons();
     }
 
@@ -49,6 +49,11 @@ public class PlayerCombat : MonoBehaviour
 
     private void InitializeWeapons()
     {
+        if (weaponsInitialized)
+        {
+            return;
+        }
+
         List<WeaponBase> validWeapons = new List<WeaponBase>();
 
         foreach (WeaponBase weapon in weaponSlots)
@@ -67,18 +72,16 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        foreach (WeaponBase weapon in weaponSlots)
-        {
-            weapon.BindOwner(this);
-        }
-
         int initialIndex = Mathf.Clamp(defaultWeaponIndex, 0, Mathf.Max(0, weaponSlots.Length - 1));
         if (weaponSlots.Length > 0)
         {
             currentWeapon = weaponSlots[initialIndex];
+            currentWeapon.BindOwner(this);
             UpdateWeaponVisibility();
             OnCurrentWeaponChanged?.Invoke(currentWeapon);
         }
+
+        weaponsInitialized = true;
     }
 
     private void HandleAimState()
@@ -227,6 +230,22 @@ public class PlayerCombat : MonoBehaviour
         return currentWeapon;
     }
 
+    public IReadOnlyList<WeaponBase> GetWeaponSlots()
+    {
+        return weaponSlots;
+    }
+
+    public void ForceSetAimState(bool isAiming)
+    {
+        if (IsAiming == isAiming)
+        {
+            return;
+        }
+
+        IsAiming = isAiming;
+        OnAimStateChanged?.Invoke(IsAiming);
+    }
+
     private void UpdateWeaponVisibility()
     {
         if (weaponSlots == null)
@@ -249,4 +268,5 @@ public class PlayerCombat : MonoBehaviour
             }
         }
     }
+
 }

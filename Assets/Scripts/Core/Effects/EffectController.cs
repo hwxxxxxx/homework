@@ -44,7 +44,8 @@ public class EffectController : MonoBehaviour
             RemoveEffectsById(effectAsset.EffectId);
         }
 
-        EffectContext context = new EffectContext(source, gameObject, statBlock, this);
+        List<IModifiableStatProvider> weaponStatsProviders = ResolveWeaponStatsProviders();
+        EffectContext context = new EffectContext(source, gameObject, statBlock, weaponStatsProviders, this);
         IEffectRuntime runtime = effectAsset.CreateRuntime(context);
         if (runtime == null)
         {
@@ -150,5 +151,34 @@ public class EffectController : MonoBehaviour
         runtime.OnRemove();
         activeEffects.RemoveAt(index);
         EventBus.Publish(new EffectRemovedEvent(gameObject, runtime.EffectId));
+    }
+
+    private List<IModifiableStatProvider> ResolveWeaponStatsProviders()
+    {
+        List<IModifiableStatProvider> providers = new List<IModifiableStatProvider>();
+        PlayerCombat playerCombat = GetComponent<PlayerCombat>();
+        if (playerCombat == null)
+        {
+            return providers;
+        }
+
+        IReadOnlyList<WeaponBase> slots = playerCombat.GetWeaponSlots();
+        if (slots == null)
+        {
+            return providers;
+        }
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            IModifiableStatProvider provider = slots[i] as IModifiableStatProvider;
+            if (provider == null || providers.Contains(provider))
+            {
+                continue;
+            }
+
+            providers.Add(provider);
+        }
+
+        return providers;
     }
 }

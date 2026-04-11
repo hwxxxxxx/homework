@@ -61,11 +61,9 @@ public class PlayerCameraAimController : MonoBehaviour
     [SerializeField] private float outputRecoveryLerpSpeed = 12f;
 
     [Header("Debug")]
-    [SerializeField] private bool enableCameraDebugLog;
-    [SerializeField] private float debugLogInterval = 0.25f;
-    [SerializeField] private bool drawDebugDirections = true;
-    [SerializeField] private bool enableCameraJumpDebugLog = true;
-    [SerializeField] private float cameraJumpDistanceThreshold = 0.45f;
+    [SerializeField] private bool drawDebugDirections = false;
+
+    public Camera MainCamera => mainCamera;
 
     private float yaw;
     private float pitch;
@@ -81,8 +79,6 @@ public class PlayerCameraAimController : MonoBehaviour
     private float recoilTargetYaw;
     private CinemachineFreeLook normalFreeLook;
     private WeaponBase currentWeapon;
-    private float nextDebugLogTime;
-    private Vector3 lastMainCameraPosition;
 
     private void Awake()
     {
@@ -138,8 +134,6 @@ public class PlayerCameraAimController : MonoBehaviour
         ApplyBrainUpdateMode();
         ApplyCinemachineTuning();
         ApplyOutputStabilizer();
-
-        lastMainCameraPosition = mainCamera.transform.position;
     }
 
     private void LateUpdate()
@@ -175,8 +169,6 @@ public class PlayerCameraAimController : MonoBehaviour
         cameraRoot.rotation = Quaternion.Euler(pitch, yaw, 0f);
         SyncFreeLookXAxisWithYaw();
         SyncFreeLookYAxisWithPitch();
-        TryDebugLog(isAiming);
-        TryDebugCameraJump();
 
         if (drawDebugDirections)
         {
@@ -491,7 +483,7 @@ public class PlayerCameraAimController : MonoBehaviour
             outputJumpThreshold,
             outputMaxStepPerFrame,
             outputRecoveryLerpSpeed,
-            enableCameraJumpDebugLog
+            false
         );
     }
 
@@ -541,63 +533,6 @@ public class PlayerCameraAimController : MonoBehaviour
         enableAimMode = false;
         enableRecoil = false;
         drawDebugDirections = false;
-        enableCameraJumpDebugLog = false;
         ApplyAimState(false);
     }
-
-    private void TryDebugLog(bool isAiming)
-    {
-        if (!enableCameraDebugLog || Time.time < nextDebugLogTime)
-        {
-            return;
-        }
-
-        nextDebugLogTime = Time.time + Mathf.Max(0.05f, debugLogInterval);
-
-        float mainYaw = mainCamera.transform.eulerAngles.y;
-        float rootYaw = cameraRoot.eulerAngles.y;
-        float yawDiff = Mathf.DeltaAngle(mainYaw, rootYaw);
-
-        string activeCameraName = "none";
-        if (normalCamera != null && aimCamera != null)
-        {
-            activeCameraName = normalCamera.Priority >= aimCamera.Priority ? normalCamera.name : aimCamera.name;
-        }
-
-        string brainUpdate = "none";
-        CinemachineBrain brain = mainCamera.GetComponent<CinemachineBrain>();
-        if (brain != null)
-        {
-            brainUpdate = brain.m_UpdateMethod.ToString();
-        }
-
-        Debug.Log(
-            $"[CameraDebug] aiming={isAiming} activeCam={activeCameraName} brainUpdate={brainUpdate} " +
-            $"rootYaw={rootYaw:F1} mainYaw={mainYaw:F1} yawDiff={yawDiff:F1} " +
-            $"targetYaw={targetYaw:F1} smoothedYaw={yaw:F1} targetPitch={targetPitch:F1} smoothedPitch={pitch:F1} " +
-            $"recoilPitch={recoilPitch:F2} recoilYaw={recoilYaw:F2}"
-        );
-    }
-
-    private void TryDebugCameraJump()
-    {
-        if (!enableCameraJumpDebugLog)
-        {
-            return;
-        }
-
-        Vector3 currentPos = mainCamera.transform.position;
-        float delta = Vector3.Distance(currentPos, lastMainCameraPosition);
-        if (delta > cameraJumpDistanceThreshold)
-        {
-            Debug.LogWarning(
-                $"[CameraJumpDebug] delta={delta:F3} threshold={cameraJumpDistanceThreshold:F3} " +
-                $"camPos={currentPos:F3} lastPos={lastMainCameraPosition:F3} " +
-                $"collideMask={collisionLayers.value} ignoreTag={CombatConfigProvider.Config.PlayerTag}"
-            );
-        }
-
-        lastMainCameraPosition = currentPos;
-    }
-
 }

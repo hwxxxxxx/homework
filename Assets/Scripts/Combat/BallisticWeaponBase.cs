@@ -4,7 +4,6 @@ public abstract class BallisticWeaponBase : WeaponBase, IWeaponAimPointProvider
 {
     [Header("References")]
     [SerializeField] protected Transform firePoint;
-    [SerializeField] protected Transform hipFireForwardReference;
     [SerializeField] protected Camera mainCamera;
     [SerializeField] protected ProjectileBullet projectilePrefab;
     [SerializeField] protected ParticleSystem muzzleFlashPrefab;
@@ -47,7 +46,7 @@ public abstract class BallisticWeaponBase : WeaponBase, IWeaponAimPointProvider
     {
         if (!isAiming)
         {
-            return firePoint.forward;
+            return firePoint.forward.normalized;
         }
 
         Vector3 aimPoint = GetCameraAimPoint();
@@ -61,8 +60,18 @@ public abstract class BallisticWeaponBase : WeaponBase, IWeaponAimPointProvider
             return direction.normalized;
         }
 
+        direction = direction.normalized;
+        Vector3 right = Vector3.Cross(Vector3.up, direction);
+        if (right.sqrMagnitude < 0.0001f)
+        {
+            right = Vector3.Cross(Vector3.forward, direction);
+        }
+
+        right.Normalize();
+        Vector3 up = Vector3.Cross(direction, right).normalized;
+
         Vector2 spread = Random.insideUnitCircle * Mathf.Tan(spreadAngle * Mathf.Deg2Rad);
-        Vector3 spreadDir = direction + transform.right * spread.x + transform.up * spread.y;
+        Vector3 spreadDir = direction + right * spread.x + up * spread.y;
         return spreadDir.normalized;
     }
 

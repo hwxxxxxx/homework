@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public static class GameplaySceneInitializer
@@ -13,6 +14,8 @@ public static class GameplaySceneInitializer
             throw new InvalidOperationException("Gameplay scene is not loaded.");
         }
 
+        ShellSceneInitializer.ExitBaseMode(runtimeShell);
+
         LevelSceneBinding binding = ResolveBinding<LevelSceneBinding>(scene);
         PersistentRuntimeRoot persistentRoot = runtimeShell.PersistentRoot;
         persistentRoot.BattleSharedRoot.SetActive(true);
@@ -24,6 +27,24 @@ public static class GameplaySceneInitializer
         {
             throw new InvalidOperationException("PersistentRuntimeRoot has unassigned player runtime references.");
         }
+
+        persistentRoot.PlayerCombat.enabled = true;
+        persistentRoot.PlayerCombat.ForceSetAimState(false);
+
+        if (binding.PlayerSpawnPoint == null)
+        {
+            throw new InvalidOperationException($"LevelSceneBinding in scene '{scene.name}' is missing PlayerSpawnPoint.");
+        }
+
+        Transform playerTransform = persistentRoot.PlayerStats.transform;
+        Transform spawnPoint = binding.PlayerSpawnPoint;
+        PlayerController playerController = playerTransform.GetComponent<PlayerController>();
+        if (playerController == null)
+        {
+            throw new InvalidOperationException("Persistent player is missing PlayerController.");
+        }
+
+        playerController.TeleportTo(spawnPoint.position, spawnPoint.rotation);
 
         while (!runtimeShell.PlayerHud.EnsurePresentationReady())
         {

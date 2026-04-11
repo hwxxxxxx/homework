@@ -1,8 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class WeaponBase : MonoBehaviour
+public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
 {
     public enum WeaponKind
     {
@@ -12,28 +13,20 @@ public abstract class WeaponBase : MonoBehaviour
 
     [Header("Weapon Settings")]
     [SerializeField] protected WeaponConfigAsset weaponConfig;
-    [SerializeField] protected StatBlock statBlock;
 
     protected float lastFireTime;
     protected int currentAmmoInMagazine;
     protected int reserveAmmo;
     protected bool isReloading;
     protected PlayerCombat ownerCombat;
+    private readonly Dictionary<string, StatValue> weaponStats = new Dictionary<string, StatValue>();
 
     public event Action<int, int> OnAmmoChanged;
     public event Action OnFired;
 
     protected virtual void Awake()
     {
-        if (statBlock == null)
-        {
-            statBlock = GetComponentInParent<StatBlock>();
-        }
-
-        statBlock.SetBaseValue(StatIds.WeaponDamage, weaponConfig.Damage);
-        statBlock.SetBaseValue(StatIds.WeaponFireRate, weaponConfig.FireRate);
-        statBlock.SetBaseValue(StatIds.WeaponReloadTime, weaponConfig.ReloadTime);
-
+        RebuildWeaponStats();
         currentAmmoInMagazine = weaponConfig.MagazineSize;
         reserveAmmo = weaponConfig.ReserveAmmo;
         NotifyAmmoChanged();
@@ -41,8 +34,15 @@ public abstract class WeaponBase : MonoBehaviour
 
     public virtual bool CanFire()
     {
-        if (isReloading) return false;
-        if (currentAmmoInMagazine <= 0) return false;
+        if (isReloading)
+        {
+            return false;
+        }
+
+        if (currentAmmoInMagazine <= 0)
+        {
+            return false;
+        }
 
         float currentFireRate = GetFireRateValue();
         return Time.time >= lastFireTime + 1f / currentFireRate;
@@ -50,7 +50,10 @@ public abstract class WeaponBase : MonoBehaviour
 
     public virtual void TryFire()
     {
-        if (!CanFire()) return;
+        if (!CanFire())
+        {
+            return;
+        }
 
         Fire();
         currentAmmoInMagazine--;
@@ -114,10 +117,7 @@ public abstract class WeaponBase : MonoBehaviour
     {
         ownerCombat = owner;
 
-        if (statBlock == null && ownerCombat != null)
-        {
-            statBlock = ownerCombat.GetComponent<StatBlock>();
-        }
+        RebuildWeaponStats();
     }
 
     protected int GetDamageValue()
@@ -127,12 +127,12 @@ public abstract class WeaponBase : MonoBehaviour
 
     protected float GetFireRateValue()
     {
-        return GetStatValue(StatIds.WeaponFireRate);
+        return Mathf.Max(0.01f, GetStatValue(StatIds.WeaponFireRate));
     }
 
     protected float GetReloadTimeValue()
     {
-        return GetStatValue(StatIds.WeaponReloadTime);
+        return Mathf.Max(0.05f, GetStatValue(StatIds.WeaponReloadTime));
     }
 
     protected void SpawnPooledEffect(
@@ -183,14 +183,91 @@ public abstract class WeaponBase : MonoBehaviour
         return CombatTargetResolver.TryResolveDamageable(collider, out damageable);
     }
 
-    private float GetStatValue(string statId)
-    {
-        return statBlock.GetStatValue(statId);
-    }
-
     protected void NotifyAmmoChanged()
     {
         OnAmmoChanged?.Invoke(currentAmmoInMagazine, reserveAmmo);
+    }
+
+    public bool HasStat(string statId)
+    {
+        return !string.IsNullOrWhiteSpace(statId) && weaponStats.ContainsKey(statId);
+    }
+
+    public float GetStatValue(string statId)
+    {
+        if (!weaponStats.TryGetValue(statId, out StatValue stat))
+        {
+            return 0f;
+        }
+
+        return stat.CurrentValue;
+    }
+
+    public string AddModifier(string statId, StatModifier modifier)
+    {
+        if (string.IsNullOrWhiteSpace(statId))
+        {
+            return null;
+        }
+
+        if (!weaponStats.TryGetValue(statId, out StatValue stat))
+        {
+            stat = new StatValue(0f);
+            weaponStats[statId] = stat;
+        }
+
+        stat.AddModifier(modifier);
+        return modifier.ModifierId;
+    }
+
+    public bool RemoveModifier(string statId, string modifierId)
+    {
+        if (!weaponStats.TryGetValue(statId, out StatValue stat))
+        {
+            return false;
+        }
+
+        return stat.RemoveModifier(modifierId);
+    }
+
+    public int RemoveModifiersBySource(object source)
+    {
+        int totalRemoved = 0;
+        List<string> keys = new List<string>(weaponStats.Keys);
+        for (int i = 0; i < keys.Count; i++)
+        {
+            totalRemoved += weaponStats[keys[i]].RemoveModifiersBySource(source);
+        }
+
+        return totalRemoved;
+    }
+
+    public void SetBaseValue(string statId, float baseValue)
+    {
+        if (string.IsNullOrWhiteSpace(statId))
+        {
+            return;
+        }
+
+        if (!weaponStats.TryGetValue(statId, out StatValue stat))
+        {
+            weaponStats[statId] = new StatValue(baseValue);
+            return;
+        }
+
+        stat.SetBaseValue(baseValue);
+    }
+
+    private void RebuildWeaponStats()
+    {
+        if (weaponConfig == null)
+        {
+            return;
+        }
+
+        SetBaseValue(StatIds.WeaponDamage, weaponConfig.Damage);
+        SetBaseValue(StatIds.WeaponFireRate, weaponConfig.FireRate);
+        SetBaseValue(StatIds.WeaponReloadTime, weaponConfig.ReloadTime);
     }
 
     protected abstract void Fire();

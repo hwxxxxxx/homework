@@ -3,8 +3,8 @@ using System.Collections.Generic;
 public class StatModifierEffectRuntime : EffectRuntimeBase
 {
     private readonly StatModifierDescriptor[] modifierEntries;
-    private readonly List<(string statId, string modifierId)> appliedModifiers =
-        new List<(string statId, string modifierId)>();
+    private readonly List<(IModifiableStatProvider provider, string statId, string modifierId)> appliedModifiers =
+        new List<(IModifiableStatProvider provider, string statId, string modifierId)>();
 
     public StatModifierEffectRuntime(
         string effectId,
@@ -18,7 +18,7 @@ public class StatModifierEffectRuntime : EffectRuntimeBase
 
     public override void OnApply()
     {
-        if (Context.TargetStats == null || modifierEntries == null)
+        if (modifierEntries == null)
         {
             return;
         }
@@ -39,27 +39,66 @@ public class StatModifierEffectRuntime : EffectRuntimeBase
                 order: entry.order
             );
 
-            string modifierId = Context.TargetStats.AddModifier(entry.statId, modifier);
-            if (!string.IsNullOrWhiteSpace(modifierId))
+            IReadOnlyList<IModifiableStatProvider> providers = ResolveProviders(entry.statId);
+            if (providers == null || providers.Count == 0)
             {
-                appliedModifiers.Add((entry.statId, modifierId));
+                continue;
+            }
+
+            for (int p = 0; p < providers.Count; p++)
+            {
+                IModifiableStatProvider provider = providers[p];
+                if (provider == null)
+                {
+                    continue;
+                }
+
+                string modifierId = provider.AddModifier(entry.statId, modifier);
+                if (!string.IsNullOrWhiteSpace(modifierId))
+                {
+                    appliedModifiers.Add((provider, entry.statId, modifierId));
+                }
             }
         }
     }
 
     public override void OnRemove()
     {
-        if (Context.TargetStats == null)
-        {
-            return;
-        }
-
         for (int i = 0; i < appliedModifiers.Count; i++)
         {
-            (string statId, string modifierId) modifier = appliedModifiers[i];
-            Context.TargetStats.RemoveModifier(modifier.statId, modifier.modifierId);
+            (IModifiableStatProvider provider, string statId, string modifierId) modifier = appliedModifiers[i];
+            modifier.provider?.RemoveModifier(modifier.statId, modifier.modifierId);
         }
 
         appliedModifiers.Clear();
+    }
+
+    private IReadOnlyList<IModifiableStatProvider> ResolveProviders(string statId)
+    {
+        if (string.IsNullOrWhiteSpace(statId))
+        {
+            return null;
+        }
+
+        if (IsWeaponStat(statId) &&
+            Context.WeaponStatsProviders != null &&
+            Context.WeaponStatsProviders.Count > 0)
+        {
+            return Context.WeaponStatsProviders;
+        }
+
+        if (Context.TargetStats == null)
+        {
+            return null;
+        }
+
+        return new IModifiableStatProvider[] { Context.TargetStats };
+    }
+
+    private static bool IsWeaponStat(string statId)
+    {
+        return statId == StatIds.WeaponDamage ||
+               statId == StatIds.WeaponFireRate ||
+               statId == StatIds.WeaponReloadTime;
     }
 }

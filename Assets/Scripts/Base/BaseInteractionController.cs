@@ -9,27 +9,28 @@ public class BaseInteractionController : MonoBehaviour
     private BaseInteractionTarget[] interactionTargets;
     private UiTextConfigAsset textConfig;
 
+    public void ConfigureRuntime(GameInput runtimeInput, BaseSceneUIController runtimeUiController, Transform runtimeInteractionRoot)
+    {
+        gameInput = runtimeInput;
+        uiController = runtimeUiController;
+        interactionRoot = runtimeInteractionRoot;
+        RefreshInteractionTargets();
+        enabled = gameInput != null && uiController != null && interactionTargets != null && interactionTargets.Length > 0;
+    }
+
     private void Awake()
     {
         textConfig = UiTextConfigProvider.Config;
-
-        if (gameInput == null || uiController == null || interactionRoot == null)
-        {
-            Debug.LogError("BaseInteractionController references are not fully assigned.", this);
-            enabled = false;
-            return;
-        }
-
-        interactionTargets = interactionRoot.GetComponentsInChildren<BaseInteractionTarget>(true);
-        if (interactionTargets.Length == 0)
-        {
-            Debug.LogError("BaseInteractionController interactionRoot has no BaseInteractionTarget.", this);
-            enabled = false;
-        }
+        RefreshInteractionTargets();
     }
 
     private void Update()
     {
+        if (gameInput == null || uiController == null || interactionRoot == null)
+        {
+            return;
+        }
+
         if (uiController.IsModalOpen)
         {
             uiController.SetInteractionHint(textConfig.InteractionPromptIdle);
@@ -59,6 +60,13 @@ public class BaseInteractionController : MonoBehaviour
                 uiController.ShowUpgradePanel();
                 break;
         }
+    }
+
+    private void RefreshInteractionTargets()
+    {
+        interactionTargets = interactionRoot == null
+            ? null
+            : interactionRoot.GetComponentsInChildren<BaseInteractionTarget>(true);
     }
 
     private BaseInteractionTarget GetNearestTarget()

@@ -24,9 +24,12 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float coyoteTime = 0.1f;
     [SerializeField] private float jumpBufferTime = 0.1f;
 
-    [Header("Debug")]
-    [SerializeField] private bool enableMovementDebugLog;
-    [SerializeField] private float debugLogInterval = 0.25f;
+    public GameInput GameInput => gameInput;
+    public Transform CameraRoot => cameraRoot;
+    public Vector3 HorizontalVelocity => horizontalVelocity;
+    public bool IsGrounded => isGrounded;
+    public bool IsAiming => playerCombat != null && playerCombat.IsAiming;
+    public float MaxGroundSpeed => Mathf.Max(moveSpeed, runSpeed);
 
     private CharacterController characterController;
     private float verticalVelocity;
@@ -36,11 +39,6 @@ public class PlayerController : MonoBehaviour
     private float jumpBufferTimer;
     private bool isGrounded;
     private bool wasGrounded;
-    private float nextDebugLogTime;
-    private Vector3 lastCameraForward;
-    private Vector2 lastMoveInput;
-    private bool usedCameraRootBasis;
-
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
@@ -63,7 +61,6 @@ public class PlayerController : MonoBehaviour
     {
         bool isAiming = playerCombat != null && playerCombat.IsAiming;
         GetCameraBasis(out Vector3 cameraForward, out Vector3 cameraRight);
-        lastCameraForward = cameraForward;
 
         cameraForward.y = 0f;
         cameraRight.y = 0f;
@@ -73,7 +70,6 @@ public class PlayerController : MonoBehaviour
         RotateCharacterByState(isAiming, cameraForward);
 
         Vector2 moveInput = gameInput.GetMoveInput();
-        lastMoveInput = moveInput;
         Vector3 inputDirection = new Vector3(moveInput.x, 0f, moveInput.y);
         Vector3 targetHorizontalVelocity = Vector3.zero;
         if (inputDirection.magnitude >= 0.1f)
@@ -98,7 +94,6 @@ public class PlayerController : MonoBehaviour
             currentAcceleration * controlMultiplier * Time.deltaTime
         );
 
-        TryDebugLog(isAiming);
     }
 
     private void RotateCharacterByState(bool isAiming, Vector3 cameraForward)
@@ -158,6 +153,7 @@ public class PlayerController : MonoBehaviour
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             jumpBufferTimer = 0f;
             coyoteTimer = 0f;
+            isGrounded = false;
         }
 
         verticalVelocity += gravity * Time.deltaTime;
@@ -188,28 +184,30 @@ public class PlayerController : MonoBehaviour
 
     private void GetCameraBasis(out Vector3 forward, out Vector3 right)
     {
-        usedCameraRootBasis = true;
         forward = cameraRoot.forward;
         right = cameraRoot.right;
     }
 
-    private void TryDebugLog(bool isAiming)
+    public void TeleportTo(Vector3 position, Quaternion rotation)
     {
-        if (!enableMovementDebugLog || Time.time < nextDebugLogTime)
+        bool controllerWasEnabled = characterController.enabled;
+        if (controllerWasEnabled)
         {
-            return;
+            characterController.enabled = false;
         }
 
-        nextDebugLogTime = Time.time + Mathf.Max(0.05f, debugLogInterval);
+        transform.SetPositionAndRotation(position, rotation);
 
-        float cameraForwardYaw = Mathf.Atan2(lastCameraForward.x, lastCameraForward.z) * Mathf.Rad2Deg;
-        float playerYaw = transform.eulerAngles.y;
-        float yawDelta = Mathf.DeltaAngle(playerYaw, cameraForwardYaw);
+        if (controllerWasEnabled)
+        {
+            characterController.enabled = true;
+        }
 
-        Debug.Log(
-            $"[PlayerMoveDebug] basis={(usedCameraRootBasis ? "CameraRoot" : "MainCamera")} aiming={isAiming} " +
-            $"moveInput={lastMoveInput:F2} horizVel={horizontalVelocity.magnitude:F2} vertVel={verticalVelocity:F2} " +
-            $"grounded={isGrounded} playerYaw={playerYaw:F1} camYaw={cameraForwardYaw:F1} yawDelta={yawDelta:F1}"
-        );
+        horizontalVelocity = Vector3.zero;
+        verticalVelocity = groundedStickVelocity;
+        coyoteTimer = 0f;
+        jumpBufferTimer = 0f;
+        isGrounded = false;
+        wasGrounded = false;
     }
 }

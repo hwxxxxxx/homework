@@ -1929,6 +1929,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyDropListeners: []
   encounterController: {fileID: 1755496543}
+  playerSpawnPoint: {fileID: 939812803}
 --- !u!114 &1755496543
 MonoBehaviour:
   m_ObjectHideFlags: 0

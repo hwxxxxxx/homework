@@ -30,6 +30,5 @@ public class MainMenuUI : MonoBehaviour
     public void OnQuitGame()
     {
         Application.Quit();
-        Debug.Log("Quit Game");
     }
 }

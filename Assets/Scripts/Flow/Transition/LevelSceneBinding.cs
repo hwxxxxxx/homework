@@ -4,8 +4,10 @@ public class LevelSceneBinding : MonoBehaviour
 {
     [SerializeField] private EnemyDeathDropListenerBase[] enemyDropListeners;
     [SerializeField] private LevelEncounterController encounterController;
+    [SerializeField] private Transform playerSpawnPoint;
 
     public EnemyDeathDropListenerBase[] EnemyDropListeners => enemyDropListeners;
+    public Transform PlayerSpawnPoint => playerSpawnPoint;
 
     public void StartEncounter(RuntimeShell shell, string runId)
     {
