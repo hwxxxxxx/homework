@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyStats))]
 [RequireComponent(typeof(EnemyAIController))]
 [RequireComponent(typeof(EnemyCombat))]
+[RequireComponent(typeof(EnemyDeathDissolveView))]
 public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 {
     [Header("References")]
@@ -12,9 +13,8 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
     [SerializeField] private EnemyAIController enemyAIController;
     [SerializeField] private EnemyCombat enemyCombat;
     [SerializeField] private StatBlock statBlock;
+    [SerializeField] private EnemyDeathDissolveView deathDissolveView;
     [SerializeField] private Collider[] collidersToDisableOnDeath;
-
-    private float despawnDelayOnDeath;
 
     public event Action<EnemyBase> OnEnemyDied;
     private bool hasDied;
@@ -44,6 +44,11 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         if (collidersToDisableOnDeath == null || collidersToDisableOnDeath.Length == 0)
         {
             collidersToDisableOnDeath = GetComponentsInChildren<Collider>();
+        }
+
+        if (deathDissolveView == null)
+        {
+            deathDissolveView = GetComponent<EnemyDeathDissolveView>();
         }
 
         ApplyConfig();
@@ -109,7 +114,17 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         }
 
         DisableColliders();
-        PoolService.DespawnAfterDelay(gameObject, despawnDelayOnDeath);
+        deathDissolveView.Play(
+            enemyConfig.DeathDissolveDuration,
+            enemyConfig.DeathDissolveEdgeWidth,
+            enemyConfig.DeathDissolveEdgeColor,
+            enemyConfig.DeathDissolveNoiseScale,
+            HandleDeathDissolveCompleted);
+    }
+
+    private void HandleDeathDissolveCompleted()
+    {
+        PoolService.Despawn(gameObject);
     }
 
     private void DisableColliders()
@@ -150,6 +165,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
     {
         hasDied = false;
         EnableColliders();
+        deathDissolveView.ResetVisuals();
         ApplyConfig();
 
         if (enemyStats != null)
@@ -171,6 +187,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
     public void OnDespawnedToPool()
     {
         hasDied = false;
+        deathDissolveView.ResetVisuals();
     }
 
     private void ApplyConfig()
@@ -193,6 +210,5 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 
         enemyCombat.ApplyConfig(enemyConfig);
         enemyAIController.ApplyConfig(enemyConfig);
-        despawnDelayOnDeath = enemyConfig.DespawnDelayOnDeath;
     }
 }

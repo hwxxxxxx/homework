@@ -20,6 +20,25 @@
     unity-font-style: bold;
 }
 
+.buff-stats-panel {
+    position: absolute;
+    left: 24px;
+    top: 50%;
+    translate: 0 -80px;
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.buff-stat-text {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
 .hud-ammo {
     position: absolute;
     right: 24px;

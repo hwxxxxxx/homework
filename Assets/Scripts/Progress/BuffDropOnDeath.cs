@@ -8,19 +8,47 @@ public class BuffDropOnDeath : EnemyDeathDropListenerBase
 
     public void SetTargetEffectController(EffectController controller)
     {
+        if (controller == null)
+        {
+            throw new System.ArgumentNullException(nameof(controller));
+        }
+
         targetEffectController = controller;
     }
 
     protected override void HandleEnemyDiedInRun(EnemyBase enemy)
     {
+        if (dropTable == null || targetEffectController == null)
+        {
+            throw new System.InvalidOperationException("BuffDropOnDeath requires dropTable and targetEffectController.");
+        }
+
+        RunLootConfigAsset config = RunLootConfigProvider.Config;
+        if (config.BuffPickupPrefab == null)
+        {
+            throw new System.InvalidOperationException("RunLootConfig.BuffPickupPrefab is required.");
+        }
+
         if (!dropTable.TryRoll(out EffectAsset effect, out int stackCount))
         {
             return;
         }
 
-        for (int i = 0; i < stackCount; i++)
+        string buffStatId = ResolveBuffStatId(effect);
+        Vector3 spawnPosition = (enemy != null ? enemy.transform.position : transform.position) + Vector3.up * config.BuffPickupSpawnHeightOffset;
+        BuffPickupItem pickupItem = PoolService.Spawn(config.BuffPickupPrefab, spawnPosition, Quaternion.identity);
+        pickupItem.InitializeDrop(effect, stackCount, targetEffectController, buffStatId);
+    }
+
+    private static string ResolveBuffStatId(EffectAsset effect)
+    {
+        if (!(effect is StatModifierEffectAsset statModifierEffect) ||
+            statModifierEffect.Modifiers == null ||
+            statModifierEffect.Modifiers.Length == 0)
         {
-            targetEffectController.ApplyEffect(effect, enemy != null ? enemy.gameObject : null);
+            return string.Empty;
         }
+
+        return statModifierEffect.Modifiers[0].statId;
     }
 }

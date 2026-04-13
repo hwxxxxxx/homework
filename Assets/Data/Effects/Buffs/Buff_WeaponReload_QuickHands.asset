@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Buff_WeaponReload_QuickHands
   m_EditorClassIdentifier: 
   effectId: buff.weapon.reload.quickhands
-  stackable: 0
-  duration: 10
+  stackable: 1
+  duration: 9999
   modifiers:
   - statId: ReloadTime
     value: -0.3

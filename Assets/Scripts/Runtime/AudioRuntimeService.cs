@@ -140,4 +140,14 @@ public class AudioRuntimeService : MonoBehaviour
         emitter.clip = clip;
         emitter.Play();
     }
+
+    public void SetBgmVolume(float volume)
+    {
+        bgmSource.volume = Mathf.Clamp01(volume);
+    }
+
+    public float GetBgmVolume()
+    {
+        return bgmSource.volume;
+    }
 }

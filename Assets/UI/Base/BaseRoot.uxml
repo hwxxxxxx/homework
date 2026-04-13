@@ -1,35 +1,32 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
     <ui:Style src="project://database/Assets/UI/Base/BaseRoot.uss" />
     <ui:VisualElement name="base-root" class="base-root">
-        <ui:Label name="title" text="BASE" class="title" />
-        <ui:VisualElement name="progress-panel" class="panel">
-            <ui:Label text="Progress" class="panel-title" />
-            <ui:Label text="Fragments and unlock progress will be shown here." />
-        </ui:VisualElement>
-        <ui:VisualElement name="unlock-panel" class="panel">
-            <ui:Label text="Unlocks" class="panel-title" />
-            <ui:Label text="Use the upgrade interaction point to unlock levels." />
-        </ui:VisualElement>
-        <ui:Label name="interaction-hint" class="hint" text="" />
-
-        <ui:VisualElement name="battle-panel" class="modal">
-            <ui:Label text="Select Level" class="panel-title" />
-            <ui:Button name="level-body1-btn" text="Body Level 1" class="battle-level-btn" />
-            <ui:Button name="level-body2-btn" text="Body Level 2" class="battle-level-btn" />
-            <ui:Button name="level-soul1-btn" text="Soul Level 1" class="battle-level-btn" />
-            <ui:Button name="level-memory1-btn" text="Memory Level 1" class="battle-level-btn" />
-            <ui:Label name="battle-status" text="" />
-            <ui:Button name="start-level-btn" text="Start Selected Level" />
-            <ui:Button name="close-battle-btn" text="Close" />
+        <ui:VisualElement name="interaction-hint" class="interaction-prompt">
+            <ui:Label text="E" class="interaction-key" />
         </ui:VisualElement>
 
-        <ui:VisualElement name="upgrade-panel" class="modal">
-            <ui:Label text="Unlock Levels" class="panel-title" />
-            <ui:Button name="unlock-body2-btn" text="Unlock Body Level 2" class="unlock-level-btn" />
-            <ui:Button name="unlock-soul1-btn" text="Unlock Soul Level 1" class="unlock-level-btn" />
-            <ui:Button name="unlock-memory1-btn" text="Unlock Memory Level 1" class="unlock-level-btn" />
-            <ui:Label name="unlock-status" text="" />
-            <ui:Button name="close-upgrade-btn" text="Close" />
+        <ui:VisualElement name="battle-panel" class="modal wood-modal draggable-window">
+            <ui:VisualElement name="battle-drag-handle" class="panel-header drag-handle">
+                <ui:Label text="Select Level" class="panel-title" />
+            </ui:VisualElement>
+            <ui:Button name="level-body1-btn" text="Body Level 1" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-body2-btn" text="Body Level 2" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-soul1-btn" text="Soul Level 1" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-memory1-btn" text="Memory Level 1" class="battle-level-btn wood-btn" />
+            <ui:Label name="battle-status" text="" class="status-text" />
+            <ui:Button name="start-level-btn" text="Start Selected Level" class="wood-btn action-btn" />
+            <ui:Button name="close-battle-btn" text="Close" class="wood-btn close-btn" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="upgrade-panel" class="modal wood-modal draggable-window">
+            <ui:VisualElement name="upgrade-drag-handle" class="panel-header drag-handle">
+                <ui:Label text="Unlock Levels" class="panel-title" />
+            </ui:VisualElement>
+            <ui:Button name="unlock-body2-btn" text="Unlock Body Level 2" class="unlock-level-btn wood-btn" />
+            <ui:Button name="unlock-soul1-btn" text="Unlock Soul Level 1" class="unlock-level-btn wood-btn" />
+            <ui:Button name="unlock-memory1-btn" text="Unlock Memory Level 1" class="unlock-level-btn wood-btn" />
+            <ui:Label name="unlock-status" text="" class="status-text" />
+            <ui:Button name="close-upgrade-btn" text="Close" class="wood-btn close-btn" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

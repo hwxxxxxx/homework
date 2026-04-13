@@ -1,58 +1,107 @@
 .base-root {
-    flex-direction: column;
-    padding: 20px;
-    gap: 10px;
-    width: 520px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
 }
 
-.title {
+.interaction-prompt {
+    position: absolute;
+    display: none;
+    width: 52px;
+    height: 52px;
+    justify-content: center;
+    align-items: center;
+    background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/UI board Small Set.png?fileID=2800000&guid=8eb69fafe4f719b49bb2dd1a7358aaaa&type=3");
+    -unity-background-scale-mode: scale-to-stretch-to-fill;
+    unity-background-image-tint-color: rgba(255, 255, 255, 0.96);
+    opacity: 0.96;
+}
+
+.interaction-key {
     font-size: 22px;
     unity-font-style: bold;
-    color: rgb(245,245,245);
-}
-
-.panel {
-    padding: 12px;
-    border-top-width: 1px;
-    border-right-width: 1px;
-    border-bottom-width: 1px;
-    border-left-width: 1px;
-    border-top-color: rgb(90,90,90);
-    border-right-color: rgb(90,90,90);
-    border-bottom-color: rgb(90,90,90);
-    border-left-color: rgb(90,90,90);
-    background-color: rgba(20,20,20,0.55);
-}
-
-.panel-title {
-    font-size: 16px;
-    unity-font-style: bold;
-    margin-bottom: 6px;
-}
-
-.hint {
-    font-size: 14px;
-    unity-font-style: bold;
-    color: rgb(255, 223, 120);
-    margin-top: 4px;
-    display: none;
+    color: rgb(83, 46, 24);
+    -unity-text-align: middle-center;
+    width: 100%;
+    height: 100%;
 }
 
 .modal {
     position: absolute;
-    right: 20px;
-    top: 20px;
-    width: 360px;
-    padding: 12px;
-    gap: 8px;
-    border-top-width: 1px;
-    border-right-width: 1px;
-    border-bottom-width: 1px;
-    border-left-width: 1px;
-    border-top-color: rgb(100,100,100);
-    border-right-color: rgb(100,100,100);
-    border-bottom-color: rgb(100,100,100);
-    border-left-color: rgb(100,100,100);
-    background-color: rgba(18,18,18,0.9);
+    right: 24px;
+    top: 24px;
+    width: 436px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    gap: 10px;
     display: none;
+}
+
+.wood-modal {
+    background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/UI board Large Set.png?fileID=2800000&guid=1a5d8785d80a4ee42a2a4c8632436dc0&type=3");
+    -unity-background-scale-mode: scale-to-stretch-to-fill;
+}
+
+.panel-title {
+    font-size: 24px;
+    unity-font-style: bold;
+    color: rgb(76, 40, 18);
+}
+
+.panel-header {
+    height: 40px;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+
+.drag-handle {
+    cursor: move;
+}
+
+.wood-btn {
+    height: 42px;
+    padding-left: 14px;
+    padding-right: 14px;
+    margin-bottom: 2px;
+    color: rgb(255, 246, 225);
+    font-size: 15px;
+    unity-font-style: bold;
+    -unity-text-align: middle-center;
+    background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/TextBTN_Medium.png?fileID=2800000&guid=efee20b64d1e73942a29ba61ce3379c3&type=3");
+    -unity-background-scale-mode: scale-to-stretch-to-fill;
+}
+
+.wood-btn:hover {
+    color: rgb(255, 251, 238);
+}
+
+.wood-btn:active {
+    background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/TextBTN_Medium_Pressed.png?fileID=2800000&guid=047b929beb10565479851d39b452dfb6&type=3");
+}
+
+.wood-btn:disabled {
+    opacity: 0.55;
+}
+
+.action-btn {
+    margin-top: 8px;
+    height: 46px;
+}
+
+.close-btn {
+    height: 40px;
+    background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/TextBTN_Medium.png?fileID=2800000&guid=efee20b64d1e73942a29ba61ce3379c3&type=3");
+}
+
+.status-text {
+    min-height: 44px;
+    color: rgb(98, 52, 24);
+    font-size: 14px;
+    white-space: normal;
+    -unity-text-align: middle-left;
+    margin-top: 2px;
 }

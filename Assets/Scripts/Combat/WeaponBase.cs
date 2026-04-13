@@ -114,6 +114,36 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
         return weaponConfig.WeaponKind;
     }
 
+    public float GetBaseDamageValue()
+    {
+        return weaponConfig != null ? weaponConfig.Damage : 0f;
+    }
+
+    public float GetBaseFireRateValue()
+    {
+        return weaponConfig != null ? weaponConfig.FireRate : 0f;
+    }
+
+    public float GetBaseReloadTimeValue()
+    {
+        return weaponConfig != null ? weaponConfig.ReloadTime : 0f;
+    }
+
+    public float GetCurrentDamageValue()
+    {
+        return GetDamageValue();
+    }
+
+    public float GetCurrentFireRateValue()
+    {
+        return GetFireRateValue();
+    }
+
+    public float GetCurrentReloadTimeValue()
+    {
+        return GetReloadTimeValue();
+    }
+
     public virtual void BindOwner(PlayerCombat owner)
     {
         ownerCombat = owner;

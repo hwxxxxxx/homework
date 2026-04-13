@@ -21,6 +21,9 @@ public class GlobalRuntimeConfigAsset : ScriptableObject
     [Header("Audio")]
     [SerializeField] private AudioConfigAsset audioConfig;
 
+    [Header("Run Loot")]
+    [SerializeField] private RunLootConfigAsset runLootConfig;
+
     public void Install()
     {
         ValidateReferences();
@@ -31,6 +34,7 @@ public class GlobalRuntimeConfigAsset : ScriptableObject
         RuntimeUiConfigProvider.Configure(runtimeUiConfig);
         UiTextConfigProvider.Configure(uiTextConfig);
         AudioConfigProvider.Configure(audioConfig);
+        RunLootConfigProvider.Configure(runLootConfig);
     }
 
     private void ValidateReferences()
@@ -41,7 +45,8 @@ public class GlobalRuntimeConfigAsset : ScriptableObject
             progressConfig == null ||
             runtimeUiConfig == null ||
             uiTextConfig == null ||
-            audioConfig == null)
+            audioConfig == null ||
+            runLootConfig == null)
         {
             throw new InvalidOperationException("GlobalRuntimeConfigAsset has unassigned required config references.");
         }

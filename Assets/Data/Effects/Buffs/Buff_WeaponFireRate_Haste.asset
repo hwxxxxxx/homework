@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Buff_WeaponFireRate_Haste
   m_EditorClassIdentifier: 
   effectId: buff.weapon.firerate.haste
-  stackable: 0
-  duration: 10
+  stackable: 1
+  duration: 9999
   modifiers:
   - statId: FireRate
     value: 0.3

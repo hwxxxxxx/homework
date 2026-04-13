@@ -4,6 +4,7 @@ using UnityEngine;
 public class StatModifierEffectAsset : EffectAsset
 {
     [SerializeField] private StatModifierDescriptor[] modifiers;
+    public StatModifierDescriptor[] Modifiers => modifiers;
 
     public override IEffectRuntime CreateRuntime(EffectContext context)
     {

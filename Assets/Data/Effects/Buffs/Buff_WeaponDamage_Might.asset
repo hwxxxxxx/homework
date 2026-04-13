@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Buff_WeaponDamage_Might
   m_EditorClassIdentifier: 
   effectId: buff.weapon.damage.might
-  stackable: 0
-  duration: 12
+  stackable: 1
+  duration: 9999
   modifiers:
   - statId: Damage
     value: 0.35

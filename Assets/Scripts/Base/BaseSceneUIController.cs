@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 public class BaseSceneUIController : MonoBehaviour
 {
     private const string CursorOwner = "BaseModalUI";
+    private const float InteractionPromptHalfSize = 26f;
 
     [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
     [SerializeField] private RunCatalogAsset runCatalog;
@@ -15,9 +16,11 @@ public class BaseSceneUIController : MonoBehaviour
 
     private readonly List<Action> battleLevelHandlers = new List<Action>();
     private readonly List<Action> unlockLevelHandlers = new List<Action>();
+    private readonly List<UIDraggableWindowManipulator> windowDragManipulators = new List<UIDraggableWindowManipulator>();
+    private bool isUiBound;
 
     private UIDocument uiDocument;
-    private Label interactionHintLabel;
+    private VisualElement interactionPrompt;
     private Label battleStatusLabel;
     private Label unlockStatusLabel;
     private VisualElement battlePanel;
@@ -55,13 +58,16 @@ public class BaseSceneUIController : MonoBehaviour
     {
         BindUi();
         HideAllPanels();
-        SetInteractionHint(string.Empty);
+        SetInteractionPrompt(false, Vector3.zero);
     }
 
     private void OnDisable()
     {
         CursorPolicyService.ReleaseUiCursor(CursorOwner);
-        UnbindUi();
+        if (isUiBound)
+        {
+            UnbindUi();
+        }
     }
 
     public void ShowBattlePanel()
@@ -89,17 +95,53 @@ public class BaseSceneUIController : MonoBehaviour
         CursorPolicyService.ReleaseUiCursor(CursorOwner);
     }
 
-    public void SetInteractionHint(string hint)
+    public void SetInteractionPrompt(bool visible, Vector3 worldPosition)
     {
-        bool hasHint = !string.IsNullOrWhiteSpace(hint);
-        interactionHintLabel.text = hasHint ? hint : string.Empty;
-        interactionHintLabel.style.display = hasHint ? DisplayStyle.Flex : DisplayStyle.None;
+        if (!visible)
+        {
+            interactionPrompt.style.display = DisplayStyle.None;
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            interactionPrompt.style.display = DisplayStyle.None;
+            return;
+        }
+
+        VisualElement root = uiDocument.rootVisualElement;
+        float rootWidth = root.resolvedStyle.width;
+        float rootHeight = root.resolvedStyle.height;
+        if (rootWidth <= 0f || rootHeight <= 0f)
+        {
+            interactionPrompt.style.display = DisplayStyle.None;
+            return;
+        }
+
+        Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
+        if (screenPosition.z <= 0f)
+        {
+            interactionPrompt.style.display = DisplayStyle.None;
+            return;
+        }
+
+        float panelX = screenPosition.x / Screen.width * rootWidth;
+        float panelY = (Screen.height - screenPosition.y) / Screen.height * rootHeight;
+        interactionPrompt.style.left = panelX - InteractionPromptHalfSize;
+        interactionPrompt.style.top = panelY - InteractionPromptHalfSize;
+        interactionPrompt.style.display = DisplayStyle.Flex;
     }
 
     private void BindUi()
     {
+        if (isUiBound)
+        {
+            UnbindUi();
+        }
+
         VisualElement root = uiDocument.rootVisualElement;
-        interactionHintLabel = root.Q<Label>("interaction-hint");
+        interactionPrompt = root.Q<VisualElement>("interaction-hint");
         battleStatusLabel = root.Q<Label>("battle-status");
         unlockStatusLabel = root.Q<Label>("unlock-status");
         battlePanel = root.Q<VisualElement>("battle-panel");
@@ -109,6 +151,9 @@ public class BaseSceneUIController : MonoBehaviour
         startLevelButton = root.Q<Button>("start-level-btn");
         closeBattleButton = root.Q<Button>("close-battle-btn");
         closeUpgradeButton = root.Q<Button>("close-upgrade-btn");
+        ValidateBoundElements();
+        RegisterDraggableWindow(root, battlePanel, "battle-drag-handle");
+        RegisterDraggableWindow(root, upgradePanel, "upgrade-drag-handle");
 
         for (int i = 0; i < battleLevelButtons.Count; i++)
         {
@@ -129,17 +174,26 @@ public class BaseSceneUIController : MonoBehaviour
         startLevelButton.clicked += HandleStartLevel;
         closeBattleButton.clicked += HideAllPanels;
         closeUpgradeButton.clicked += HideAllPanels;
+        isUiBound = true;
     }
 
     private void UnbindUi()
     {
-        for (int i = 0; i < battleLevelButtons.Count; i++)
+        for (int i = 0; i < windowDragManipulators.Count; i++)
+        {
+            windowDragManipulators[i].Dispose();
+        }
+        windowDragManipulators.Clear();
+
+        int battleUnbindCount = Mathf.Min(battleLevelButtons.Count, battleLevelHandlers.Count);
+        for (int i = 0; i < battleUnbindCount; i++)
         {
             battleLevelButtons[i].clicked -= battleLevelHandlers[i];
         }
         battleLevelHandlers.Clear();
 
-        for (int i = 0; i < unlockLevelButtons.Count; i++)
+        int unlockUnbindCount = Mathf.Min(unlockLevelButtons.Count, unlockLevelHandlers.Count);
+        for (int i = 0; i < unlockUnbindCount; i++)
         {
             unlockLevelButtons[i].clicked -= unlockLevelHandlers[i];
         }
@@ -148,6 +202,7 @@ public class BaseSceneUIController : MonoBehaviour
         startLevelButton.clicked -= HandleStartLevel;
         closeBattleButton.clicked -= HideAllPanels;
         closeUpgradeButton.clicked -= HideAllPanels;
+        isUiBound = false;
     }
 
     private void HandleSelectLevel(int index)
@@ -301,5 +356,27 @@ public class BaseSceneUIController : MonoBehaviour
     private static string FormatText(string template, string value)
     {
         return string.Format(template, value);
+    }
+
+    private void RegisterDraggableWindow(VisualElement root, VisualElement window, string handleName)
+    {
+        VisualElement handle = root.Q<VisualElement>(handleName);
+        UIDraggableWindowManipulator manipulator = new UIDraggableWindowManipulator(root, window, handle);
+        windowDragManipulators.Add(manipulator);
+    }
+
+    private void ValidateBoundElements()
+    {
+        if (interactionPrompt == null ||
+            battleStatusLabel == null ||
+            unlockStatusLabel == null ||
+            battlePanel == null ||
+            upgradePanel == null ||
+            startLevelButton == null ||
+            closeBattleButton == null ||
+            closeUpgradeButton == null)
+        {
+            throw new InvalidOperationException("BaseRoot.uxml is missing required named UI elements.");
+        }
     }
 }

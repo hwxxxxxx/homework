@@ -1,6 +1,11 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="HUD.uss" />
     <ui:VisualElement name="hud-root" class="hud-root">
+        <ui:VisualElement name="buff-stats-panel" class="buff-stats-panel">
+            <ui:Label name="buff-damage-bonus-text" class="buff-stat-text" text="Damage Buff: +0%" />
+            <ui:Label name="buff-fire-rate-bonus-text" class="buff-stat-text" text="FireRate Buff: +0%" />
+            <ui:Label name="buff-reload-bonus-text" class="buff-stat-text" text="Reload Buff: +0%" />
+        </ui:VisualElement>
         <ui:Label name="health-text" class="hud-health" text="HP 0 / 0" />
         <ui:Label name="ammo-text" class="hud-ammo" text="0 / 0" />
         <ui:Label name="skill-cooldown-text" class="hud-skill-text" text="Q READY" />

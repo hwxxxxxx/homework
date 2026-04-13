@@ -86,6 +86,12 @@ public class PauseMenuController : MonoBehaviour
     {
         pauseController.SetPaused(false);
         SetPauseVisible(false);
+        if (gameStateService.CurrentState == GameStateId.Base)
+        {
+            gameFlowOrchestrator.EnterMainMenu();
+            return;
+        }
+
         gameFlowOrchestrator.ReturnToMainMenu();
     }
 

@@ -5,7 +5,6 @@ public class EnemyConfigAsset : ScriptableObject
 {
     [Header("Vitals")]
     [SerializeField] private int maxHealth = 100;
-    [SerializeField] private float despawnDelayOnDeath = 2f;
 
     [Header("Combat")]
     [SerializeField] private int attackDamage = 10;
@@ -21,8 +20,13 @@ public class EnemyConfigAsset : ScriptableObject
     [SerializeField] private float repathInterval = 0.1f;
     [SerializeField] private float faceTargetSpeed = 10f;
 
+    [Header("Death Visual")]
+    [SerializeField] private float deathDissolveDuration = 1.2f;
+    [SerializeField] private float deathDissolveEdgeWidth = 0.15f;
+    [SerializeField] private Color deathDissolveEdgeColor = new Color(1f, 0.5f, 0.2f, 1f);
+    [SerializeField] private float deathDissolveNoiseScale = 2f;
+
     public int MaxHealth => maxHealth;
-    public float DespawnDelayOnDeath => despawnDelayOnDeath;
     public int AttackDamage => attackDamage;
     public float AttackInterval => attackInterval;
     public float AttackRange => attackRange;
@@ -33,4 +37,8 @@ public class EnemyConfigAsset : ScriptableObject
     public float DetectionRange => detectionRange;
     public float RepathInterval => repathInterval;
     public float FaceTargetSpeed => faceTargetSpeed;
+    public float DeathDissolveDuration => deathDissolveDuration;
+    public float DeathDissolveEdgeWidth => deathDissolveEdgeWidth;
+    public Color DeathDissolveEdgeColor => deathDissolveEdgeColor;
+    public float DeathDissolveNoiseScale => deathDissolveNoiseScale;
 }

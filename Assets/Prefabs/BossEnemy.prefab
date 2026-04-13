@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 1492289674698113374}
   - component: {fileID: 2931419760660352017}
   - component: {fileID: 990000000000000002}
+  - component: {fileID: 4412345678901234568}
   - component: {fileID: 2307689752589708629}
   m_Layer: 0
   m_Name: BossEnemy
@@ -76,7 +77,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: b9460437ff5a4ad99745323d6f5cc571, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -202,6 +203,7 @@ MonoBehaviour:
   enemyAIController: {fileID: 0}
   enemyCombat: {fileID: 0}
   statBlock: {fileID: 0}
+  deathDissolveView: {fileID: 4412345678901234568}
   collidersToDisableOnDeath: []
 --- !u!114 &8244933989182514567
 MonoBehaviour:
@@ -318,6 +320,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dccffb8362bc0144c89f858051ed16e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &4412345678901234568
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8277816582260641995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7be74a3d072e4d6d9be6b9aab4b2d6a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetRenderers: []
 --- !u!114 &2307689752589708629
 MonoBehaviour:
   m_ObjectHideFlags: 0

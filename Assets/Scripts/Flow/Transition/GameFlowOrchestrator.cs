@@ -34,57 +34,32 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     public void EnterMainMenu()
     {
-        if (isTransitioning)
-        {
-            return;
-        }
-
-        StartCoroutine(EnterMainMenuRoutine());
+        StartTransition(EnterMainMenuRoutine());
     }
 
     public void EnterMainMenuFromBoot()
     {
-        if (isTransitioning)
-        {
-            return;
-        }
-
-        StartCoroutine(EnterMainMenuFromBootRoutine());
+        StartTransition(EnterMainMenuFromBootRoutine());
     }
 
     public void EnterBase()
     {
-        if (isTransitioning)
-        {
-            return;
-        }
-
-        StartCoroutine(EnterBaseRoutine());
+        StartTransition(EnterBaseRoutine());
     }
 
     public void EnterRun(string levelId)
     {
-        if (isTransitioning)
-        {
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(levelId))
         {
             throw new ArgumentException("Run levelId cannot be null or empty.", nameof(levelId));
         }
 
-        StartCoroutine(EnterRunRoutine(levelId));
+        StartTransition(EnterRunRoutine(levelId));
     }
 
     public void ReturnToBase()
     {
-        if (isTransitioning)
-        {
-            return;
-        }
-
-        StartCoroutine(ReturnToBaseRoutine());
+        StartTransition(ReturnToBaseRoutine());
     }
 
     public void ReturnToMainMenu()
@@ -94,12 +69,11 @@ public class GameFlowOrchestrator : MonoBehaviour
             return;
         }
 
-        StartCoroutine(ReturnToMainMenuRoutine());
+        StartTransition(ReturnToMainMenuRoutine());
     }
 
     private IEnumerator EnterMainMenuRoutine()
     {
-        isTransitioning = true;
         SceneCatalogAsset.SceneEntry targetEntry = ResolveMainMenuEntry();
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
         ApplyPreExit(policy);
@@ -120,7 +94,6 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     private IEnumerator EnterMainMenuFromBootRoutine()
     {
-        isTransitioning = true;
         SceneCatalogAsset.SceneEntry targetEntry = ResolveMainMenuEntry();
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
         ApplyPreExit(policy);
@@ -141,7 +114,6 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     private IEnumerator EnterBaseRoutine()
     {
-        isTransitioning = true;
         SceneCatalogAsset.SceneEntry targetEntry = ResolveBaseEntry();
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
         ApplyPreExit(policy);
@@ -174,7 +146,6 @@ public class GameFlowOrchestrator : MonoBehaviour
             throw new InvalidOperationException($"Run '{levelId}' maps to non-gameplay domain '{targetEntry.domain}'.");
         }
 
-        isTransitioning = true;
         pendingRunId = levelId;
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
         ApplyPreExit(policy);
@@ -196,7 +167,6 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     private IEnumerator ReturnToBaseRoutine()
     {
-        isTransitioning = true;
         SceneCatalogAsset.SceneEntry targetEntry = ResolveBaseEntry();
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
 
@@ -225,7 +195,6 @@ public class GameFlowOrchestrator : MonoBehaviour
 
     private IEnumerator ReturnToMainMenuRoutine()
     {
-        isTransitioning = true;
         SceneCatalogAsset.SceneEntry targetEntry = ResolveMainMenuEntry();
         TransitionPolicy policy = ResolveTransitionPolicy(targetEntry.domain);
 
@@ -273,6 +242,53 @@ public class GameFlowOrchestrator : MonoBehaviour
     private void PostEnter()
     {
         runtimeShell.AchievementService.ConfigureProgressService(runtimeShell.ProgressService);
+        CompleteTransition();
+    }
+
+    private void StartTransition(IEnumerator routine)
+    {
+        if (isTransitioning)
+        {
+            return;
+        }
+
+        isTransitioning = true;
+        StartCoroutine(TransitionGuard(routine));
+    }
+
+    private IEnumerator TransitionGuard(IEnumerator routine)
+    {
+        Exception transitionError = null;
+        while (true)
+        {
+            object yielded;
+            try
+            {
+                if (!routine.MoveNext())
+                {
+                    break;
+                }
+
+                yielded = routine.Current;
+            }
+            catch (Exception ex)
+            {
+                transitionError = ex;
+                break;
+            }
+
+            yield return yielded;
+        }
+
+        if (transitionError != null)
+        {
+            Debug.LogException(transitionError, this);
+            CompleteTransition();
+        }
+    }
+
+    private void CompleteTransition()
+    {
         isTransitioning = false;
         pendingRunId = null;
         LoadingScreenService.EndTransition();

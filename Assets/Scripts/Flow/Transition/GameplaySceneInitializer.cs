@@ -30,6 +30,7 @@ public static class GameplaySceneInitializer
 
         persistentRoot.PlayerCombat.enabled = true;
         persistentRoot.PlayerCombat.ForceSetAimState(false);
+        persistentRoot.PlayerEffectController.RemoveEffectsByPrefix("buff.");
 
         if (binding.PlayerSpawnPoint == null)
         {
@@ -92,6 +93,7 @@ public static class GameplaySceneInitializer
         }
 
         runtimeShell.PlayerHud.SetGameplayActive(false);
+        runtimeShell.PersistentRoot.PlayerEffectController.RemoveEffectsByPrefix("buff.");
         runtimeShell.PersistentRoot.BattleSharedRoot.SetActive(false);
         runtimeShell.RunContextService.ResetRunState();
     }
