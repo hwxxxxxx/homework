@@ -1942,7 +1942,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a3c21b4db1743b39e74f79c018d6f49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  waveConfig: {fileID: 11400000, guid: 93270def33da426a82b8209bd9766324, type: 2}
+  waveConfig: {fileID: 11400000, guid: 22d38b5fc77fd0b469356c04448973f7, type: 2}
   spawnPointsRoot: {fileID: 362915127}
   spawnPoints: []
   randomSpawnPoint: 1

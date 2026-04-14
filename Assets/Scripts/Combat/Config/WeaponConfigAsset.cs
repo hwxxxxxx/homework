@@ -11,6 +11,7 @@ public class WeaponConfigAsset : ScriptableObject
     [SerializeField] private int damage = 10;
     [SerializeField] private float fireRate = 5f;
     [SerializeField] private int magazineSize = 30;
+    [SerializeField] private int initialAmmoInMagazine = 30;
     [SerializeField] private int reserveAmmo = 90;
     [SerializeField] private float reloadTime = 1.5f;
 
@@ -23,6 +24,7 @@ public class WeaponConfigAsset : ScriptableObject
 
     [Header("Projectile")]
     [SerializeField] private float projectileLifetime = 4f;
+    [SerializeField] private float explosionRadius = 0f;
 
     [Header("Effects")]
     [SerializeField] private float muzzleEffectLifetime = 1.2f;
@@ -36,6 +38,7 @@ public class WeaponConfigAsset : ScriptableObject
     public int Damage => damage;
     public float FireRate => fireRate;
     public int MagazineSize => magazineSize;
+    public int InitialAmmoInMagazine => initialAmmoInMagazine;
     public int ReserveAmmo => reserveAmmo;
     public float ReloadTime => reloadTime;
     public float Range => range;
@@ -44,6 +47,7 @@ public class WeaponConfigAsset : ScriptableObject
     public float AimSpreadAngle => aimSpreadAngle;
     public float HipFireSpreadAngle => hipFireSpreadAngle;
     public float ProjectileLifetime => projectileLifetime;
+    public float ExplosionRadius => explosionRadius;
     public float MuzzleEffectLifetime => muzzleEffectLifetime;
     public float ImpactEffectLifetime => impactEffectLifetime;
     public int PelletCount => pelletCount;

@@ -22,7 +22,7 @@ MonoBehaviour:
     m_Bits: 4294967295
   attackOriginHeightOffset: 0.5
   targetHeightOffset: 1
-  detectionRange: 15
+  detectionRange: 60
   repathInterval: 0.1
   faceTargetSpeed: 10
   deathDissolveDuration: 1.2

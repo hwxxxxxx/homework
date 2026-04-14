@@ -8,11 +8,15 @@ public class BaseSceneUIController : MonoBehaviour
 {
     private const string CursorOwner = "BaseModalUI";
     private const float InteractionPromptHalfSize = 26f;
+    private static readonly Vector2 InteractionPromptDefaultAnchor = new Vector2(0.58f, 0.42f);
 
     [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
     [SerializeField] private RunCatalogAsset runCatalog;
     [SerializeField] private LevelUnlockService levelUnlockService;
     [SerializeField] private ProgressService progressService;
+    [Header("Interaction Prompt Layout")]
+    [SerializeField] private Vector2 interactionPromptAnchor = InteractionPromptDefaultAnchor;
+    [SerializeField] private Vector2 interactionPromptPixelOffset = Vector2.zero;
 
     private readonly List<Action> battleLevelHandlers = new List<Action>();
     private readonly List<Action> unlockLevelHandlers = new List<Action>();
@@ -103,13 +107,6 @@ public class BaseSceneUIController : MonoBehaviour
             return;
         }
 
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
-            interactionPrompt.style.display = DisplayStyle.None;
-            return;
-        }
-
         VisualElement root = uiDocument.rootVisualElement;
         float rootWidth = root.resolvedStyle.width;
         float rootHeight = root.resolvedStyle.height;
@@ -119,15 +116,10 @@ public class BaseSceneUIController : MonoBehaviour
             return;
         }
 
-        Vector3 screenPosition = mainCamera.WorldToScreenPoint(worldPosition);
-        if (screenPosition.z <= 0f)
-        {
-            interactionPrompt.style.display = DisplayStyle.None;
-            return;
-        }
-
-        float panelX = screenPosition.x / Screen.width * rootWidth;
-        float panelY = (Screen.height - screenPosition.y) / Screen.height * rootHeight;
+        float anchorX = Mathf.Clamp01(interactionPromptAnchor.x);
+        float anchorY = Mathf.Clamp01(interactionPromptAnchor.y);
+        float panelX = rootWidth * anchorX + interactionPromptPixelOffset.x;
+        float panelY = rootHeight * anchorY + interactionPromptPixelOffset.y;
         interactionPrompt.style.left = panelX - InteractionPromptHalfSize;
         interactionPrompt.style.top = panelY - InteractionPromptHalfSize;
         interactionPrompt.style.display = DisplayStyle.Flex;

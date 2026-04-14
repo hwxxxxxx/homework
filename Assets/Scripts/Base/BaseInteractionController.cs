@@ -6,8 +6,6 @@ public class BaseInteractionController : MonoBehaviour
     [SerializeField] private BaseSceneUIController uiController;
     [SerializeField] private Transform interactionRoot;
     [SerializeField] private float interactDistance = 2.8f;
-    [SerializeField] private float promptHorizontalOffset = 0.8f;
-    [SerializeField] private float promptVerticalOffset = 1.2f;
     private BaseInteractionTarget[] interactionTargets;
 
     public void ConfigureRuntime(GameInput runtimeInput, BaseSceneUIController runtimeUiController, Transform runtimeInteractionRoot)
@@ -34,10 +32,7 @@ public class BaseInteractionController : MonoBehaviour
         BaseInteractionTarget nearestTarget = GetNearestTarget();
         if (nearestTarget != null && !uiController.IsModalOpen)
         {
-            Vector3 promptWorldPosition = transform.position
-                                          + transform.right * promptHorizontalOffset
-                                          + Vector3.up * promptVerticalOffset;
-            uiController.SetInteractionPrompt(true, promptWorldPosition);
+            uiController.SetInteractionPrompt(true, Vector3.zero);
         }
         else
         {

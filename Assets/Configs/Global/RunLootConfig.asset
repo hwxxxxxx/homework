@@ -21,3 +21,7 @@ MonoBehaviour:
     type: 3}
   reloadBuffVisualPrefab: {fileID: 5923972992805410746, guid: 2c19505c3f3b0ce489bbc1852e94c484,
     type: 3}
+  effectVisualMappings:
+  - effectId: buff.rpg.ammo
+    visualPrefab: {fileID: 8415248498332601849, guid: 836d7ac5b25afc746ac6cd6b74c295d0,
+      type: 3}

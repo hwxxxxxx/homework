@@ -140,7 +140,8 @@ public abstract class BallisticWeaponBase : WeaponBase, IWeaponAimPointProvider
             CombatConfigProvider.Config.PlayerTag,
             impactEffectPrefab,
             weaponConfig.ProjectileLifetime,
-            weaponConfig.ImpactEffectLifetime
+            weaponConfig.ImpactEffectLifetime,
+            weaponConfig.ExplosionRadius
         );
         return true;
     }
@@ -150,6 +151,13 @@ public abstract class BallisticWeaponBase : WeaponBase, IWeaponAimPointProvider
         if (TryGetDamageableFromCollider(hit.collider, out IDamageable damageable))
         {
             damageable.TakeDamage(GetDamageValue());
+
+            EnemyBase enemyBase = hit.collider.GetComponentInParent<EnemyBase>();
+            if (enemyBase != null)
+            {
+                bool isBoss = enemyBase.GetComponent<BossEnemyController>() != null;
+                EventBus.Publish(new PlayerHitEnemyEvent(enemyBase.gameObject, isBoss, hit.point));
+            }
         }
 
         SpawnPooledEffect(

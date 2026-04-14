@@ -1,12 +1,19 @@
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 [DisallowMultipleComponent]
 public class WeaponIkTargetBinder : MonoBehaviour
 {
     [SerializeField] private PlayerCombat playerCombat;
+    [SerializeField] private PlayerController playerController;
+    [SerializeField] private TwoBoneIKConstraint leftHandIkConstraint;
     [SerializeField] private Transform leftHandTargetRuntime;
     [SerializeField] private string leftHandAnchorName = "LeftHandTarget";
     [SerializeField] private bool copyRotation = true;
+    [SerializeField] private bool disableLeftHandIkWhenAirborne = true;
+    [SerializeField] private bool disableLeftHandIkWhenReloading = true;
+    [SerializeField, Range(0f, 1f)] private float groundedIkWeight = 1f;
+    [SerializeField, Range(0f, 1f)] private float airborneIkWeight = 0f;
 
     private Transform activeAnchor;
 
@@ -16,6 +23,13 @@ public class WeaponIkTargetBinder : MonoBehaviour
         {
             playerCombat = GetComponent<PlayerCombat>();
         }
+
+        if (playerController == null)
+        {
+            playerController = GetComponent<PlayerController>();
+        }
+
+        CacheLeftHandIkConstraint();
     }
 
     private void OnEnable()
@@ -38,6 +52,7 @@ public class WeaponIkTargetBinder : MonoBehaviour
 
     private void LateUpdate()
     {
+        UpdateLeftHandIkWeight();
         SyncRuntimeTarget();
     }
 
@@ -68,6 +83,68 @@ public class WeaponIkTargetBinder : MonoBehaviour
         if (copyRotation)
         {
             leftHandTargetRuntime.rotation = activeAnchor.rotation;
+        }
+    }
+
+    private void UpdateLeftHandIkWeight()
+    {
+        if (leftHandIkConstraint == null)
+        {
+            CacheLeftHandIkConstraint();
+        }
+
+        if (leftHandIkConstraint == null)
+        {
+            return;
+        }
+
+        float targetWeight = groundedIkWeight;
+        if (disableLeftHandIkWhenAirborne && playerController != null && !playerController.IsGrounded)
+        {
+            targetWeight = airborneIkWeight;
+        }
+
+        if (disableLeftHandIkWhenReloading && playerCombat != null)
+        {
+            WeaponBase currentWeapon = playerCombat.GetCurrentWeapon();
+            if (currentWeapon != null && currentWeapon.IsReloading())
+            {
+                targetWeight = airborneIkWeight;
+            }
+        }
+
+        if (!Mathf.Approximately(leftHandIkConstraint.weight, targetWeight))
+        {
+            leftHandIkConstraint.weight = targetWeight;
+        }
+    }
+
+    private void CacheLeftHandIkConstraint()
+    {
+        if (leftHandIkConstraint != null)
+        {
+            return;
+        }
+
+        TwoBoneIKConstraint[] constraints = GetComponentsInChildren<TwoBoneIKConstraint>(true);
+        for (int i = 0; i < constraints.Length; i++)
+        {
+            TwoBoneIKConstraint candidate = constraints[i];
+            if (candidate == null)
+            {
+                continue;
+            }
+
+            if (candidate.name == "LeftArmIK")
+            {
+                leftHandIkConstraint = candidate;
+                return;
+            }
+        }
+
+        if (constraints.Length > 0)
+        {
+            leftHandIkConstraint = constraints[0];
         }
     }
 

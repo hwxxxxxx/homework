@@ -18,6 +18,7 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
 
     public event Action<EnemyBase> OnEnemyDied;
     private bool hasDied;
+    public bool IsDead => hasDied;
 
     private void Awake()
     {
@@ -49,6 +50,11 @@ public class EnemyBase : MonoBehaviour, IDamageable, IPoolable
         if (deathDissolveView == null)
         {
             deathDissolveView = GetComponent<EnemyDeathDissolveView>();
+        }
+
+        if (GetComponent<EnemyVoiceEmitter>() == null)
+        {
+            gameObject.AddComponent<EnemyVoiceEmitter>();
         }
 
         ApplyConfig();

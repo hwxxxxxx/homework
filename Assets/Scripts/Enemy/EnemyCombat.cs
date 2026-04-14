@@ -18,6 +18,13 @@ public class EnemyCombat : MonoBehaviour
     private LayerMask lineOfSightMask;
     private float attackOriginHeightOffset;
     private float targetHeightOffset;
+    private EnemyConfigAsset.EnemyAttackMode attackMode;
+    private EnemyProjectile projectilePrefab;
+    private float projectileSpeed;
+    private float projectileLifetime;
+    private LayerMask projectileHitMask;
+    private float projectileSpawnForwardOffset;
+    private float projectileSpawnHeightOffset;
     private bool isBoss;
 
     public event Action OnAttack;
@@ -63,18 +70,11 @@ public class EnemyCombat : MonoBehaviour
             return;
         }
 
-        IDamageable damageable = target.GetComponent<IDamageable>();
-        if (damageable == null)
-        {
-            damageable = target.GetComponentInParent<IDamageable>();
-        }
-
-        if (damageable == null)
+        if (!TryPerformAttack())
         {
             return;
         }
 
-        damageable.TakeDamage(GetDamageValue());
         lastAttackTime = Time.time;
         EventBus.Publish(new EnemyAttackEvent(gameObject, isBoss, transform.position));
         OnAttack?.Invoke();
@@ -107,11 +107,18 @@ public class EnemyCombat : MonoBehaviour
 
     public void ApplyConfig(EnemyConfigAsset config)
     {
+        attackMode = config.AttackMode;
         attackRange = config.AttackRange;
         requireLineOfSight = config.RequireLineOfSight;
         lineOfSightMask = config.LineOfSightMask;
         attackOriginHeightOffset = config.AttackOriginHeightOffset;
         targetHeightOffset = config.TargetHeightOffset;
+        projectilePrefab = config.ProjectilePrefab;
+        projectileSpeed = config.ProjectileSpeed;
+        projectileLifetime = config.ProjectileLifetime;
+        projectileHitMask = config.ProjectileHitMask;
+        projectileSpawnForwardOffset = config.ProjectileSpawnForwardOffset;
+        projectileSpawnHeightOffset = config.ProjectileSpawnHeightOffset;
     }
 
     private bool HasLineOfSight(Transform potentialTarget)
@@ -131,6 +138,59 @@ public class EnemyCombat : MonoBehaviour
     private int GetDamageValue()
     {
         return Mathf.RoundToInt(statBlock.GetStatValue(damageStatId));
+    }
+
+    private bool TryPerformAttack()
+    {
+        if (attackMode == EnemyConfigAsset.EnemyAttackMode.RangedProjectile)
+        {
+            return TryPerformRangedAttack();
+        }
+
+        IDamageable damageable = target.GetComponent<IDamageable>();
+        if (damageable == null)
+        {
+            damageable = target.GetComponentInParent<IDamageable>();
+        }
+
+        if (damageable == null)
+        {
+            return false;
+        }
+
+        damageable.TakeDamage(GetDamageValue());
+        return true;
+    }
+
+    private bool TryPerformRangedAttack()
+    {
+        Vector3 origin = attackOrigin.position + Vector3.up * projectileSpawnHeightOffset;
+        Vector3 targetPosition = target.position + Vector3.up * targetHeightOffset;
+        Vector3 direction = (targetPosition - origin).normalized;
+        if (direction.sqrMagnitude <= 0.0001f)
+        {
+            direction = transform.forward;
+        }
+
+        origin += direction * projectileSpawnForwardOffset;
+
+        EnemyProjectile projectile = PoolService.Spawn(
+            projectilePrefab,
+            origin,
+            Quaternion.LookRotation(direction),
+            null,
+            0
+        );
+
+        projectile.Initialize(
+            transform,
+            direction,
+            projectileSpeed,
+            projectileLifetime,
+            GetDamageValue(),
+            projectileHitMask
+        );
+        return true;
     }
 
     private float GetAttackInterval()

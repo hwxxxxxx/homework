@@ -16,6 +16,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
     private bool collected;
     private Vector3 spawnPosition;
     private GameObject activeVisual;
+    private string effectId;
 
     private void OnValidate()
     {
@@ -47,7 +48,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         visualRoot.Rotate(Vector3.up, rotateSpeed * Time.deltaTime, Space.World);
     }
 
-    public void InitializeDrop(EffectAsset effect, int stacks, EffectController targetController, string statId)
+    public void InitializeDrop(EffectAsset effect, int stacks, EffectController targetController, string statId, string resolvedEffectId)
     {
         if (effect == null)
         {
@@ -67,9 +68,10 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         effectAsset = effect;
         stackCount = stacks;
         targetEffectController = targetController;
+        effectId = resolvedEffectId;
         spawnPosition = transform.position;
         collected = false;
-        ApplyVisual(statId);
+        ApplyVisual(statId, effectId);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -100,6 +102,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         stackCount = 0;
         targetEffectController = null;
         collected = false;
+        effectId = null;
 
         if (activeVisual != null)
         {
@@ -108,7 +111,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         }
     }
 
-    private void ApplyVisual(string statId)
+    private void ApplyVisual(string statId, string resolvedEffectId)
     {
         if (activeVisual != null)
         {
@@ -116,7 +119,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
             activeVisual = null;
         }
 
-        GameObject visualPrefab = ResolveVisualPrefab(statId);
+        GameObject visualPrefab = ResolveVisualPrefab(statId, resolvedEffectId);
         if (visualPrefab == null)
         {
             return;
@@ -140,7 +143,7 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         }
     }
 
-    private static GameObject ResolveVisualPrefab(string statId)
+    private static GameObject ResolveVisualPrefab(string statId, string resolvedEffectId)
     {
         RunLootConfigAsset config = RunLootConfigProvider.Config;
         if (statId == StatIds.WeaponDamage)
@@ -156,6 +159,11 @@ public class BuffPickupItem : MonoBehaviour, IPoolable
         if (statId == StatIds.WeaponReloadTime)
         {
             return config.ReloadBuffVisualPrefab;
+        }
+
+        if (config.TryGetEffectVisualPrefab(resolvedEffectId, out GameObject mappedVisual))
+        {
+            return mappedVisual;
         }
 
         return null;

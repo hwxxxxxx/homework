@@ -5,6 +5,7 @@ public class PlayerAnimationDriver : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerController playerController;
+    [SerializeField] private PlayerCombat playerCombat;
     [SerializeField] private Animator targetAnimator;
 
     [Header("Animator Params")]
@@ -12,18 +13,25 @@ public class PlayerAnimationDriver : MonoBehaviour
     [SerializeField] private string moveYParam = "MoveY";
     [SerializeField] private string speedParam = "Speed";
     [SerializeField] private string groundedParam = "IsGrounded";
+    [SerializeField] private string reloadingParam = "IsReloading";
     [SerializeField] private float dampTime = 0.1f;
 
     private int moveXHash;
     private int moveYHash;
     private int speedHash;
     private int groundedHash;
+    private int reloadingHash;
 
     private void Awake()
     {
         if (playerController == null)
         {
             playerController = GetComponent<PlayerController>();
+        }
+
+        if (playerCombat == null)
+        {
+            playerCombat = GetComponent<PlayerCombat>();
         }
 
         if (targetAnimator == null)
@@ -47,6 +55,7 @@ public class PlayerAnimationDriver : MonoBehaviour
         moveYHash = Animator.StringToHash(moveYParam);
         speedHash = Animator.StringToHash(speedParam);
         groundedHash = Animator.StringToHash(groundedParam);
+        reloadingHash = Animator.StringToHash(reloadingParam);
         targetAnimator.applyRootMotion = false;
     }
 
@@ -81,5 +90,9 @@ public class PlayerAnimationDriver : MonoBehaviour
         targetAnimator.SetFloat(moveYHash, moveY, dampTime, Time.deltaTime);
         targetAnimator.SetFloat(speedHash, speed01, dampTime, Time.deltaTime);
         targetAnimator.SetBool(groundedHash, playerController.IsGrounded);
+
+        WeaponBase currentWeapon = playerCombat != null ? playerCombat.GetCurrentWeapon() : null;
+        bool isReloading = currentWeapon != null && currentWeapon.IsReloading();
+        targetAnimator.SetBool(reloadingHash, isReloading);
     }
 }

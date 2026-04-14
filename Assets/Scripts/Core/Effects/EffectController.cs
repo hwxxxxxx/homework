@@ -44,8 +44,9 @@ public class EffectController : MonoBehaviour
             RemoveEffectsById(effectAsset.EffectId);
         }
 
-        List<IModifiableStatProvider> weaponStatsProviders = ResolveWeaponStatsProviders();
-        EffectContext context = new EffectContext(source, gameObject, statBlock, weaponStatsProviders, this);
+        List<WeaponBase> weapons = ResolveWeapons();
+        List<IModifiableStatProvider> weaponStatsProviders = ResolveWeaponStatsProviders(weapons);
+        EffectContext context = new EffectContext(source, gameObject, statBlock, weapons, weaponStatsProviders, this);
         IEffectRuntime runtime = effectAsset.CreateRuntime(context);
         if (runtime == null)
         {
@@ -153,24 +154,46 @@ public class EffectController : MonoBehaviour
         EventBus.Publish(new EffectRemovedEvent(gameObject, runtime.EffectId));
     }
 
-    private List<IModifiableStatProvider> ResolveWeaponStatsProviders()
+    private List<WeaponBase> ResolveWeapons()
     {
-        List<IModifiableStatProvider> providers = new List<IModifiableStatProvider>();
+        List<WeaponBase> weapons = new List<WeaponBase>();
         PlayerCombat playerCombat = GetComponent<PlayerCombat>();
         if (playerCombat == null)
         {
-            return providers;
+            return weapons;
         }
 
         IReadOnlyList<WeaponBase> slots = playerCombat.GetWeaponSlots();
         if (slots == null)
         {
-            return providers;
+            return weapons;
         }
 
         for (int i = 0; i < slots.Count; i++)
         {
-            IModifiableStatProvider provider = slots[i] as IModifiableStatProvider;
+            WeaponBase weapon = slots[i];
+            if (weapon == null || weapons.Contains(weapon))
+            {
+                continue;
+            }
+
+            weapons.Add(weapon);
+        }
+
+        return weapons;
+    }
+
+    private static List<IModifiableStatProvider> ResolveWeaponStatsProviders(IReadOnlyList<WeaponBase> weapons)
+    {
+        List<IModifiableStatProvider> providers = new List<IModifiableStatProvider>();
+        if (weapons == null)
+        {
+            return providers;
+        }
+
+        for (int i = 0; i < weapons.Count; i++)
+        {
+            IModifiableStatProvider provider = weapons[i] as IModifiableStatProvider;
             if (provider == null || providers.Contains(provider))
             {
                 continue;

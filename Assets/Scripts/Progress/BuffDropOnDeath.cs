@@ -37,7 +37,7 @@ public class BuffDropOnDeath : EnemyDeathDropListenerBase
         string buffStatId = ResolveBuffStatId(effect);
         Vector3 spawnPosition = (enemy != null ? enemy.transform.position : transform.position) + Vector3.up * config.BuffPickupSpawnHeightOffset;
         BuffPickupItem pickupItem = PoolService.Spawn(config.BuffPickupPrefab, spawnPosition, Quaternion.identity);
-        pickupItem.InitializeDrop(effect, stackCount, targetEffectController, buffStatId);
+        pickupItem.InitializeDrop(effect, stackCount, targetEffectController, buffStatId, effect.EffectId);
     }
 
     private static string ResolveBuffStatId(EffectAsset effect)

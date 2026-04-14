@@ -8,7 +8,8 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
     public enum WeaponKind
     {
         Rifle = 0,
-        Shotgun = 1
+        Shotgun = 1,
+        RocketLauncher = 2
     }
 
     [Header("Weapon Settings")]
@@ -27,7 +28,7 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
     protected virtual void Awake()
     {
         RebuildWeaponStats();
-        currentAmmoInMagazine = weaponConfig.MagazineSize;
+        currentAmmoInMagazine = weaponConfig.InitialAmmoInMagazine;
         reserveAmmo = weaponConfig.ReserveAmmo;
         NotifyAmmoChanged();
     }
@@ -70,6 +71,7 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
         if (currentAmmoInMagazine >= weaponConfig.MagazineSize) return;
         if (reserveAmmo <= 0) return;
 
+        EventBus.Publish(new WeaponReloadStartedEvent(gameObject, transform.position));
         runner.StartCoroutine(ReloadRoutine());
     }
 
@@ -97,6 +99,12 @@ public abstract class WeaponBase : MonoBehaviour, IModifiableStatProvider
     public int GetReserveAmmo()
     {
         return reserveAmmo;
+    }
+
+    public void AddReserveAmmo(int amount)
+    {
+        reserveAmmo += amount;
+        NotifyAmmoChanged();
     }
 
     public bool IsReloading()

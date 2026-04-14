@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 88930d465bf8dfc4b9542eacf75016e5, type: 3}
+  m_Name: RpgWeaponConfig
+  m_EditorClassIdentifier: 
+  displayName: RPG-7
+  weaponKind: 2
+  damage: 80
+  fireRate: 0.55
+  magazineSize: 1
+  initialAmmoInMagazine: 0
+  reserveAmmo: 0
+  reloadTime: 2.8
+  range: 95
+  projectileSpeed: 52
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  aimSpreadAngle: 0.2
+  hipFireSpreadAngle: 2.2
+  projectileLifetime: 2.2
+  explosionRadius: 4.8
+  muzzleEffectLifetime: 0.2
+  impactEffectLifetime: 0.9
+  pelletCount: 1

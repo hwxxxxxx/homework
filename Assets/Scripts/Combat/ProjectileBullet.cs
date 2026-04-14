@@ -10,6 +10,7 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
     private string ignoreTag;
     private ParticleSystem impactEffectPrefab;
     private float impactEffectLifetime;
+    private float explosionRadius;
     private float lifeSeconds;
     private float traveledDistance;
     private float lifeTimer;
@@ -24,7 +25,8 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
         string shotIgnoreTag,
         ParticleSystem impactPrefab,
         float shotLifeSeconds,
-        float shotImpactEffectLifetime
+        float shotImpactEffectLifetime,
+        float shotExplosionRadius
     )
     {
         direction = shotDirection.normalized;
@@ -36,6 +38,7 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
         impactEffectPrefab = impactPrefab;
         lifeSeconds = shotLifeSeconds;
         impactEffectLifetime = shotImpactEffectLifetime;
+        explosionRadius = shotExplosionRadius;
         traveledDistance = 0f;
         lifeTimer = 0f;
         initialized = true;
@@ -114,9 +117,13 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
     {
         transform.position = hit.point;
 
-        if (CombatTargetResolver.TryResolveDamageable(hit.collider, out IDamageable damageable))
+        if (explosionRadius > 0f)
         {
-            damageable.TakeDamage(damage);
+            ApplyExplosionDamage(hit.point);
+        }
+        else if (CombatTargetResolver.TryResolveDamageable(hit.collider, out IDamageable damageable))
+        {
+            ApplyDamageAndPublishHitEvent(hit.collider, damageable, hit.point);
         }
 
         if (impactEffectPrefab != null)
@@ -135,6 +142,49 @@ public class ProjectileBullet : MonoBehaviour, IPoolable
         }
 
         DespawnSelf();
+    }
+
+    private void ApplyExplosionDamage(Vector3 center)
+    {
+        Collider[] hits = Physics.OverlapSphere(center, explosionRadius, hitMask, QueryTriggerInteraction.Ignore);
+        if (hits == null || hits.Length == 0)
+        {
+            return;
+        }
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider targetCollider = hits[i];
+            if (targetCollider == null)
+            {
+                continue;
+            }
+
+            if (!string.IsNullOrEmpty(ignoreTag) && targetCollider.CompareTag(ignoreTag))
+            {
+                continue;
+            }
+
+            if (!CombatTargetResolver.TryResolveDamageable(targetCollider, out IDamageable damageable))
+            {
+                continue;
+            }
+
+            ApplyDamageAndPublishHitEvent(targetCollider, damageable, center);
+        }
+    }
+
+    private void ApplyDamageAndPublishHitEvent(Collider hitCollider, IDamageable damageable, Vector3 hitPoint)
+    {
+        damageable.TakeDamage(damage);
+        EnemyBase enemyBase = hitCollider.GetComponentInParent<EnemyBase>();
+        if (enemyBase == null)
+        {
+            return;
+        }
+
+        bool isBoss = enemyBase.GetComponent<BossEnemyController>() != null;
+        EventBus.Publish(new PlayerHitEnemyEvent(enemyBase.gameObject, isBoss, hitPoint));
     }
 
     public void OnSpawnedFromPool()

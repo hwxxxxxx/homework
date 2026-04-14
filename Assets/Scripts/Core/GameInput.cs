@@ -78,6 +78,11 @@ public class GameInput : MonoBehaviour
             return 1;
         }
 
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            return 2;
+        }
+
         return -1;
     }
 }

@@ -58,6 +58,11 @@ public class MainMenuUI : MonoBehaviour
     private void OnDisable()
     {
         CursorPolicyService.ReleaseUiCursor(CursorOwner);
+        AudioRuntimeService audioService = ResolveAudioService();
+        if (audioService != null)
+        {
+            audioService.SaveVolumeSettings();
+        }
     }
 
     private void BindButtonActions()
@@ -81,7 +86,7 @@ public class MainMenuUI : MonoBehaviour
         UpdateDisplayModeLabel();
 
         AudioRuntimeService audioService = ResolveAudioService();
-        float currentVolume = audioService != null ? audioService.GetBgmVolume() : 1f;
+        float currentVolume = audioService != null ? audioService.GetMasterVolume() : 1f;
         musicVolumeSlider.SetValueWithoutNotify(currentVolume);
         UpdateMusicValueLabel(currentVolume);
         settingsPanel.SetActive(false);
@@ -141,6 +146,12 @@ public class MainMenuUI : MonoBehaviour
 
     private void HandleCloseSettingsClicked()
     {
+        AudioRuntimeService audioService = ResolveAudioService();
+        if (audioService != null)
+        {
+            audioService.SaveVolumeSettings();
+        }
+
         settingsPanel.SetActive(false);
     }
 
@@ -194,7 +205,7 @@ public class MainMenuUI : MonoBehaviour
         AudioRuntimeService audioService = ResolveAudioService();
         if (audioService != null)
         {
-            audioService.SetBgmVolume(value);
+            audioService.SetMasterVolume(value);
         }
     }
 

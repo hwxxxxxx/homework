@@ -92,6 +92,32 @@ public readonly struct WeaponFiredEvent : IGameEvent
     }
 }
 
+public readonly struct WeaponReloadStartedEvent : IGameEvent
+{
+    public readonly GameObject SourceObject;
+    public readonly Vector3 Position;
+
+    public WeaponReloadStartedEvent(GameObject sourceObject, Vector3 position)
+    {
+        SourceObject = sourceObject;
+        Position = position;
+    }
+}
+
+public readonly struct PlayerHitEnemyEvent : IGameEvent
+{
+    public readonly GameObject EnemyObject;
+    public readonly bool IsBoss;
+    public readonly Vector3 Position;
+
+    public PlayerHitEnemyEvent(GameObject enemyObject, bool isBoss, Vector3 position)
+    {
+        EnemyObject = enemyObject;
+        IsBoss = isBoss;
+        Position = position;
+    }
+}
+
 public readonly struct EnemyAttackEvent : IGameEvent
 {
     public readonly GameObject EnemyObject;

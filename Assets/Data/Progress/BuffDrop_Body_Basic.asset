@@ -26,3 +26,7 @@ MonoBehaviour:
     weight: 30
     minStacks: 1
     maxStacks: 1
+  - effect: {fileID: 11400000, guid: 957c32b63248eb143b93aaf6fcf98c27, type: 2}
+    weight: 20
+    minStacks: 1
+    maxStacks: 1
