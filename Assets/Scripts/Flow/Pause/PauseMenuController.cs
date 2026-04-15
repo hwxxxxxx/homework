@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(UIDocument))]
 public class PauseMenuController : MonoBehaviour
 {
     private const string CursorOwner = "PauseMenuUI";
+    private const float PauseUiSortingOrder = 1000f;
 
     [SerializeField] private GameInput gameInput;
     [SerializeField] private GamePauseController pauseController;
@@ -15,7 +17,9 @@ public class PauseMenuController : MonoBehaviour
     private UIDocument pauseDocument;
     private VisualElement pauseRoot;
     private Button returnBaseButton;
+    private Button openSettingsButton;
     private Button returnMainMenuButton;
+    private GameSettingsUiPresenter settingsPresenter;
 
     private void Awake()
     {
@@ -25,12 +29,15 @@ public class PauseMenuController : MonoBehaviour
         }
 
         pauseDocument = GetComponent<UIDocument>();
+        pauseDocument.sortingOrder = PauseUiSortingOrder;
         VisualElement root = pauseDocument.rootVisualElement;
         pauseRoot = root.Q<VisualElement>("pause-root");
         returnBaseButton = root.Q<Button>("return-base-btn");
+        openSettingsButton = root.Q<Button>("pause-settings-btn");
         returnMainMenuButton = root.Q<Button>("return-mainmenu-btn");
+        settingsPresenter = new GameSettingsUiPresenter(root);
 
-        if (pauseRoot == null || returnBaseButton == null || returnMainMenuButton == null)
+        if (pauseRoot == null || returnBaseButton == null || openSettingsButton == null || returnMainMenuButton == null)
         {
             throw new InvalidOperationException("PauseMenuController UI binding failed.");
         }
@@ -39,16 +46,26 @@ public class PauseMenuController : MonoBehaviour
     private void OnEnable()
     {
         returnBaseButton.clicked += HandleReturnBaseClicked;
+        openSettingsButton.clicked += HandleOpenSettingsClicked;
         returnMainMenuButton.clicked += HandleReturnMainMenuClicked;
         SetPauseVisible(false);
         pauseController.SetPaused(false);
+        settingsPresenter.Hide(saveAudioSettings: false);
     }
 
     private void OnDisable()
     {
         CursorPolicyService.ReleaseUiCursor(CursorOwner);
         returnBaseButton.clicked -= HandleReturnBaseClicked;
+        openSettingsButton.clicked -= HandleOpenSettingsClicked;
         returnMainMenuButton.clicked -= HandleReturnMainMenuClicked;
+        settingsPresenter.Hide(saveAudioSettings: true);
+    }
+
+    private void OnDestroy()
+    {
+        settingsPresenter?.Dispose();
+        settingsPresenter = null;
     }
 
     private void Update()
@@ -69,22 +86,40 @@ public class PauseMenuController : MonoBehaviour
             return;
         }
 
+        if (GamePauseController.IsPaused && settingsPresenter.IsVisible)
+        {
+            settingsPresenter.Hide(saveAudioSettings: true);
+            return;
+        }
+
         bool nextPaused = !GamePauseController.IsPaused;
         pauseController.SetPaused(nextPaused);
         ConfigureButtonsByState(gameStateService.CurrentState);
         SetPauseVisible(nextPaused);
+
+        if (!nextPaused)
+        {
+            settingsPresenter.Hide(saveAudioSettings: true);
+        }
     }
 
     private void HandleReturnBaseClicked()
     {
         pauseController.SetPaused(false);
+        settingsPresenter.Hide(saveAudioSettings: true);
         SetPauseVisible(false);
         gameFlowOrchestrator.ReturnToBase();
+    }
+
+    private void HandleOpenSettingsClicked()
+    {
+        settingsPresenter.Open();
     }
 
     private void HandleReturnMainMenuClicked()
     {
         pauseController.SetPaused(false);
+        settingsPresenter.Hide(saveAudioSettings: true);
         SetPauseVisible(false);
         if (gameStateService.CurrentState == GameStateId.Base)
         {
@@ -125,6 +160,34 @@ public class PauseMenuController : MonoBehaviour
 
     private static bool IsPauseMenuState(GameStateId state)
     {
-        return state == GameStateId.InRun || state == GameStateId.Base;
+        if (state == GameStateId.InRun || state == GameStateId.Base)
+        {
+            return true;
+        }
+
+        return IsGameplaySceneLoaded();
+    }
+
+    private static bool IsGameplaySceneLoaded()
+    {
+        int sceneCount = SceneManager.sceneCount;
+        for (int i = 0; i < sceneCount; i++)
+        {
+            Scene scene = SceneManager.GetSceneAt(i);
+            if (!scene.IsValid() || !scene.isLoaded)
+            {
+                continue;
+            }
+
+            string sceneName = scene.name;
+            if (sceneName == "Persistent" || sceneName == "Boot" || sceneName == "MainMenu")
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

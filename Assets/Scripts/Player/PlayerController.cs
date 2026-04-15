@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
     private float jumpBufferTimer;
     private bool isGrounded;
     private bool wasGrounded;
+    private bool isRunningAudioActive;
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
@@ -94,6 +95,7 @@ public class PlayerController : MonoBehaviour
             currentAcceleration * controlMultiplier * Time.deltaTime
         );
 
+        UpdateRunAudioState(moveInput);
     }
 
     private void RotateCharacterByState(bool isAiming, Vector3 cameraForward)
@@ -188,6 +190,18 @@ public class PlayerController : MonoBehaviour
         right = cameraRoot.right;
     }
 
+    private void UpdateRunAudioState(Vector2 moveInput)
+    {
+        bool isRunningNow = isGrounded && moveInput.magnitude >= 0.1f;
+        if (isRunningNow == isRunningAudioActive)
+        {
+            return;
+        }
+
+        isRunningAudioActive = isRunningNow;
+        EventBus.Publish(new PlayerRunStateChangedEvent(gameObject, transform.position, isRunningAudioActive));
+    }
+
     public void TeleportTo(Vector3 position, Quaternion rotation)
     {
         bool controllerWasEnabled = characterController.enabled;
@@ -209,5 +223,18 @@ public class PlayerController : MonoBehaviour
         jumpBufferTimer = 0f;
         isGrounded = false;
         wasGrounded = false;
+        isRunningAudioActive = false;
+        EventBus.Publish(new PlayerRunStateChangedEvent(gameObject, transform.position, false));
+    }
+
+    private void OnDisable()
+    {
+        if (!isRunningAudioActive)
+        {
+            return;
+        }
+
+        isRunningAudioActive = false;
+        EventBus.Publish(new PlayerRunStateChangedEvent(gameObject, transform.position, false));
     }
 }

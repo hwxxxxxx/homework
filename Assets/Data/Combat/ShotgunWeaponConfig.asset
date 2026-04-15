@@ -17,6 +17,7 @@ MonoBehaviour:
   damage: 8
   fireRate: 0.95
   magazineSize: 8
+  initialAmmoInMagazine: 8
   reserveAmmo: 56
   reloadTime: 2.35
   range: 52
@@ -27,6 +28,7 @@ MonoBehaviour:
   aimSpreadAngle: 2.8
   hipFireSpreadAngle: 8.8
   projectileLifetime: 0.9
+  explosionRadius: 0
   muzzleEffectLifetime: 0.14
   impactEffectLifetime: 0.55
   pelletCount: 10

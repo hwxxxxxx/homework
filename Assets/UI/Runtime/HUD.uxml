@@ -2,16 +2,20 @@
     <ui:Style src="HUD.uss" />
     <ui:VisualElement name="hud-root" class="hud-root">
         <ui:VisualElement name="buff-stats-panel" class="buff-stats-panel">
-            <ui:Label name="buff-damage-bonus-text" class="buff-stat-text" text="Damage Buff: +0%" />
-            <ui:Label name="buff-fire-rate-bonus-text" class="buff-stat-text" text="FireRate Buff: +0%" />
-            <ui:Label name="buff-reload-bonus-text" class="buff-stat-text" text="Reload Buff: +0%" />
+            <ui:Label name="buff-damage-bonus-text" class="buff-stat-text" text="伤害加成：+0%" />
+            <ui:Label name="buff-fire-rate-bonus-text" class="buff-stat-text" text="射速加成：+0%" />
+            <ui:Label name="buff-reload-bonus-text" class="buff-stat-text" text="换弹加成：+0%" />
         </ui:VisualElement>
-        <ui:Label name="health-text" class="hud-health" text="HP 0 / 0" />
+        <ui:VisualElement name="health-bar-bg" class="hud-health-bar-bg">
+            <ui:VisualElement name="health-bar-fill" class="hud-health-bar-fill" />
+            <ui:Label name="health-text" class="hud-health-text" text="生命 0 / 0" />
+        </ui:VisualElement>
+        <ui:Label name="weapon-name-text" class="hud-weapon-name" text="武器" />
         <ui:Label name="ammo-text" class="hud-ammo" text="0 / 0" />
-        <ui:Label name="skill-cooldown-text" class="hud-skill-text" text="Q READY" />
+        <ui:Label name="skill-cooldown-text" class="hud-skill-text" text="Q 就绪" />
         <ui:VisualElement name="skill-cooldown-bg" class="hud-skill-bg">
             <ui:VisualElement name="skill-cooldown-fill" class="hud-skill-fill" />
         </ui:VisualElement>
-        <ui:Label name="tutorial-text" class="hud-tutorial" text="RMB: Aim&#10;LMB: Fire&#10;Shift: Sprint&#10;Space: Jump&#10;R: Reload&#10;Q: Skill" />
+        <ui:Label name="tutorial-text" class="hud-tutorial" text="鼠标右键：瞄准&#10;鼠标左键：射击&#10;Shift：冲刺&#10;空格：跳跃&#10;R：换弹&#10;Q：技能" />
     </ui:VisualElement>
 </ui:UXML>

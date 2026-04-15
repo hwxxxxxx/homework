@@ -12,14 +12,12 @@ public class BaseSceneUIController : MonoBehaviour
 
     [SerializeField] private GameFlowOrchestrator gameFlowOrchestrator;
     [SerializeField] private RunCatalogAsset runCatalog;
-    [SerializeField] private LevelUnlockService levelUnlockService;
     [SerializeField] private ProgressService progressService;
     [Header("Interaction Prompt Layout")]
     [SerializeField] private Vector2 interactionPromptAnchor = InteractionPromptDefaultAnchor;
     [SerializeField] private Vector2 interactionPromptPixelOffset = Vector2.zero;
 
     private readonly List<Action> battleLevelHandlers = new List<Action>();
-    private readonly List<Action> unlockLevelHandlers = new List<Action>();
     private readonly List<UIDraggableWindowManipulator> windowDragManipulators = new List<UIDraggableWindowManipulator>();
     private bool isUiBound;
 
@@ -42,13 +40,11 @@ public class BaseSceneUIController : MonoBehaviour
     public void ConfigureRuntimeServices(
         GameFlowOrchestrator flowOrchestrator,
         RunCatalogAsset runtimeRunCatalog,
-        LevelUnlockService unlockService,
         ProgressService runtimeProgressService
     )
     {
         gameFlowOrchestrator = flowOrchestrator;
         runCatalog = runtimeRunCatalog;
-        levelUnlockService = unlockService;
         progressService = runtimeProgressService;
     }
 
@@ -89,7 +85,7 @@ public class BaseSceneUIController : MonoBehaviour
         upgradePanel.style.display = DisplayStyle.Flex;
         CursorPolicyService.AcquireUiCursor(CursorOwner);
         RefreshUpgradePanel();
-        SetUnlockStatus(string.Empty);
+        SetUnlockStatus("关卡会在完成前置关卡后自动解锁。");
     }
 
     public void HideAllPanels()
@@ -155,14 +151,6 @@ public class BaseSceneUIController : MonoBehaviour
             battleLevelHandlers.Add(handler);
         }
 
-        for (int i = 0; i < unlockLevelButtons.Count; i++)
-        {
-            int index = i;
-            Action handler = () => HandleUnlockLevel(index);
-            unlockLevelButtons[i].clicked += handler;
-            unlockLevelHandlers.Add(handler);
-        }
-
         startLevelButton.clicked += HandleStartLevel;
         closeBattleButton.clicked += HideAllPanels;
         closeUpgradeButton.clicked += HideAllPanels;
@@ -183,13 +171,6 @@ public class BaseSceneUIController : MonoBehaviour
             battleLevelButtons[i].clicked -= battleLevelHandlers[i];
         }
         battleLevelHandlers.Clear();
-
-        int unlockUnbindCount = Mathf.Min(unlockLevelButtons.Count, unlockLevelHandlers.Count);
-        for (int i = 0; i < unlockUnbindCount; i++)
-        {
-            unlockLevelButtons[i].clicked -= unlockLevelHandlers[i];
-        }
-        unlockLevelHandlers.Clear();
 
         startLevelButton.clicked -= HandleStartLevel;
         closeBattleButton.clicked -= HideAllPanels;
@@ -227,34 +208,6 @@ public class BaseSceneUIController : MonoBehaviour
 
         gameFlowOrchestrator.EnterRun(selectedRun.RunId);
         HideAllPanels();
-    }
-
-    private void HandleUnlockLevel(int index)
-    {
-        List<RunCatalogAsset.RunEntry> unlockableRuns = GetUnlockableRuns();
-        if (index < 0 || index >= unlockableRuns.Count)
-        {
-            return;
-        }
-
-        RunCatalogAsset.RunEntry runEntry = unlockableRuns[index];
-        TryUnlockRun(runEntry);
-    }
-
-    private void TryUnlockRun(RunCatalogAsset.RunEntry runEntry)
-    {
-        if (progressService.IsLevelUnlocked(runEntry.RunId))
-        {
-            SetUnlockStatus(FormatText(textConfig.UnlockStatusAlreadyUnlockedTemplate, runEntry.DisplayName));
-            RefreshUpgradePanel();
-            return;
-        }
-
-        bool unlocked = levelUnlockService.TryUnlock(runEntry);
-        SetUnlockStatus(unlocked
-            ? FormatText(textConfig.UnlockStatusUnlockedTemplate, runEntry.DisplayName)
-            : FormatText(textConfig.UnlockStatusFailedTemplate, runEntry.DisplayName));
-        RefreshUpgradePanel();
     }
 
     private void RefreshBattlePanel()
@@ -324,10 +277,16 @@ public class BaseSceneUIController : MonoBehaviour
     private void SetUnlockButtonState(Button button, RunCatalogAsset.RunEntry runEntry)
     {
         bool unlocked = progressService.IsLevelUnlocked(runEntry.RunId);
-        button.text = unlocked
-            ? FormatText(textConfig.UnlockButtonUnlockedTemplate, runEntry.DisplayName)
-            : FormatText(textConfig.UnlockButtonActionTemplate, runEntry.DisplayName);
-        button.SetEnabled(!unlocked);
+        if (unlocked)
+        {
+            button.text = $"{runEntry.DisplayName} {textConfig.LevelButtonUnlockedSuffix}";
+            button.SetEnabled(false);
+            return;
+        }
+
+        string requirement = BuildRequirementText(runEntry);
+        button.text = $"{runEntry.DisplayName} ({requirement})";
+        button.SetEnabled(false);
     }
 
     private void SetBattleStatus(string text)
@@ -348,6 +307,39 @@ public class BaseSceneUIController : MonoBehaviour
     private static string FormatText(string template, string value)
     {
         return string.Format(template, value);
+    }
+
+    private string BuildRequirementText(RunCatalogAsset.RunEntry runEntry)
+    {
+        if (runEntry.PrerequisiteRunIds == null || runEntry.PrerequisiteRunIds.Count == 0)
+        {
+            return "自动解锁";
+        }
+
+        List<string> names = new List<string>();
+        for (int i = 0; i < runEntry.PrerequisiteRunIds.Count; i++)
+        {
+            string prerequisiteRunId = runEntry.PrerequisiteRunIds[i];
+            string displayName = ResolveRunDisplayName(prerequisiteRunId);
+            bool completed = progressService.IsRunCompleted(prerequisiteRunId);
+            names.Add(completed ? $"{displayName}：已通关" : $"{displayName}：未通关");
+        }
+
+        return string.Join(", ", names);
+    }
+
+    private string ResolveRunDisplayName(string runId)
+    {
+        IReadOnlyList<RunCatalogAsset.RunEntry> runs = GetRuns();
+        for (int i = 0; i < runs.Count; i++)
+        {
+            if (runs[i].RunId == runId)
+            {
+                return runs[i].DisplayName;
+            }
+        }
+
+        return runId;
     }
 
     private void RegisterDraggableWindow(VisualElement root, VisualElement window, string handleName)

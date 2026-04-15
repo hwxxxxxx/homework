@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef4d557d68dd42fb84f54fef579759ec, type: 3}
+  m_Name: GlobalRuntimeConfig
+  m_EditorClassIdentifier: 
+  combatConfig: {fileID: 11400000, guid: 8fbec1682da228345946a8e69e1c13b7, type: 2}
+  runtimeNodeConfig: {fileID: 11400000, guid: 238e2cd8f4c9df648b38b67f2863d569, type: 2}
+  flowConfig: {fileID: 11400000, guid: aa02618fcb609b5418b60592f72c8e39, type: 2}
+  progressConfig: {fileID: 11400000, guid: d4c9705cd804c884db51352edb44626d, type: 2}
+  runtimeUiConfig: {fileID: 11400000, guid: 6baf2b467af5b0c4e8973358fa31d9ed, type: 2}
+  uiTextConfig: {fileID: 11400000, guid: b64fd3242f18bf3479183404ae94bf93, type: 2}
+  audioConfig: {fileID: 11400000, guid: b0de649c4763d784984731d6daa86d30, type: 2}
+  runLootConfig: {fileID: 11400000, guid: 75db5bc0941a4536b9ea8b97225ff29f, type: 2}

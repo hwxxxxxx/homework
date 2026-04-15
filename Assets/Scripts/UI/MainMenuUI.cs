@@ -1,137 +1,31 @@
-using System.Collections.Generic;
-using TMPro;
+using System;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UIElements;
 
+[RequireComponent(typeof(UIDocument))]
 public class MainMenuUI : MonoBehaviour
 {
     private const string CursorOwner = "MainMenuUI";
 
     [SerializeField] private GameFlowOrchestrator flowOrchestrator;
+    [SerializeField] private UIDocument menuDocument;
 
-    [Header("Main Buttons")]
-    [SerializeField] private Button startButton;
-    [SerializeField] private Button settingsButton;
-    [SerializeField] private Button quitButton;
-
-    [Header("Settings Panel")]
-    [SerializeField] private GameObject settingsPanel;
-    [SerializeField] private Button closeSettingsButton;
-
-    [Header("Resolution Controls")]
-    [SerializeField] private Button resolutionPrevButton;
-    [SerializeField] private Button resolutionNextButton;
-    [SerializeField] private TMP_Text resolutionValueText;
-
-    [Header("Display Mode Controls")]
-    [SerializeField] private Button displayModePrevButton;
-    [SerializeField] private Button displayModeNextButton;
-    [SerializeField] private TMP_Text displayModeValueText;
-
-    [Header("Audio Controls")]
-    [SerializeField] private Slider musicVolumeSlider;
-    [SerializeField] private TMP_Text musicValueText;
-
-    private readonly List<Vector2Int> availableResolutions = new List<Vector2Int>();
-    private int selectedResolutionIndex;
-    private FullScreenMode selectedDisplayMode;
+    private VisualElement mainMenuRoot;
+    private VisualElement saveSelectRoot;
+    private Button startButton;
+    private Button saveStartButton;
+    private Button saveBackButton;
+    private Button slot1Button;
+    private Button slot2Button;
+    private Button slot3Button;
+    private Button settingsButton;
+    private Button quitButton;
+    private GameSettingsUiPresenter settingsPresenter;
+    private int selectedSlotId;
 
     public void ConfigureRuntimeServices(GameFlowOrchestrator runtimeFlowOrchestrator)
     {
         flowOrchestrator = runtimeFlowOrchestrator;
-    }
-
-    private void Awake()
-    {
-        AutoWireReferences();
-        ValidateBindings();
-        BindButtonActions();
-        InitializeSettingsValues();
-    }
-
-    private void OnEnable()
-    {
-        Time.timeScale = 1f;
-        CursorPolicyService.AcquireUiCursor(CursorOwner);
-    }
-
-    private void OnDisable()
-    {
-        CursorPolicyService.ReleaseUiCursor(CursorOwner);
-        AudioRuntimeService audioService = ResolveAudioService();
-        if (audioService != null)
-        {
-            audioService.SaveVolumeSettings();
-        }
-    }
-
-    private void BindButtonActions()
-    {
-        startButton.onClick.AddListener(HandleStartGameClicked);
-        settingsButton.onClick.AddListener(HandleOpenSettingsClicked);
-        quitButton.onClick.AddListener(HandleQuitClicked);
-        closeSettingsButton.onClick.AddListener(HandleCloseSettingsClicked);
-        resolutionPrevButton.onClick.AddListener(HandleResolutionPrevClicked);
-        resolutionNextButton.onClick.AddListener(HandleResolutionNextClicked);
-        displayModePrevButton.onClick.AddListener(HandleDisplayModePrevClicked);
-        displayModeNextButton.onClick.AddListener(HandleDisplayModeNextClicked);
-        musicVolumeSlider.onValueChanged.AddListener(HandleMusicVolumeChanged);
-    }
-
-    private void InitializeSettingsValues()
-    {
-        LoadResolutionOptions();
-        selectedDisplayMode = Screen.fullScreenMode;
-        UpdateResolutionLabel();
-        UpdateDisplayModeLabel();
-
-        AudioRuntimeService audioService = ResolveAudioService();
-        float currentVolume = audioService != null ? audioService.GetMasterVolume() : 1f;
-        musicVolumeSlider.SetValueWithoutNotify(currentVolume);
-        UpdateMusicValueLabel(currentVolume);
-        settingsPanel.SetActive(false);
-    }
-
-    private void LoadResolutionOptions()
-    {
-        Resolution[] resolutions = Screen.resolutions;
-        availableResolutions.Clear();
-
-        for (int i = 0; i < resolutions.Length; i++)
-        {
-            Resolution candidate = resolutions[i];
-            bool exists = false;
-            for (int j = 0; j < availableResolutions.Count; j++)
-            {
-                if (availableResolutions[j].x == candidate.width && availableResolutions[j].y == candidate.height)
-                {
-                    exists = true;
-                    break;
-                }
-            }
-
-            if (!exists)
-            {
-                availableResolutions.Add(new Vector2Int(candidate.width, candidate.height));
-            }
-        }
-
-        selectedResolutionIndex = 0;
-        int currentWidth = Screen.currentResolution.width;
-        int currentHeight = Screen.currentResolution.height;
-        for (int i = 0; i < availableResolutions.Count; i++)
-        {
-            if (availableResolutions[i].x == currentWidth && availableResolutions[i].y == currentHeight)
-            {
-                selectedResolutionIndex = i;
-                break;
-            }
-        }
-    }
-
-    private void HandleStartGameClicked()
-    {
-        flowOrchestrator.EnterBase();
     }
 
     public void OnStartGame()
@@ -139,209 +33,203 @@ public class MainMenuUI : MonoBehaviour
         HandleStartGameClicked();
     }
 
-    private void HandleOpenSettingsClicked()
-    {
-        settingsPanel.SetActive(true);
-    }
-
-    private void HandleCloseSettingsClicked()
-    {
-        AudioRuntimeService audioService = ResolveAudioService();
-        if (audioService != null)
-        {
-            audioService.SaveVolumeSettings();
-        }
-
-        settingsPanel.SetActive(false);
-    }
-
-    private void HandleQuitClicked()
-    {
-        Application.Quit();
-    }
-
     public void OnQuitGame()
     {
         HandleQuitClicked();
     }
 
-    private void HandleResolutionPrevClicked()
+    private void Awake()
     {
-        if (availableResolutions.Count == 0)
+        if (menuDocument == null)
         {
-            return;
+            menuDocument = GetComponent<UIDocument>();
         }
 
-        selectedResolutionIndex = (selectedResolutionIndex - 1 + availableResolutions.Count) % availableResolutions.Count;
-        ApplyDisplaySettings();
-    }
-
-    private void HandleResolutionNextClicked()
-    {
-        if (availableResolutions.Count == 0)
+        if (menuDocument == null)
         {
-            return;
+            throw new InvalidOperationException("MainMenuUI requires UIDocument.");
         }
 
-        selectedResolutionIndex = (selectedResolutionIndex + 1) % availableResolutions.Count;
-        ApplyDisplaySettings();
-    }
+        VisualElement root = menuDocument.rootVisualElement;
+        mainMenuRoot = root.Q<VisualElement>("mainmenu-root");
+        saveSelectRoot = root.Q<VisualElement>("save-select-root");
+        startButton = root.Q<Button>("mainmenu-start-btn");
+        saveStartButton = root.Q<Button>("save-start-btn");
+        saveBackButton = root.Q<Button>("save-back-btn");
+        slot1Button = root.Q<Button>("save-slot-1-btn");
+        slot2Button = root.Q<Button>("save-slot-2-btn");
+        slot3Button = root.Q<Button>("save-slot-3-btn");
+        settingsButton = root.Q<Button>("mainmenu-settings-btn");
+        quitButton = root.Q<Button>("mainmenu-quit-btn");
 
-    private void HandleDisplayModePrevClicked()
-    {
-        selectedDisplayMode = GetRelativeDisplayMode(-1);
-        ApplyDisplaySettings();
-    }
-
-    private void HandleDisplayModeNextClicked()
-    {
-        selectedDisplayMode = GetRelativeDisplayMode(1);
-        ApplyDisplaySettings();
-    }
-
-    private void HandleMusicVolumeChanged(float value)
-    {
-        UpdateMusicValueLabel(value);
-        AudioRuntimeService audioService = ResolveAudioService();
-        if (audioService != null)
-        {
-            audioService.SetMasterVolume(value);
-        }
-    }
-
-    private void ApplyDisplaySettings()
-    {
-        if (availableResolutions.Count == 0)
-        {
-            return;
-        }
-
-        Vector2Int target = availableResolutions[selectedResolutionIndex];
-        Screen.SetResolution(target.x, target.y, selectedDisplayMode);
-        UpdateResolutionLabel();
-        UpdateDisplayModeLabel();
-    }
-
-    private void UpdateResolutionLabel()
-    {
-        if (availableResolutions.Count == 0)
-        {
-            resolutionValueText.text = "-";
-            return;
-        }
-
-        Vector2Int value = availableResolutions[selectedResolutionIndex];
-        resolutionValueText.text = value.x + " x " + value.y;
-    }
-
-    private void UpdateDisplayModeLabel()
-    {
-        displayModeValueText.text = GetDisplayModeLabel(selectedDisplayMode);
-    }
-
-    private void UpdateMusicValueLabel(float value)
-    {
-        int percent = Mathf.RoundToInt(Mathf.Clamp01(value) * 100f);
-        musicValueText.text = percent + "%";
-    }
-
-    private FullScreenMode GetRelativeDisplayMode(int delta)
-    {
-        FullScreenMode[] modes = { FullScreenMode.ExclusiveFullScreen, FullScreenMode.Windowed, FullScreenMode.FullScreenWindow };
-        int index = 0;
-        for (int i = 0; i < modes.Length; i++)
-        {
-            if (modes[i] == selectedDisplayMode)
-            {
-                index = i;
-                break;
-            }
-        }
-
-        index = (index + delta + modes.Length) % modes.Length;
-        return modes[index];
-    }
-
-    private static string GetDisplayModeLabel(FullScreenMode mode)
-    {
-        switch (mode)
-        {
-            case FullScreenMode.Windowed:
-                return "Windowed";
-            case FullScreenMode.FullScreenWindow:
-                return "Borderless";
-            default:
-                return "Fullscreen";
-        }
-    }
-
-    private AudioRuntimeService ResolveAudioService()
-    {
-        RuntimeShell shell = RuntimeShell.Instance;
-        return shell != null ? shell.AudioRuntimeService : null;
-    }
-
-    private void ValidateBindings()
-    {
-        if (startButton == null ||
+        if (mainMenuRoot == null ||
+            saveSelectRoot == null ||
+            startButton == null ||
+            saveStartButton == null ||
+            saveBackButton == null ||
+            slot1Button == null ||
+            slot2Button == null ||
+            slot3Button == null ||
             settingsButton == null ||
-            quitButton == null ||
-            settingsPanel == null ||
-            closeSettingsButton == null ||
-            resolutionPrevButton == null ||
-            resolutionNextButton == null ||
-            resolutionValueText == null ||
-            displayModePrevButton == null ||
-            displayModeNextButton == null ||
-            displayModeValueText == null ||
-            musicVolumeSlider == null ||
-            musicValueText == null)
+            quitButton == null)
         {
-            throw new System.InvalidOperationException("MainMenuUI has unassigned UI references.");
+            throw new InvalidOperationException("MainMenuUI UI binding failed.");
+        }
+
+        settingsPresenter = new GameSettingsUiPresenter(root);
+    }
+
+    private void OnEnable()
+    {
+        Time.timeScale = 1f;
+        CursorPolicyService.AcquireUiCursor(CursorOwner);
+        startButton.clicked += HandleStartGameClicked;
+        saveStartButton.clicked += HandleSaveStartClicked;
+        saveBackButton.clicked += HandleSaveBackClicked;
+        slot1Button.clicked += HandleSlot1Clicked;
+        slot2Button.clicked += HandleSlot2Clicked;
+        slot3Button.clicked += HandleSlot3Clicked;
+        settingsButton.clicked += HandleOpenSettingsClicked;
+        quitButton.clicked += HandleQuitClicked;
+        settingsPresenter.Hide(saveAudioSettings: false);
+        CloseSaveSelectModal();
+    }
+
+    private void OnDisable()
+    {
+        CursorPolicyService.ReleaseUiCursor(CursorOwner);
+        startButton.clicked -= HandleStartGameClicked;
+        saveStartButton.clicked -= HandleSaveStartClicked;
+        saveBackButton.clicked -= HandleSaveBackClicked;
+        slot1Button.clicked -= HandleSlot1Clicked;
+        slot2Button.clicked -= HandleSlot2Clicked;
+        slot3Button.clicked -= HandleSlot3Clicked;
+        settingsButton.clicked -= HandleOpenSettingsClicked;
+        quitButton.clicked -= HandleQuitClicked;
+        settingsPresenter.Hide(saveAudioSettings: true);
+    }
+
+    private void OnDestroy()
+    {
+        settingsPresenter?.Dispose();
+        settingsPresenter = null;
+    }
+
+    private void HandleStartGameClicked()
+    {
+        OpenSaveSelectModal();
+    }
+
+    private void HandleSaveStartClicked()
+    {
+        SaveSlotService.SelectSlot(selectedSlotId);
+        CloseSaveSelectModal();
+        flowOrchestrator.EnterBase();
+    }
+
+    private void HandleSaveBackClicked()
+    {
+        CloseSaveSelectModal();
+    }
+
+    private void HandleSlot1Clicked()
+    {
+        SelectSlot(1);
+    }
+
+    private void HandleSlot2Clicked()
+    {
+        SelectSlot(2);
+    }
+
+    private void HandleSlot3Clicked()
+    {
+        SelectSlot(3);
+    }
+
+    private void HandleOpenSettingsClicked()
+    {
+        settingsPresenter.Open();
+    }
+
+    private static void HandleQuitClicked()
+    {
+        Application.Quit();
+    }
+
+    private void OpenSaveSelectModal()
+    {
+        selectedSlotId = 0;
+        RefreshSlotTexts();
+        RefreshSlotSelectionVisual();
+        saveStartButton.SetEnabled(false);
+        saveSelectRoot.style.display = DisplayStyle.Flex;
+    }
+
+    private void CloseSaveSelectModal()
+    {
+        selectedSlotId = 0;
+        RefreshSlotSelectionVisual();
+        saveStartButton.SetEnabled(false);
+        saveSelectRoot.style.display = DisplayStyle.None;
+    }
+
+    private void SelectSlot(int slotId)
+    {
+        selectedSlotId = slotId;
+        RefreshSlotSelectionVisual();
+        saveStartButton.SetEnabled(true);
+    }
+
+    private void RefreshSlotSelectionVisual()
+    {
+        ApplySlotSelectedClass(slot1Button, selectedSlotId == 1);
+        ApplySlotSelectedClass(slot2Button, selectedSlotId == 2);
+        ApplySlotSelectedClass(slot3Button, selectedSlotId == 3);
+    }
+
+    private void RefreshSlotTexts()
+    {
+        slot1Button.text = BuildSlotText(SaveSlotService.GetSlotSummary(1));
+        slot2Button.text = BuildSlotText(SaveSlotService.GetSlotSummary(2));
+        slot3Button.text = BuildSlotText(SaveSlotService.GetSlotSummary(3));
+    }
+
+    private static string BuildSlotText(SaveSlotService.SaveSlotSummary summary)
+    {
+        if (!summary.HasData)
+        {
+            return $"存档 {summary.SlotId}\n空";
+        }
+
+        return $"存档 {summary.SlotId}\n最近关卡：{ToLocalizedLevelName(summary.LastSelectedLevelId)}\n已解锁：{summary.UnlockedLevelCount}\n已通关：{summary.CompletedRunCount}";
+    }
+
+    private static string ToLocalizedLevelName(string runId)
+    {
+        switch (runId)
+        {
+            case "body_1":
+                return "肉体回响一";
+            case "body_2":
+                return "肉体回响二";
+            case "soul_1":
+                return "灵魂回响一";
+            case "memory_1":
+                return "记忆回响一";
+            default:
+                return "未选择";
         }
     }
 
-    private void AutoWireReferences()
+    private static void ApplySlotSelectedClass(Button slotButton, bool selected)
     {
-        if (startButton == null) startButton = FindButton("StartButton");
-        if (settingsButton == null) settingsButton = FindButton("SettingsButton");
-        if (quitButton == null) quitButton = FindButton("QuitButton");
-        if (settingsPanel == null)
+        if (selected)
         {
-            Transform panel = transform.Find("SettingsPanel");
-            settingsPanel = panel != null ? panel.gameObject : null;
+            slotButton.AddToClassList("save-slot-btn--selected");
+            return;
         }
 
-        if (closeSettingsButton == null) closeSettingsButton = FindButtonIn("SettingsPanel/CloseSettingsButton");
-        if (resolutionPrevButton == null) resolutionPrevButton = FindButtonIn("SettingsPanel/ResolutionPrevButton");
-        if (resolutionNextButton == null) resolutionNextButton = FindButtonIn("SettingsPanel/ResolutionNextButton");
-        if (displayModePrevButton == null) displayModePrevButton = FindButtonIn("SettingsPanel/DisplayModePrevButton");
-        if (displayModeNextButton == null) displayModeNextButton = FindButtonIn("SettingsPanel/DisplayModeNextButton");
-        if (resolutionValueText == null) resolutionValueText = FindText("SettingsPanel/ResolutionValueText");
-        if (displayModeValueText == null) displayModeValueText = FindText("SettingsPanel/DisplayModeValueText");
-        if (musicValueText == null) musicValueText = FindText("SettingsPanel/MusicValueText");
-        if (musicVolumeSlider == null)
-        {
-            Transform slider = transform.Find("SettingsPanel/MusicSlider");
-            musicVolumeSlider = slider != null ? slider.GetComponent<Slider>() : null;
-        }
-    }
-
-    private Button FindButton(string objectName)
-    {
-        Transform child = transform.Find(objectName);
-        return child != null ? child.GetComponent<Button>() : null;
-    }
-
-    private Button FindButtonIn(string relativePath)
-    {
-        Transform child = transform.Find(relativePath);
-        return child != null ? child.GetComponent<Button>() : null;
-    }
-
-    private TMP_Text FindText(string relativePath)
-    {
-        Transform child = transform.Find(relativePath);
-        return child != null ? child.GetComponent<TMP_Text>() : null;
+        slotButton.RemoveFromClassList("save-slot-btn--selected");
     }
 }

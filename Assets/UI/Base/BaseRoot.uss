@@ -4,6 +4,7 @@
     top: 0;
     right: 0;
     bottom: 0;
+    -unity-font-definition: url("project://database/Assets/Font/PingFangSC-Light.ttf");
 }
 
 .interaction-prompt {
@@ -66,6 +67,12 @@
     height: 42px;
     padding-left: 14px;
     padding-right: 14px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
     margin-bottom: 2px;
     color: rgb(255, 246, 225);
     font-size: 15px;
@@ -73,6 +80,7 @@
     -unity-text-align: middle-center;
     background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/TextBTN_Medium.png?fileID=2800000&guid=efee20b64d1e73942a29ba61ce3379c3&type=3");
     -unity-background-scale-mode: scale-to-stretch-to-fill;
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .wood-btn:hover {
@@ -81,6 +89,7 @@
 
 .wood-btn:active {
     background-image: url("project://database/Assets/Fantasy Wooden GUI  Free/normal_ui_set A/TextBTN_Medium_Pressed.png?fileID=2800000&guid=047b929beb10565479851d39b452dfb6&type=3");
+    background-color: rgba(0, 0, 0, 0);
 }
 
 .wood-btn:disabled {

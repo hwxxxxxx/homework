@@ -1676,11 +1676,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 667205115}
+  playerCombat: {fileID: 0}
   targetAnimator: {fileID: 909839430}
   moveXParam: MoveX
   moveYParam: MoveY
   speedParam: Speed
   groundedParam: IsGrounded
+  reloadingParam: IsReloading
   dampTime: 0.1
 --- !u!114 &667205119
 MonoBehaviour:
@@ -1701,6 +1703,7 @@ MonoBehaviour:
   leftHandAnchorName: LeftHandTarget
   copyRotation: 1
   disableLeftHandIkWhenAirborne: 1
+  disableLeftHandIkWhenReloading: 1
   groundedIkWeight: 1
   airborneIkWeight: 0
 --- !u!1 &687614653

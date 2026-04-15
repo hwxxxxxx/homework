@@ -2,12 +2,12 @@
     <ui:Style src="Result.uss" />
     <ui:VisualElement name="result-root" class="result-root">
         <ui:VisualElement name="victory-panel" class="result-card">
-            <ui:Label class="result-title" text="Victory" />
-            <ui:Button name="victory-back-btn" class="result-button" text="Back To Base" />
+            <ui:Label class="result-title" text="胜利" />
+            <ui:Button name="victory-back-btn" class="result-button" text="返回基地" />
         </ui:VisualElement>
         <ui:VisualElement name="fail-panel" class="result-card">
-            <ui:Label class="result-title" text="Defeat" />
-            <ui:Button name="fail-back-btn" class="result-button" text="Back To Base" />
+            <ui:Label class="result-title" text="失败" />
+            <ui:Button name="fail-back-btn" class="result-button" text="返回基地" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

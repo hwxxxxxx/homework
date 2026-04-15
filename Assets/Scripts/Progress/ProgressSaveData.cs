@@ -5,8 +5,10 @@ using System.Collections.Generic;
 public class ProgressSaveData
 {
     public int schemaVersion = 1;
+    public int slotId;
     public string lastSelectedLevelId = string.Empty;
     public List<string> unlockedLevelIds = new List<string>();
+    public List<string> completedRunIds = new List<string>();
     public List<string> unlockedAchievementIds = new List<string>();
     public int bodyFragments;
     public int soulFragments;

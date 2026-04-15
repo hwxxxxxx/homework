@@ -44,9 +44,13 @@ public class AudioRuntimeService : MonoBehaviour
 
     private IDisposable weaponFiredSubscription;
     private IDisposable weaponReloadStartedSubscription;
+    private IDisposable playerRunStateChangedSubscription;
     private IDisposable playerHitEnemySubscription;
     private IDisposable enemyAttackSubscription;
     private IDisposable enemyDiedSubscription;
+
+    private AudioSource playerRunLoopSource;
+    private Transform playerRunLoopTarget;
 
     private int nextSfxEmitterIndex;
     private float masterVolume = 1f;
@@ -82,6 +86,7 @@ public class AudioRuntimeService : MonoBehaviour
 
         weaponFiredSubscription = EventBus.Subscribe<WeaponFiredEvent>(HandleWeaponFired);
         weaponReloadStartedSubscription = EventBus.Subscribe<WeaponReloadStartedEvent>(HandleWeaponReloadStarted);
+        playerRunStateChangedSubscription = EventBus.Subscribe<PlayerRunStateChangedEvent>(HandlePlayerRunStateChanged);
         playerHitEnemySubscription = EventBus.Subscribe<PlayerHitEnemyEvent>(HandlePlayerHitEnemy);
         enemyAttackSubscription = EventBus.Subscribe<EnemyAttackEvent>(HandleEnemyAttack);
         enemyDiedSubscription = EventBus.Subscribe<EnemyDiedEvent>(HandleEnemyDied);
@@ -97,15 +102,19 @@ public class AudioRuntimeService : MonoBehaviour
 
         weaponFiredSubscription?.Dispose();
         weaponReloadStartedSubscription?.Dispose();
+        playerRunStateChangedSubscription?.Dispose();
         playerHitEnemySubscription?.Dispose();
         enemyAttackSubscription?.Dispose();
         enemyDiedSubscription?.Dispose();
 
         weaponFiredSubscription = null;
         weaponReloadStartedSubscription = null;
+        playerRunStateChangedSubscription = null;
         playerHitEnemySubscription = null;
         enemyAttackSubscription = null;
         enemyDiedSubscription = null;
+
+        StopPlayerRunLoop();
     }
 
     public bool PlayCue2D(AudioCueId cueId)
@@ -308,6 +317,17 @@ public class AudioRuntimeService : MonoBehaviour
         PlayCueAt(AudioCueId.PlayerHitEnemy, gameEvent.Position);
     }
 
+    private void HandlePlayerRunStateChanged(PlayerRunStateChangedEvent gameEvent)
+    {
+        if (gameEvent.IsRunning)
+        {
+            StartPlayerRunLoop(gameEvent.SourceObject);
+            return;
+        }
+
+        StopPlayerRunLoop();
+    }
+
     private void HandleEnemyAttack(EnemyAttackEvent gameEvent)
     {
         PlayCueAt(gameEvent.IsBoss ? AudioCueId.BossEnemyAttack : AudioCueId.NormalEnemyAttack, gameEvent.Position);
@@ -316,6 +336,58 @@ public class AudioRuntimeService : MonoBehaviour
     private void HandleEnemyDied(EnemyDiedEvent gameEvent)
     {
         PlayCueAt(gameEvent.IsBoss ? AudioCueId.BossEnemyDeath : AudioCueId.NormalEnemyDeath, gameEvent.Position);
+    }
+
+    private void StartPlayerRunLoop(GameObject sourceObject)
+    {
+        if (!TryResolveCue(AudioCueId.PlayerRun, out AudioCueDefinition cue) || !cue.TryGetRandomClip(out AudioClip clip))
+        {
+            return;
+        }
+
+        Transform sourceTransform = sourceObject.transform;
+        if (playerRunLoopSource != null && playerRunLoopTarget == sourceTransform)
+        {
+            if (!playerRunLoopSource.isPlaying)
+            {
+                playerRunLoopSource.Play();
+            }
+
+            return;
+        }
+
+        StopPlayerRunLoop();
+
+        GameObject emitterObject = new GameObject("PlayerRunLoop");
+        emitterObject.transform.SetParent(sourceTransform, false);
+        emitterObject.transform.localPosition = Vector3.zero;
+
+        playerRunLoopSource = emitterObject.AddComponent<AudioSource>();
+        playerRunLoopSource.playOnAwake = false;
+        playerRunLoopSource.loop = true;
+        playerRunLoopSource.spatialBlend = cue.Spatial ? 1f : 0f;
+        playerRunLoopSource.minDistance = cue.MinDistance;
+        playerRunLoopSource.maxDistance = cue.MaxDistance;
+        playerRunLoopSource.outputAudioMixerGroup = GetMixerGroup(cue.Bus);
+        playerRunLoopSource.pitch = UnityEngine.Random.Range(cue.PitchMin, cue.PitchMax);
+        playerRunLoopSource.volume = GetCueFinalVolume(cue, 1f);
+        playerRunLoopSource.clip = clip;
+        playerRunLoopSource.Play();
+
+        playerRunLoopTarget = sourceTransform;
+    }
+
+    private void StopPlayerRunLoop()
+    {
+        if (playerRunLoopSource == null)
+        {
+            return;
+        }
+
+        playerRunLoopSource.Stop();
+        Destroy(playerRunLoopSource.gameObject);
+        playerRunLoopSource = null;
+        playerRunLoopTarget = null;
     }
 
     private void HandleSceneLoaded(Scene _, LoadSceneMode __)

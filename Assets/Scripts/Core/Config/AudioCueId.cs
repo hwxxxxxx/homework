@@ -10,5 +10,6 @@ public enum AudioCueId
     NormalEnemyDeath = 7,
     BossEnemyAttack = 8,
     BossEnemyDeath = 9,
-    PlayerWeaponReload = 10
+    PlayerWeaponReload = 10,
+    PlayerRun = 11
 }

@@ -12,6 +12,8 @@ public class AudioConfigAsset : ScriptableObject
     [SerializeField] private AudioClip playerWeaponFire;
     [SerializeField] private AudioClip playerHitEnemy;
     [SerializeField] private AudioClip playerWeaponReload;
+    [SerializeField] private AudioClip playerRun;
+    [SerializeField] private float playerRunVolume = 0.8f;
     [SerializeField] private AudioClip enemyVoice;
     [SerializeField] private float enemyVoiceVolume = 0.9f;
     [SerializeField] private float enemyVoiceMinInterval = 3f;
@@ -109,6 +111,7 @@ public class AudioConfigAsset : ScriptableObject
         AddLegacyCueIfMissing(AudioCueId.PlayerWeaponFire, playerWeaponFire, AudioBus.Sfx, false, true, 1f);
         AddLegacyCueIfMissing(AudioCueId.PlayerHitEnemy, playerHitEnemy, AudioBus.Sfx, false, true, 1f);
         AddLegacyCueIfMissing(AudioCueId.PlayerWeaponReload, playerWeaponReload, AudioBus.Sfx, false, true, 1f);
+        AddLegacyCueIfMissing(AudioCueId.PlayerRun, playerRun, AudioBus.Sfx, true, true, playerRunVolume);
         AddLegacyCueIfMissing(AudioCueId.EnemyVoice, enemyVoice, AudioBus.Voice, false, true, enemyVoiceVolume);
         AddLegacyCueIfMissing(AudioCueId.NormalEnemyAttack, normalEnemyAttack, AudioBus.Sfx, false, true, 1f);
         AddLegacyCueIfMissing(AudioCueId.NormalEnemyDeath, normalEnemyDeath, AudioBus.Sfx, false, true, 1f);

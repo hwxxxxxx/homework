@@ -1,10 +1,37 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements">
     <ui:Style src="Pause.uss" />
+    <ui:Style src="SettingsPanel.uss" />
     <ui:VisualElement name="pause-root" class="pause-root">
         <ui:VisualElement class="pause-card">
-            <ui:Label name="pause-title" class="pause-title" text="Paused" />
-            <ui:Button name="return-base-btn" class="pause-button" text="Return Base" />
-            <ui:Button name="return-mainmenu-btn" class="pause-button" text="Return MainMenu" />
+            <ui:Label name="pause-title" class="pause-title" text="已暂停" />
+            <ui:Button name="return-base-btn" class="pause-button" text="返回基地" />
+            <ui:Button name="pause-settings-btn" class="pause-button" text="设置" />
+            <ui:Button name="return-mainmenu-btn" class="pause-button" text="返回主菜单" />
+        </ui:VisualElement>
+        <ui:VisualElement name="settings-root" class="settings-root">
+            <ui:VisualElement name="settings-card" class="settings-card">
+                <ui:VisualElement name="settings-drag-handle" class="settings-drag-handle">
+                    <ui:Label class="settings-title" text="设置" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label class="settings-label" text="分辨率" />
+                    <ui:Button name="settings-resolution-prev-btn" class="settings-mini-btn" text="&lt;" />
+                    <ui:Label name="settings-resolution-value" class="settings-value" text="-" />
+                    <ui:Button name="settings-resolution-next-btn" class="settings-mini-btn" text="&gt;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label class="settings-label" text="显示模式" />
+                    <ui:Button name="settings-displaymode-prev-btn" class="settings-mini-btn" text="&lt;" />
+                    <ui:Label name="settings-displaymode-value" class="settings-value" text="-" />
+                    <ui:Button name="settings-displaymode-next-btn" class="settings-mini-btn" text="&gt;" />
+                </ui:VisualElement>
+                <ui:VisualElement class="settings-row">
+                    <ui:Label class="settings-label" text="总音量" />
+                    <ui:Slider name="settings-master-volume-slider" class="settings-slider" low-value="0" high-value="1" />
+                    <ui:Label name="settings-master-volume-value" class="settings-value" text="100%" />
+                </ui:VisualElement>
+                <ui:Button name="settings-close-btn" class="settings-close-btn" text="关闭" />
+            </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

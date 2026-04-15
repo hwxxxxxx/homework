@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59728d3f5f1747f8be673351662dcf1b, type: 3}
+  m_Name: UiTextConfig
+  m_EditorClassIdentifier: 
+  battleInteractionLabel: 战斗
+  upgradeInteractionLabel: 强化
+  tutorialMessage: '鼠标右键：瞄准
+
+    鼠标左键：射击
+
+    Shift：冲刺
+
+    空格：跳跃
+
+    R：换弹
+
+    Q：技能'
+  battleStatusLockedTemplate: '未解锁：{0}'
+  battleStatusSelectedTemplate: '已选择：{0}'
+  battleStatusSelectUnlockedHint: 请先选择一个已解锁关卡。
+  unlockStatusAlreadyUnlockedTemplate: '已解锁：{0}'
+  unlockStatusUnlockedTemplate: '解锁成功：{0}'
+  unlockStatusFailedTemplate: '解锁失败：{0}'
+  levelButtonUnlockedSuffix: '[已解锁]'
+  levelButtonLockedSuffix: '[未解锁]'
+  unlockButtonUnlockedTemplate: '已解锁：{0}'
+  unlockButtonActionTemplate: '解锁：{0}'
+  hudHealthTemplate: 生命 {0} / {1}
+  hudSkillReadyText: Q 就绪
+  hudSkillCooldownTemplate: Q 冷却 {0:0.0}s
+  interactionPromptIdle: 按 E 进行交互
+  interactionPromptWithTargetTemplate: '按 E 进行交互：{0}'

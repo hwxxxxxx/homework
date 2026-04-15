@@ -7,6 +7,7 @@ using UnityEngine;
 public class ProgressService : MonoBehaviour
 {
     private ProgressSaveData data;
+    private int activeSlotId;
 
     public event Action OnProgressChanged;
 
@@ -14,11 +15,22 @@ public class ProgressService : MonoBehaviour
 
     private void Awake()
     {
-        LoadOrCreate();
+        SaveSlotService.ActiveSlotChanged += HandleActiveSlotChanged;
+        if (SaveSlotService.HasActiveSlot)
+        {
+            LoadOrCreateForSlot(SaveSlotService.ActiveSlotId);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        SaveSlotService.ActiveSlotChanged -= HandleActiveSlotChanged;
     }
 
     public int GetFragment(FragmentType fragmentType)
     {
+        EnsureLoaded();
+
         switch (fragmentType)
         {
             case FragmentType.Body:
@@ -34,6 +46,8 @@ public class ProgressService : MonoBehaviour
 
     public void AddFragment(FragmentType fragmentType, int amount)
     {
+        EnsureLoaded();
+
         if (amount <= 0)
         {
             return;
@@ -57,6 +71,8 @@ public class ProgressService : MonoBehaviour
 
     public bool TryConsumeFragment(FragmentType fragmentType, int amount)
     {
+        EnsureLoaded();
+
         if (amount <= 0)
         {
             return true;
@@ -87,6 +103,8 @@ public class ProgressService : MonoBehaviour
 
     public bool IsLevelUnlocked(string levelId)
     {
+        EnsureLoaded();
+
         if (string.IsNullOrWhiteSpace(levelId))
         {
             return false;
@@ -97,6 +115,8 @@ public class ProgressService : MonoBehaviour
 
     public bool TryUnlockLevel(string levelId)
     {
+        EnsureLoaded();
+
         if (string.IsNullOrWhiteSpace(levelId) || data.unlockedLevelIds.Contains(levelId))
         {
             return false;
@@ -110,6 +130,8 @@ public class ProgressService : MonoBehaviour
 
     public bool TryUnlockLevelWithCost(RunCatalogAsset.RunEntry runEntry)
     {
+        EnsureLoaded();
+
         if (runEntry == null)
         {
             return false;
@@ -144,6 +166,8 @@ public class ProgressService : MonoBehaviour
 
     public bool IsAchievementUnlocked(AchievementId achievementId)
     {
+        EnsureLoaded();
+
         if (data.unlockedAchievementIds == null)
         {
             return false;
@@ -154,6 +178,8 @@ public class ProgressService : MonoBehaviour
 
     public bool TryUnlockAchievement(AchievementId achievementId)
     {
+        EnsureLoaded();
+
         string achievementKey = ToAchievementKey(achievementId);
         if (data.unlockedAchievementIds.Contains(achievementKey))
         {
@@ -167,22 +193,90 @@ public class ProgressService : MonoBehaviour
 
     public void SetLastSelectedLevel(string levelId)
     {
+        EnsureLoaded();
+
         data.lastSelectedLevelId = levelId ?? string.Empty;
         Save();
     }
 
     public string GetLastSelectedLevelId()
     {
+        EnsureLoaded();
         return data.lastSelectedLevelId;
     }
 
-    private void LoadOrCreate()
+    public bool IsRunCompleted(string runId)
+    {
+        EnsureLoaded();
+        return data.completedRunIds.Contains(runId);
+    }
+
+    public void MarkRunCompleted(string runId, RunCatalogAsset runCatalog)
+    {
+        EnsureLoaded();
+
+        bool changed = false;
+        if (!data.completedRunIds.Contains(runId))
+        {
+            data.completedRunIds.Add(runId);
+            changed = true;
+        }
+
+        IReadOnlyList<RunCatalogAsset.RunEntry> runs = runCatalog.Runs;
+        for (int i = 0; i < runs.Count; i++)
+        {
+            RunCatalogAsset.RunEntry runEntry = runs[i];
+            if (data.unlockedLevelIds.Contains(runEntry.RunId))
+            {
+                continue;
+            }
+
+            if (runEntry.PrerequisiteRunIds.Count == 0)
+            {
+                continue;
+            }
+
+            bool prerequisitesCompleted = true;
+            for (int j = 0; j < runEntry.PrerequisiteRunIds.Count; j++)
+            {
+                string prerequisiteRunId = runEntry.PrerequisiteRunIds[j];
+                if (!data.completedRunIds.Contains(prerequisiteRunId))
+                {
+                    prerequisitesCompleted = false;
+                    break;
+                }
+            }
+
+            if (!prerequisitesCompleted)
+            {
+                continue;
+            }
+
+            data.unlockedLevelIds.Add(runEntry.RunId);
+            EventBus.Publish(new LevelUnlockedEvent(runEntry.RunId));
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Save();
+        }
+    }
+
+    private void HandleActiveSlotChanged(int slotId)
+    {
+        LoadOrCreateForSlot(slotId);
+    }
+
+    private void LoadOrCreateForSlot(int slotId)
     {
         ProgressConfigAsset config = ProgressConfigProvider.Config;
-        string path = GetSavePath();
+        string path = SaveSlotService.GetSlotSavePath(slotId);
+        activeSlotId = slotId;
+
         if (!File.Exists(path))
         {
-            data = CreateDefaultData(config);
+            data = CreateDefaultData(config, slotId);
             Save();
             return;
         }
@@ -191,9 +285,7 @@ public class ProgressService : MonoBehaviour
         data = JsonUtility.FromJson<ProgressSaveData>(json);
         if (data == null)
         {
-            data = CreateDefaultData(config);
-            Save();
-            return;
+            throw new InvalidOperationException($"Save file is invalid: {path}");
         }
 
         if (data.unlockedLevelIds == null)
@@ -204,6 +296,11 @@ public class ProgressService : MonoBehaviour
         if (data.unlockedAchievementIds == null)
         {
             data.unlockedAchievementIds = new System.Collections.Generic.List<string>();
+        }
+
+        if (data.completedRunIds == null)
+        {
+            data.completedRunIds = new System.Collections.Generic.List<string>();
         }
 
         if (data.unlockedLevelIds.Count == 0 && !string.IsNullOrWhiteSpace(config.InitialUnlockedLevelId))
@@ -220,11 +317,17 @@ public class ProgressService : MonoBehaviour
         {
             data.unlockedLevelIds.Add(data.lastSelectedLevelId);
         }
+
+        data.slotId = slotId;
     }
 
-    private ProgressSaveData CreateDefaultData(ProgressConfigAsset config)
+    private ProgressSaveData CreateDefaultData(ProgressConfigAsset config, int slotId)
     {
-        var defaultData = new ProgressSaveData();
+        var defaultData = new ProgressSaveData
+        {
+            slotId = slotId
+        };
+
         if (!string.IsNullOrWhiteSpace(config.InitialUnlockedLevelId))
         {
             defaultData.unlockedLevelIds.Add(config.InitialUnlockedLevelId);
@@ -236,7 +339,7 @@ public class ProgressService : MonoBehaviour
 
     private void Save()
     {
-        string path = GetSavePath();
+        string path = SaveSlotService.GetSlotSavePath(activeSlotId);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(path, json);
         OnProgressChanged?.Invoke();
@@ -287,9 +390,12 @@ public class ProgressService : MonoBehaviour
         }
     }
 
-    private string GetSavePath()
+    private void EnsureLoaded()
     {
-        return Path.Combine(Application.persistentDataPath, ProgressConfigProvider.Config.SaveFileName);
+        if (data == null || !SaveSlotService.HasActiveSlot)
+        {
+            throw new InvalidOperationException("ProgressService requires an active save slot before use.");
+        }
     }
 
     private static string ToAchievementKey(AchievementId achievementId)

@@ -20,7 +20,7 @@ MonoBehaviour:
   initialAmmoInMagazine: 0
   reserveAmmo: 0
   reloadTime: 2.8
-  range: 95
+  range: 130
   projectileSpeed: 52
   hitMask:
     serializedVersion: 2

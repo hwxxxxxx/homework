@@ -49,6 +49,12 @@ public class RunOutcomeController : MonoBehaviour
             return;
         }
 
+        if (won)
+        {
+            RuntimeShell runtimeShell = RuntimeShell.Instance;
+            runtimeShell.ProgressService.MarkRunCompleted(runContextService.CurrentRunId, runtimeShell.RunCatalog);
+        }
+
         runContextService.EndRun(won);
         pauseController.SetPaused(false);
         if (!gameStateService.TrySetState(GameStateId.RunResult))

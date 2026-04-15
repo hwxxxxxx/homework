@@ -1,0 +1,129 @@
+.settings-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.settings-card {
+    width: 68%;
+    min-width: 560px;
+    max-width: 860px;
+    min-height: 450px;
+    padding-left: 36px;
+    padding-right: 36px;
+    padding-top: 30px;
+    padding-bottom: 22px;
+    background-image: url("project://database/Assets/Art/UI/normal_ui_set%20A/UI%20board%20Large%20Set.png?fileID=21300000&guid=90a2dde0942123c4ebb9c4af580c5818&type=3#UI board Large Set");
+    -unity-background-scale-mode: stretch-to-fill;
+    background-color: rgb(255, 255, 255);
+    overflow: hidden;
+    align-items: center;
+}
+
+.settings-drag-handle {
+    height: 54px;
+    justify-content: center;
+}
+
+.settings-title {
+    color: rgb(36, 26, 12);
+    font-size: 30px;
+    unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 18px;
+}
+
+.settings-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 56px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.settings-label {
+    width: 140px;
+    flex-shrink: 0;
+    color: rgb(46, 33, 17);
+    font-size: 20px;
+    unity-font-style: bold;
+    -unity-text-align: middle-right;
+    margin-right: 8px;
+}
+
+.settings-value {
+    min-width: 160px;
+    max-width: 190px;
+    flex-shrink: 1;
+    color: rgb(46, 33, 17);
+    font-size: 20px;
+    -unity-text-align: middle-center;
+}
+
+.settings-mini-btn {
+    width: 52px;
+    height: 44px;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    background-image: url("project://database/Assets/Art/UI/normal_ui_set%20A/TextBTN_Medium.png?fileID=21300000&guid=efee20b64d1e73942a29ba61ce3379c3&type=3#TextBTN_Medium");
+    -unity-background-scale-mode: stretch-to-fill;
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+    font-size: 24px;
+    unity-font-style: bold;
+}
+
+.settings-mini-btn:active {
+    background-image: url("project://database/Assets/Art/UI/normal_ui_set%20A/TextBTN_Medium_Pressed.png?fileID=21300000&guid=047b929beb10565479851d39b452dfb6&type=3#TextBTN_Medium_Pressed");
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.settings-slider {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 320px;
+    min-width: 320px;
+    margin-left: 10px;
+    margin-right: 14px;
+}
+
+.settings-close-btn {
+    width: 320px;
+    height: 66px;
+    margin-top: 18px;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-left-width: 0;
+    border-right-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    background-image: url("project://database/Assets/Art/UI/normal_ui_set%20A/TextBTN_Big.png?fileID=21300000&guid=2be7b70e984b51444aca9c12ae4723a7&type=3#TextBTN_Big");
+    -unity-background-scale-mode: stretch-to-fill;
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+    font-size: 24px;
+    unity-font-style: bold;
+}
+
+.settings-close-btn:active {
+    background-image: url("project://database/Assets/Art/UI/normal_ui_set%20A/TextBTN_Big_Pressed.png?fileID=21300000&guid=d6a1673a31851fd4395c287261da36e4&type=3#TextBTN_Big_Pressed");
+    background-color: rgba(0, 0, 0, 0);
+}

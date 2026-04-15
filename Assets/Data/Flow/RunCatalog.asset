@@ -14,27 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   runs:
   - runId: body_1
-    displayName: Body Echo I
+    displayName: 肉体回响一
     sceneId: body_1
     unlockCostType: 0
     unlockCostAmount: 0
     prerequisiteRunIds: []
   - runId: body_2
-    displayName: Body Echo II
+    displayName: 肉体回响二
     sceneId: body_2
     unlockCostType: 0
     unlockCostAmount: 0
     prerequisiteRunIds:
     - body_1
   - runId: soul_1
-    displayName: Soul Echo I
+    displayName: 灵魂回响一
     sceneId: soul_1
     unlockCostType: 1
     unlockCostAmount: 30
     prerequisiteRunIds:
     - body_2
   - runId: memory_1
-    displayName: Memory Echo I
+    displayName: 记忆回响一
     sceneId: memory_1
     unlockCostType: 2
     unlockCostAmount: 30

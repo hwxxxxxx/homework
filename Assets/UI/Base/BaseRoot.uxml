@@ -7,26 +7,26 @@
 
         <ui:VisualElement name="battle-panel" class="modal wood-modal draggable-window">
             <ui:VisualElement name="battle-drag-handle" class="panel-header drag-handle">
-                <ui:Label text="Select Level" class="panel-title" />
+                <ui:Label text="选择关卡" class="panel-title" />
             </ui:VisualElement>
-            <ui:Button name="level-body1-btn" text="Body Level 1" class="battle-level-btn wood-btn" />
-            <ui:Button name="level-body2-btn" text="Body Level 2" class="battle-level-btn wood-btn" />
-            <ui:Button name="level-soul1-btn" text="Soul Level 1" class="battle-level-btn wood-btn" />
-            <ui:Button name="level-memory1-btn" text="Memory Level 1" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-body1-btn" text="肉体关卡 1" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-body2-btn" text="肉体关卡 2" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-soul1-btn" text="灵魂关卡 1" class="battle-level-btn wood-btn" />
+            <ui:Button name="level-memory1-btn" text="记忆关卡 1" class="battle-level-btn wood-btn" />
             <ui:Label name="battle-status" text="" class="status-text" />
-            <ui:Button name="start-level-btn" text="Start Selected Level" class="wood-btn action-btn" />
-            <ui:Button name="close-battle-btn" text="Close" class="wood-btn close-btn" />
+            <ui:Button name="start-level-btn" text="开始已选关卡" class="wood-btn action-btn" />
+            <ui:Button name="close-battle-btn" text="关闭" class="wood-btn close-btn" />
         </ui:VisualElement>
 
         <ui:VisualElement name="upgrade-panel" class="modal wood-modal draggable-window">
             <ui:VisualElement name="upgrade-drag-handle" class="panel-header drag-handle">
-                <ui:Label text="Unlock Levels" class="panel-title" />
+                <ui:Label text="解锁进度" class="panel-title" />
             </ui:VisualElement>
-            <ui:Button name="unlock-body2-btn" text="Unlock Body Level 2" class="unlock-level-btn wood-btn" />
-            <ui:Button name="unlock-soul1-btn" text="Unlock Soul Level 1" class="unlock-level-btn wood-btn" />
-            <ui:Button name="unlock-memory1-btn" text="Unlock Memory Level 1" class="unlock-level-btn wood-btn" />
+            <ui:Button name="unlock-body2-btn" text="肉体关卡 2" class="unlock-level-btn wood-btn" />
+            <ui:Button name="unlock-soul1-btn" text="灵魂关卡 1" class="unlock-level-btn wood-btn" />
+            <ui:Button name="unlock-memory1-btn" text="记忆关卡 1" class="unlock-level-btn wood-btn" />
             <ui:Label name="unlock-status" text="" class="status-text" />
-            <ui:Button name="close-upgrade-btn" text="Close" class="wood-btn close-btn" />
+            <ui:Button name="close-upgrade-btn" text="关闭" class="wood-btn close-btn" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

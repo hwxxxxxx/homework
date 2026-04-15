@@ -14,12 +14,14 @@ public class PlayerHUD : MonoBehaviour
     private WeaponBase currentWeapon;
     private UIDocument hudDocument;
     private Label ammoText;
+    private Label weaponNameText;
     private Label healthText;
     private Label skillCooldownText;
     private Label tutorialText;
     private Label buffDamageBonusText;
     private Label buffFireRateBonusText;
     private Label buffReloadBonusText;
+    private VisualElement healthBarFill;
     private VisualElement skillCooldownFill;
     private VisualElement hudRoot;
     private VisualElement boundDocumentRoot;
@@ -85,11 +87,13 @@ public class PlayerHUD : MonoBehaviour
         currentWeapon = nextWeapon;
         if (currentWeapon == null)
         {
+            UpdateWeaponNameText(string.Empty);
             UpdateAmmoText(0, 0);
             SetBuffStatTexts(0f, 0f, 0f);
             return;
         }
 
+        UpdateWeaponNameText(currentWeapon.GetWeaponDisplayName());
         currentWeapon.OnAmmoChanged += UpdateAmmoText;
         UpdateAmmoText(
             currentWeapon.GetCurrentAmmoInMagazine(),
@@ -100,11 +104,18 @@ public class PlayerHUD : MonoBehaviour
     private void HandlePlayerHealthChanged(int current, int max)
     {
         healthText.text = string.Format(textConfig.HudHealthTemplate, current, max);
+        float normalized = max <= 0 ? 0f : Mathf.Clamp01((float)current / max);
+        healthBarFill.style.width = Length.Percent(normalized * 100f);
     }
 
     private void UpdateAmmoText(int currentAmmo, int reserveAmmo)
     {
         ammoText.text = currentAmmo + " / " + reserveAmmo;
+    }
+
+    private void UpdateWeaponNameText(string weaponName)
+    {
+        weaponNameText.text = weaponName;
     }
 
     private void RefreshSkillCooldownUI()
@@ -157,6 +168,7 @@ public class PlayerHUD : MonoBehaviour
         }
 
         UnbindPlayerEvents();
+        UpdateWeaponNameText(string.Empty);
         UpdateAmmoText(0, 0);
         HandlePlayerHealthChanged(0, 0);
         SetSkillCooldownUI(0f, true, 0f);
@@ -237,22 +249,26 @@ public class PlayerHUD : MonoBehaviour
     {
         hudRoot = root.Q<VisualElement>("hud-root");
         ammoText = root.Q<Label>("ammo-text");
+        weaponNameText = root.Q<Label>("weapon-name-text");
         healthText = root.Q<Label>("health-text");
         skillCooldownText = root.Q<Label>("skill-cooldown-text");
         tutorialText = root.Q<Label>("tutorial-text");
         buffDamageBonusText = root.Q<Label>("buff-damage-bonus-text");
         buffFireRateBonusText = root.Q<Label>("buff-fire-rate-bonus-text");
         buffReloadBonusText = root.Q<Label>("buff-reload-bonus-text");
+        healthBarFill = root.Q<VisualElement>("health-bar-fill");
         skillCooldownFill = root.Q<VisualElement>("skill-cooldown-fill");
 
         if (hudRoot == null ||
             ammoText == null ||
+            weaponNameText == null ||
             healthText == null ||
             skillCooldownText == null ||
             tutorialText == null ||
             buffDamageBonusText == null ||
             buffFireRateBonusText == null ||
             buffReloadBonusText == null ||
+            healthBarFill == null ||
             skillCooldownFill == null)
         {
             return false;
@@ -260,6 +276,7 @@ public class PlayerHUD : MonoBehaviour
 
         textConfig = UiTextConfigProvider.Config;
         tutorialText.text = textConfig.TutorialMessage;
+        UpdateWeaponNameText(string.Empty);
         SetBuffStatTexts(0f, 0f, 0f);
         boundDocumentRoot = root;
         presentationReady = true;
@@ -283,9 +300,9 @@ public class PlayerHUD : MonoBehaviour
 
     private void SetBuffStatTexts(float damageBonus, float fireRateBonus, float reloadBonus)
     {
-        buffDamageBonusText.text = $"Damage Buff: {FormatSignedPercent(damageBonus)}";
-        buffFireRateBonusText.text = $"FireRate Buff: {FormatSignedPercent(fireRateBonus)}";
-        buffReloadBonusText.text = $"Reload Buff: {FormatSignedPercent(reloadBonus)}";
+        buffDamageBonusText.text = $"伤害加成：{FormatSignedPercent(damageBonus)}";
+        buffFireRateBonusText.text = $"射速加成：{FormatSignedPercent(fireRateBonus)}";
+        buffReloadBonusText.text = $"换弹加成：{FormatSignedPercent(reloadBonus)}";
     }
 
     private static float ComputePercentDelta(float baseValue, float currentValue)

@@ -85,7 +85,7 @@ public static class LoadingScreenService
             return;
         }
 
-        runtimeFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        runtimeFont = RuntimeUiConfigProvider.Config.RuntimeFont;
 
         GameObject root = new GameObject(RuntimeNodeConfigProvider.Config.LoadingScreenRootName);
         Object.DontDestroyOnLoad(root);

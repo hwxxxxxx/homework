@@ -104,6 +104,20 @@ public readonly struct WeaponReloadStartedEvent : IGameEvent
     }
 }
 
+public readonly struct PlayerRunStateChangedEvent : IGameEvent
+{
+    public readonly GameObject SourceObject;
+    public readonly Vector3 Position;
+    public readonly bool IsRunning;
+
+    public PlayerRunStateChangedEvent(GameObject sourceObject, Vector3 position, bool isRunning)
+    {
+        SourceObject = sourceObject;
+        Position = position;
+        IsRunning = isRunning;
+    }
+}
+
 public readonly struct PlayerHitEnemyEvent : IGameEvent
 {
     public readonly GameObject EnemyObject;

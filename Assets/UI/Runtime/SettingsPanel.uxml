@@ -1,0 +1,28 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Runtime/SettingsPanel.uss?fileID=7433441132597879392&amp;guid=330899061f6e5e94481ae92288803f5b&amp;type=3#SettingsPanel" />
+    <ui:VisualElement name="settings-root" class="settings-root">
+        <ui:VisualElement name="settings-card" class="settings-card">
+            <ui:VisualElement name="settings-drag-handle" class="settings-drag-handle">
+                <ui:Label text="设置" class="settings-title" style="top: 40%;" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settings-row">
+                <ui:Label text="分辨率" class="settings-label" style="position: relative; left: 5%;" />
+                <ui:Button name="settings-resolution-prev-btn" text="&lt;" class="settings-mini-btn" />
+                <ui:Label name="settings-resolution-value" text="-" class="settings-value" />
+                <ui:Button name="settings-resolution-next-btn" text="&gt;" class="settings-mini-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settings-row">
+                <ui:Label text="显示模式" class="settings-label" style="left: 5%;" />
+                <ui:Button name="settings-displaymode-prev-btn" text="&lt;" class="settings-mini-btn" />
+                <ui:Label name="settings-displaymode-value" text="-" class="settings-value" />
+                <ui:Button name="settings-displaymode-next-btn" text="&gt;" class="settings-mini-btn" />
+            </ui:VisualElement>
+            <ui:VisualElement class="settings-row">
+                <ui:Label text="总音量" class="settings-label" style="left: 5%;" />
+                <ui:Slider name="settings-master-volume-slider" low-value="0" high-value="1" class="settings-slider" />
+                <ui:Label name="settings-master-volume-value" text="100%" class="settings-value" />
+            </ui:VisualElement>
+            <ui:Button name="settings-close-btn" text="关闭" class="settings-close-btn" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

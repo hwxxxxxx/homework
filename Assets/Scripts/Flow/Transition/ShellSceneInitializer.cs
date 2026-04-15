@@ -53,7 +53,6 @@ public static class ShellSceneInitializer
         binding.BaseSceneUiController.ConfigureRuntimeServices(
             runtimeShell.GameFlowOrchestrator,
             runtimeShell.RunCatalog,
-            runtimeShell.LevelUnlockService,
             runtimeShell.ProgressService
         );
 
